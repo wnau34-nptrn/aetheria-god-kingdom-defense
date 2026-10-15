@@ -1,0 +1,29 @@
+{
+  "baseline": {
+    "engineRevision": null,
+    "day": 1,
+    "time": 8.206061,
+    "population": 7,
+    "buildings": 5,
+    "faith": 60.024795000000005
+  },
+  "dilemmaResume": 1,
+  "combat": {
+    "count": 1,
+    "hp": [
+      515
+    ],
+    "faith": 165
+  },
+  "after": {
+    "count": 1,
+    "hp": [
+      514.65
+    ]
+  },
+  "notes": [
+    "Observed in the original HTML in Chromium with software WebGL.",
+    "Original first mobile screenshot captured during resize/HUD transition; do not use it as a stable mobile-layout comparison.",
+    "Two resource 404 console entries; no uncaught JavaScript page errors observed."
+  ]
+}

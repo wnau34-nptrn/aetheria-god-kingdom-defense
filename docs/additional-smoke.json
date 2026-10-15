@@ -1,0 +1,18 @@
+{
+  "actions": {
+    "era3": {
+      "population": 23,
+      "buildings": 19
+    },
+    "era4": {
+      "population": 29,
+      "buildings": 22
+    },
+    "cameraReset": true
+  },
+  "night": {
+    "monsters": 13,
+    "isNight": true
+  },
+  "errors": []
+}

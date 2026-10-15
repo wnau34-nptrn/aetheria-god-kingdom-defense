@@ -1,0 +1,22 @@
+{
+  "name": "aetheria-god-kingdom-defense",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "node --test tests/*.test.js",
+    "test:browser": "playwright test",
+    "audit:original": "node tests/inspect-original.mjs",
+    "audit:current": "node tests/inspect-current.mjs"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "vite": "8.3.4"
+  }
+}
