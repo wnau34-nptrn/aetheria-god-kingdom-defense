@@ -347,6 +347,18 @@
     .btn-mob-cam { width: 32px; height: 32px; font-size: 13px; }
   }
 
+  /* On narrow landscape screens the two top docks cannot share one row. */
+  @media (max-width: 600px) and (max-height: 500px) and (orientation: landscape) {
+    #top-bar { max-width: calc(100vw - 16px); transform: none; }
+    #hud-master-control {
+      top: 46px; left: 8px; right: 8px; transform: none;
+      overflow-x: auto; white-space: nowrap;
+    }
+    #hud-master-control .btn-mini { flex-shrink: 0; }
+    #era-dock { top: 82px; }
+    #left-panel, #right-panel { top: 114px; }
+  }
+
 
   /* Standalone Floating Inspector Card (Always visible on both Desktop & Mobile even when Left Drawer is hidden!) */
   #inspector-card {
