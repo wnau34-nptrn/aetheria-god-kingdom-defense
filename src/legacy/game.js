@@ -1,4 +1,5 @@
 import { createFixedStepper } from '../systems/fixed-step.js';
+import { chooseFoodTree } from '../systems/food-target.js';
 import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
 
 (() => {
@@ -2704,7 +2705,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
 
       if (ag.hunger >= 65) {
         ag.state = 'FORAGE'; ag.stateLabel = '🍎 หิว ➔ เก็บผลไม้/กินเสบียง'; ag.stateGem.material.color.setHex(0xfb7185); ag.mesh.visible = true; cForage++;
-        const ripeTree = trees.find(t => t.hasFruit && t.growth >= 0.75);
+        const ripeTree = chooseFoodTree(ag, state.food, trees);
         if (moveTowards(ag, ripeTree ? ripeTree.x : 0, ripeTree ? ripeTree.z : 0, 5.2, dt) < 2.3) {
           if (ripeTree) { ripeTree.hasFruit = false; ripeTree.fruitMeshes.forEach(fm => { fm.visible = false; }); ag.hunger = 0; ag.hp = Math.min(ag.maxHp, ag.hp + 20); state.food += 2; }
           else if (state.food >= 2) { state.food = Math.max(0, state.food - 2); ag.hunger = 0; ag.hp = Math.min(ag.maxHp, ag.hp + 15); }

@@ -351,7 +351,8 @@
   @media (max-width: 960px) and (max-height: 500px) and (orientation: landscape) {
     #top-bar { max-width: calc(100vw - 16px); transform: none; }
     #hud-master-control {
-      top: 46px; left: 8px; right: 8px; transform: none;
+      top: 46px; left: auto; right: 8px; transform: none;
+      width: max-content; max-width: calc(100vw - 16px);
       overflow-x: auto; white-space: nowrap;
     }
     #hud-master-control .btn-mini { flex-shrink: 0; }

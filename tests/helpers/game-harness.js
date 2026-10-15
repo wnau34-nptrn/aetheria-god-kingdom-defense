@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
 import { createFixedStepper } from '../../src/systems/fixed-step.js';
+import { chooseFoodTree } from '../../src/systems/food-target.js';
 import { parseProgress, PROGRESS_KEY } from '../../src/systems/progress-save.js';
 
 // Controlled clock + DOM integration harness. The actual game/geometry code runs;
@@ -34,7 +35,7 @@ export function createGameHarness({ seed = 1234, source } = {}) {
     render() {}
   };
   w.THREE.Clock = class { getDelta() { return frameDelta; } };
-  Object.assign(w, { parseProgress, PROGRESS_KEY, createFixedStepper });
+  Object.assign(w, { parseProgress, PROGRESS_KEY, createFixedStepper, chooseFoodTree });
   w.eval((source ?? readFileSync(new URL('../../src/legacy/game.js', import.meta.url), 'utf8')).replace(/^import .+;\n/gm, ''));
   const api = w.AETHERIA_API;
   // Avoid unnecessary thought-bubble DOM churn; this does not change simulation.
@@ -48,6 +49,17 @@ export function createGameHarness({ seed = 1234, source } = {}) {
         const next = Math.min(delta, remaining);
         this.frame(next);
         remaining -= next;
+      }
+    },
+    // Long navigation checks close natural event modals through their UI so
+    // "seconds" means elapsed simulation time, including at 1x.
+    play(seconds, speed, delta = 0.05) {
+      if (speed <= 0) throw new Error('play requires a positive speed');
+      const end = api.simulationTime + seconds;
+      this.click(`[data-speed="${speed}"]`);
+      while (api.simulationTime < end - 1e-8) {
+        if (w.document.getElementById('dilemma-overlay').classList.contains('visible')) this.click('#btn-close-dilemma');
+        this.frame(Math.min(delta, (end - api.simulationTime) / speed));
       }
     },
     close() { dom.window.close(); }

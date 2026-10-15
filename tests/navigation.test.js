@@ -7,7 +7,7 @@ test('the initial river-bank worker can move, eat and survive the first daytime'
   try {
     const worker = h.api.agents.find(a => a.id === 3);
     const start = { x: worker.x, z: worker.z };
-    h.advance(88, 5);
+    h.play(88, 5);
     assert.ok(h.api.state.food > 0, 'food remains available in this reproduction');
     assert.ok(worker.alive, 'the worker must not starve while stuck at its spawn');
     assert.ok(Math.hypot(worker.x - start.x, worker.z - start.z) > 3);
@@ -23,9 +23,22 @@ for (const speed of [1, 5]) {
       isolate(h, { agents: [soldier] });
       Object.assign(soldier, { x: 5.45, z: 13, hunger: 80 });
       a.state.food = 10;
-      h.advance(10, speed);
+      h.play(10, speed);
       assert.equal(a.state.food, 9);
       assert.ok(soldier.hunger < 20);
+    } finally { h.close(); }
+  });
+
+  test(`a worker can reach ore on the opposite bank at ${speed}x`, () => {
+    const h = createGameHarness(), a = h.api;
+    try {
+      const worker = a.agents.find(x => x.role === 'villager');
+      isolate(h, { agents: [worker] });
+      Object.assign(worker, { id: 1, x: 8, z: 0 });
+      a.ores.splice(1); Object.assign(a.ores[0], { x: -28, z: 20, oreAmount: 500 });
+      a.state.ore = 0;
+      h.play(35, speed);
+      assert.ok(worker.carryAmount > 0 || a.state.ore > 0, 'the worker must cross west and actually mine');
     } finally { h.close(); }
   });
 
@@ -37,7 +50,7 @@ for (const speed of [1, 5]) {
       isolate(h, { agents: [worker] });
       Object.assign(worker, { x: -28, z: era === 1 ? 20 : -25, carryType: 'ore', carryAmount: 5 });
       a.state.ore = 0;
-      h.advance(30, speed);
+      h.play(30, speed);
       assert.ok(a.state.ore >= 5, 'the carried ore must arrive at the central store');
     } finally { h.close(); }
   });
