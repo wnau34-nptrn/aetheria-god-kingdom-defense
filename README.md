@@ -45,6 +45,7 @@ src/legacy/webgl-engine.js       ตัวเรนเดอร์เดิม (
 src/legacy/game.js               เกมเดิมที่แยกไฟล์และแก้บั๊กสำคัญ
 src/systems/progress-save.js     ตรวจสอบ checkpoint ก่อนโหลด
 src/systems/fixed-step.js        นาฬิกา simulation สำหรับทุกความเร็ว
+src/systems/food-target.js       เลือกแหล่งอาหารใกล้ตัวสำหรับ NPC
 src/styles/game.css             หน้าตาเดิม
 original/                       HTML ที่อัปโหลด เก็บเหมือนเดิมทุกไบต์
 docs/                           ผลวิเคราะห์ สถาปัตยกรรม แผนพัฒนา และหลักฐานภาพ
@@ -52,6 +53,8 @@ tests/                          unit tests และ browser smoke tests
 ```
 
 ## ผลตรวจและแนวทางพัฒนาต่อ
+
+[ผลเล่นซ้ำและแก้การอยู่รอดของ NPC](docs/BALANCE_REVIEW.th.md): แก้จุดเกิดริมแม่น้ำ ทางออกสะพาน การหาอาหาร ที่พัก และจุดยืนตกปลา พร้อมหลักฐานแยกการเล่นผ่าน UI ออกจากการทดลองแบบควบคุม
 
 [ผลตรวจและแก้ 1x/5x](docs/SPEED_REVIEW.th.md): เพิ่ม simulation tick คงที่ แก้คาราวานซื้อฟรีและกรณีสภาหาที่สร้างไม่ได้ พร้อมผลก่อน/หลังและชุดทดสอบ
 

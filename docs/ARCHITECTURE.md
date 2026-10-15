@@ -6,6 +6,10 @@
 
 Gameplay now advances in fixed 50ms ticks via `src/systems/fixed-step.js`, with AI goals using simulation time. Day/night presentation is separate from clock/damage updates so it can render while paused. The legacy 50ms frame clamp and real-time cosmetic/event interval behavior remain. See `SPEED_REVIEW.th.md` for controlled-test results and limits.
 
+`src/systems/food-target.js` compares nearby ripe fruit against the central store when it can provide a meal. It is a pure decision helper with no DOM or mesh dependency. River-bank spawn correction and bridge routing remain in the legacy movement code; they are targeted fixes rather than a complete navigation system. See `BALANCE_REVIEW.th.md` for browser evidence and controlled reproductions.
+
+Shelter selection excludes completed houses inside the river walking restriction unless they are on a bridge deck, with the existing temple fallback when none qualify. It does not compute full path reachability. Fishing targets use the same river-bank boundary as walking. Bridge-deck access is shared by spawning and shelter selection.
+
 The extracted game still uses one IIFE, mutable entity arrays and direct DOM access. Splitting files is preparation, not a completed architectural rewrite. Embedded 2D scene images are still in the legacy game and should later move to named assets with provenance.
 
 The original uploaded HTML is preserved under `original/`, with SHA-256 recorded in `source-provenance.json`. It is useful as a behavioral reference and is not part of the Vite production bundle. The browser audit runner can load it from the development server.

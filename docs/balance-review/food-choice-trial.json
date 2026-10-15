@@ -1,0 +1,220 @@
+{
+  "method": "Controlled jsdom logic experiment at 5x; 107 game seconds; close natural events without choosing; paired seeds. Not a natural browser playthrough or proof of game balance.",
+  "baseline": "21b50a6",
+  "sourceSha256": {
+    "before": "4b4056452f57ba0f07b756fc5f858e4564d4c3fd63d88e21e7723f5d5eccbcbc",
+    "after": "80afb0bf28048fe70ad0dbea5c6ce994b5eb6ac0f128a12d383f5bcb5778ece8"
+  },
+  "results": [
+    {
+      "seed": 11,
+      "variant": "before",
+      "population": 6,
+      "food": 43,
+      "deaths": [
+        {
+          "id": 5,
+          "food": 39,
+          "time": 67.7499999999983
+        }
+      ]
+    },
+    {
+      "seed": 11,
+      "variant": "after",
+      "population": 7,
+      "food": 35,
+      "deaths": []
+    },
+    {
+      "seed": 22,
+      "variant": "before",
+      "population": 5,
+      "food": 39,
+      "deaths": [
+        {
+          "id": 3,
+          "food": 39,
+          "time": 78.2499999999977
+        },
+        {
+          "id": 4,
+          "food": 39,
+          "time": 82.49999999999746
+        }
+      ]
+    },
+    {
+      "seed": 22,
+      "variant": "after",
+      "population": 7,
+      "food": 31,
+      "deaths": []
+    },
+    {
+      "seed": 33,
+      "variant": "before",
+      "population": 6,
+      "food": 43,
+      "deaths": [
+        {
+          "id": 2,
+          "food": 41,
+          "time": 69.4999999999982
+        }
+      ]
+    },
+    {
+      "seed": 33,
+      "variant": "after",
+      "population": 7,
+      "food": 47,
+      "deaths": []
+    },
+    {
+      "seed": 44,
+      "variant": "before",
+      "population": 6,
+      "food": 43,
+      "deaths": [
+        {
+          "id": 3,
+          "food": 41,
+          "time": 77.49999999999774
+        }
+      ]
+    },
+    {
+      "seed": 44,
+      "variant": "after",
+      "population": 7,
+      "food": 35,
+      "deaths": []
+    },
+    {
+      "seed": 55,
+      "variant": "before",
+      "population": 5,
+      "food": 37,
+      "deaths": [
+        {
+          "id": 1,
+          "food": 39,
+          "time": 78.2499999999977
+        },
+        {
+          "id": 5,
+          "food": 39,
+          "time": 78.99999999999766
+        }
+      ]
+    },
+    {
+      "seed": 55,
+      "variant": "after",
+      "population": 7,
+      "food": 23,
+      "deaths": []
+    },
+    {
+      "seed": 66,
+      "variant": "before",
+      "population": 6,
+      "food": 43,
+      "deaths": [
+        {
+          "id": 2,
+          "food": 41,
+          "time": 72.49999999999802
+        }
+      ]
+    },
+    {
+      "seed": 66,
+      "variant": "after",
+      "population": 7,
+      "food": 27,
+      "deaths": []
+    },
+    {
+      "seed": 77,
+      "variant": "before",
+      "population": 6,
+      "food": 43,
+      "deaths": [
+        {
+          "id": 5,
+          "food": 41,
+          "time": 74.7499999999979
+        }
+      ]
+    },
+    {
+      "seed": 77,
+      "variant": "after",
+      "population": 7,
+      "food": 39,
+      "deaths": []
+    },
+    {
+      "seed": 88,
+      "variant": "before",
+      "population": 6,
+      "food": 43,
+      "deaths": [
+        {
+          "id": 4,
+          "food": 43,
+          "time": 81.24999999999753
+        }
+      ]
+    },
+    {
+      "seed": 88,
+      "variant": "after",
+      "population": 7,
+      "food": 39,
+      "deaths": []
+    },
+    {
+      "seed": 99,
+      "variant": "before",
+      "population": 6,
+      "food": 43,
+      "deaths": [
+        {
+          "id": 1,
+          "food": 41,
+          "time": 68.49999999999825
+        }
+      ]
+    },
+    {
+      "seed": 99,
+      "variant": "after",
+      "population": 7,
+      "food": 43,
+      "deaths": []
+    },
+    {
+      "seed": 110,
+      "variant": "before",
+      "population": 6,
+      "food": 39,
+      "deaths": [
+        {
+          "id": 1,
+          "food": 39,
+          "time": 70.74999999999812
+        }
+      ]
+    },
+    {
+      "seed": 110,
+      "variant": "after",
+      "population": 7,
+      "food": 39,
+      "deaths": []
+    }
+  ]
+}

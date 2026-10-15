@@ -10,7 +10,7 @@ for (const phase of ['before-food-fix', 'after-npc-fix']) {
 }
 if (!runs.length) {
   const flatRuns = JSON.parse(await readFile(`${root}/summary.json`, 'utf8'));
-  runs.push(...flatRuns.map(run => ({ ...run, phase: 'before-food-fix', directory: run.id })));
+  runs.push(...flatRuns.map(run => ({ ...run, phase: 'current', directory: run.id })));
 }
 const count = (items, key) => items.reduce((r, x) => (r[x[key]] = (r[x[key]] || 0) + 1, r), {});
 const compact = s => s ? { gameSeconds: s.simulationTime, day: s.day, time: s.time, era: s.era, progress: s.progress, population: s.population, roles: s.roles, resources: s.resources, structures: count(s.buildings, 'type'), monsters: s.monsters.length } : null;
@@ -19,6 +19,7 @@ const series = [];
 for (const run of runs) {
   const rows = (await readFile(`${root}/${run.directory}/timeline.jsonl`, 'utf8')).trim().split('\n').map(x => JSON.parse(x));
   const snapshots = rows.filter(x => x.type === 'snapshot');
+  if (snapshots.some((s, i) => i && s.simulationTime < snapshots[i - 1].simulationTime - 1e-8)) throw new Error(`Simulation clock reset during ${run.directory}; do not treat a reload as a continuous playthrough.`);
   const logs = [...new Set(snapshots.flatMap(s => s.log))];
   const firstEra = snapshots.filter(s => s.era === 1);
   const firstNight = snapshots.find(s => s.day === 1 && s.night);
@@ -52,7 +53,8 @@ for (const run of runs) {
     potentialForageStalls: [...stalled.values()], events: run.events, actions: run.actions,
     pageErrors: run.errors, inputErrors: run.inputErrors
   });
-  series.push({ id: `${run.strategy}-${run.phase === 'before-food-fix' ? 'before' : 'after'}`, phase: run.phase, strategy: run.strategy, samples: snapshots.map(s => ({ gameSeconds: s.simulationTime - run.initial.simulationTime, population: s.population, food: s.resources.food, faith: s.resources.faith, era: s.era, monsters: s.monsters.length })) });
+  const version = run.phase === 'before-food-fix' ? 'before' : run.phase === 'after-npc-fix' ? 'after' : 'current';
+  series.push({ id: `${run.strategy}-${version}`, phase: run.phase, strategy: run.strategy, samples: snapshots.map(s => ({ gameSeconds: s.simulationTime - run.initial.simulationTime, population: s.population, food: s.resources.food, faith: s.resources.faith, era: s.era, monsters: s.monsters.length })) });
 }
 await writeFile(`${root}/metrics.json`, JSON.stringify(metrics, null, 2) + '\n');
 await writeFile(`${root}/series.json`, JSON.stringify(series, null, 2) + '\n');

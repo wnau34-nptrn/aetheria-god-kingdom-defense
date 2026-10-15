@@ -1,0 +1,1406 @@
+[
+  {
+    "id": "before-food-fix/observe-1",
+    "phase": "before-food-fix",
+    "strategy": "observe",
+    "repeat": 1,
+    "gameSeconds": 240.25,
+    "wallSeconds": 610.808,
+    "stopReason": "target game time reached",
+    "initial": {
+      "gameSeconds": 0.1,
+      "day": 1,
+      "time": 8.211,
+      "era": 1,
+      "progress": 0.035,
+      "population": 7,
+      "roles": {
+        "villager": 4,
+        "child": 1,
+        "soldier": 2
+      },
+      "resources": {
+        "food": 35,
+        "wood": 20,
+        "ore": 15,
+        "faith": 60.045
+      },
+      "structures": {
+        "temple": 1,
+        "house": 3,
+        "tower": 1
+      },
+      "monsters": 0
+    },
+    "firstNight": {
+      "gameSeconds": 107.6,
+      "day": 1,
+      "time": 20.036,
+      "era": 1,
+      "progress": 37.66,
+      "population": 5,
+      "roles": {
+        "villager": 2,
+        "child": 1,
+        "soldier": 2
+      },
+      "resources": {
+        "food": 41,
+        "wood": 25,
+        "ore": 23,
+        "faith": 112.02
+      },
+      "structures": {
+        "temple": 1,
+        "house": 3,
+        "tower": 1
+      },
+      "monsters": 7
+    },
+    "firstDawn": {
+      "gameSeconds": 198.4,
+      "day": 2,
+      "time": 6.024,
+      "era": 1,
+      "progress": 69.44,
+      "population": 0,
+      "roles": {},
+      "resources": {
+        "food": 45,
+        "wood": 25,
+        "ore": 23,
+        "faith": 188.23
+      },
+      "structures": {
+        "temple": 1,
+        "house": 1
+      },
+      "monsters": 5
+    },
+    "final": {
+      "gameSeconds": 240.35,
+      "day": 2,
+      "time": 10.639,
+      "era": 1,
+      "progress": 84.122,
+      "population": 0,
+      "roles": {},
+      "resources": {
+        "food": 45,
+        "wood": 25,
+        "ore": 23,
+        "faith": 200
+      },
+      "structures": {
+        "temple": 1,
+        "house": 1
+      },
+      "monsters": 0
+    },
+    "minPopulationInEra1": 0,
+    "peakMonstersInEra1": 12,
+    "maxHiddenCiviliansAtNight": 1,
+    "firstWaveBosses": 4,
+    "starvationDeaths": [
+      "[วันที่ 1 16:06]⚠️ 🧑‍🔧 ช่างเมือง คีริน #1 สิ้นใจจากความอดอยาก!",
+      "[วันที่ 1 16:17]⚠️ 🧑‍🔧 ช่างเมือง ลลนา #4 สิ้นใจจากความอดอยาก!"
+    ],
+    "combatDeaths": [
+      "[วันที่ 1 20:56]⚠️ ⚔️ อัศวิน รินรดา #6 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 1 21:00]⚠️ ⚔️ อัศวิน กวี #7 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 1 21:45]⚠️ 👧 เด็กน้อย ภาคิน #5 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 1 22:02]⚠️ 🧑‍🔧 ช่างเมือง อารยา #2 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 2 05:44]⚠️ 🧑‍🔧 ช่างเมือง ธาม #3 พ่ายแพ้ในการปกป้องหมู่บ้าน!"
+    ],
+    "construction": [],
+    "eraTransitions": [],
+    "potentialForageStalls": [],
+    "events": [
+      {
+        "simulationTime": 89.7,
+        "category": "🎪 เหตุการณ์การค้าและผู้มาเยือน (Sky Caravan Event)",
+        "choice": "close"
+      }
+    ],
+    "actions": [
+      {
+        "label": "close natural event: 🎪 เหตุการณ์การค้าและผู้มาเยือน (Sky Caravan Event)",
+        "simulationTime": 89.7,
+        "before": {
+          "food": 39,
+          "wood": 25,
+          "ore": 19,
+          "faith": 102.765
+        },
+        "after": {
+          "food": 39,
+          "wood": 25,
+          "ore": 19,
+          "faith": 102.765
+        }
+      }
+    ],
+    "pageErrors": [],
+    "inputErrors": []
+  },
+  {
+    "id": "before-food-fix/economy-1",
+    "phase": "before-food-fix",
+    "strategy": "economy",
+    "repeat": 1,
+    "gameSeconds": 240.55,
+    "wallSeconds": 607.602,
+    "stopReason": "target game time reached",
+    "initial": {
+      "gameSeconds": 0.1,
+      "day": 1,
+      "time": 8.211,
+      "era": 1,
+      "progress": 0.035,
+      "population": 7,
+      "roles": {
+        "villager": 4,
+        "child": 1,
+        "soldier": 2
+      },
+      "resources": {
+        "food": 35,
+        "wood": 20,
+        "ore": 15,
+        "faith": 60.045
+      },
+      "structures": {
+        "temple": 1,
+        "house": 3,
+        "tower": 1
+      },
+      "monsters": 0
+    },
+    "firstNight": {
+      "gameSeconds": 107.45,
+      "day": 1,
+      "time": 20.02,
+      "era": 1,
+      "progress": 37.607,
+      "population": 8,
+      "roles": {
+        "villager": 5,
+        "child": 1,
+        "soldier": 2
+      },
+      "resources": {
+        "food": 82,
+        "wood": 25,
+        "ore": 5,
+        "faith": 92.952
+      },
+      "structures": {
+        "temple": 1,
+        "house": 4,
+        "tower": 1
+      },
+      "monsters": 7
+    },
+    "firstDawn": {
+      "gameSeconds": 198.25,
+      "day": 2,
+      "time": 6.008,
+      "era": 1,
+      "progress": 69.387,
+      "population": 0,
+      "roles": {},
+      "resources": {
+        "food": 124,
+        "wood": 25,
+        "ore": 5,
+        "faith": 182.233
+      },
+      "structures": {
+        "temple": 1,
+        "house": 1
+      },
+      "monsters": 8
+    },
+    "final": {
+      "gameSeconds": 240.65,
+      "day": 2,
+      "time": 10.672,
+      "era": 1,
+      "progress": 84.227,
+      "population": 0,
+      "roles": {},
+      "resources": {
+        "food": 124,
+        "wood": 25,
+        "ore": 5,
+        "faith": 200
+      },
+      "structures": {
+        "temple": 1,
+        "house": 1
+      },
+      "monsters": 0
+    },
+    "minPopulationInEra1": 0,
+    "peakMonstersInEra1": 11,
+    "maxHiddenCiviliansAtNight": 3,
+    "firstWaveBosses": 1,
+    "starvationDeaths": [
+      "[วันที่ 1 16:15]⚠️ 🧑‍🔧 ช่างเมือง ธาม #3 สิ้นใจจากความอดอยาก!"
+    ],
+    "combatDeaths": [
+      "[วันที่ 1 20:51]⚠️ ⚔️ อัศวิน รินรดา #6 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 1 20:57]⚠️ ⚔️ อัศวิน กวี #7 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 1 21:57]⚠️ 🧑‍🔧 ช่างเมือง อารยา #2 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 2 01:41]⚠️ 🧑‍🔧 ช่างเมือง นารา #8 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 2 02:21]⚠️ 👧 เด็กน้อย ภาคิน #5 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 2 02:59]⚠️ 🧑‍🔧 ช่างเมือง ลลนา #4 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 2 03:54]⚠️ 🧑‍🔧 ช่างเมือง อัคคี #9 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 2 04:33]⚠️ 🧑‍🔧 ช่างเมือง คีริน #1 พ่ายแพ้ในการปกป้องหมู่บ้าน!"
+    ],
+    "construction": [
+      "[วันที่ 1 14:42]🏗️ ชาวบ้านเริ่มก่อสร้างที่พักอาศัยหลังใหม่!",
+      "[วันที่ 1 15:29]✨ ก่อสร้าง ⛺ กระโจมชนเผ่าดึกดำบรรพ์ (Tribal Hide Lodge) เสร็จสมบูรณ์!"
+    ],
+    "eraTransitions": [],
+    "potentialForageStalls": [],
+    "events": [
+      {
+        "simulationTime": 89.55,
+        "category": "🌙 ยุทธศาสตร์ป้องกันอาณาจักร (Military Command)",
+        "choice": "dl-choice-2"
+      }
+    ],
+    "actions": [
+      {
+        "label": "recruit worker",
+        "simulationTime": 0.1,
+        "before": {
+          "food": 35,
+          "wood": 20,
+          "ore": 15,
+          "faith": 60.045
+        },
+        "after": {
+          "food": 35,
+          "wood": 20,
+          "ore": 15,
+          "faith": 40.158
+        }
+      },
+      {
+        "label": "recruit worker",
+        "simulationTime": 0.6,
+        "before": {
+          "food": 35,
+          "wood": 20,
+          "ore": 15,
+          "faith": 40.27
+        },
+        "after": {
+          "food": 35,
+          "wood": 20,
+          "ore": 15,
+          "faith": 20.383
+        }
+      },
+      {
+        "label": "rain near worker",
+        "simulationTime": 19.65,
+        "before": {
+          "food": 35,
+          "wood": 25,
+          "ore": 15,
+          "faith": 30.043
+        },
+        "after": {
+          "food": 53,
+          "wood": 25,
+          "ore": 15,
+          "faith": 15.155
+        }
+      },
+      {
+        "label": "rain near worker",
+        "simulationTime": 65.35,
+        "before": {
+          "food": 59,
+          "wood": 10,
+          "ore": 5,
+          "faith": 40.408
+        },
+        "after": {
+          "food": 77,
+          "wood": 10,
+          "ore": 5,
+          "faith": 25.52
+        }
+      },
+      {
+        "label": "natural event: 🌙 ยุทธศาสตร์ป้องกันอาณาจักร (Military Command) -> dl-choice-2",
+        "simulationTime": 89.55,
+        "before": {
+          "food": 79,
+          "wood": 15,
+          "ore": 5,
+          "faith": 37.498
+        },
+        "after": {
+          "food": 79,
+          "wood": 15,
+          "ore": 5,
+          "faith": 82.498
+        }
+      },
+      {
+        "label": "rain near worker",
+        "simulationTime": 110.95,
+        "before": {
+          "food": 82,
+          "wood": 25,
+          "ore": 5,
+          "faith": 95.472
+        },
+        "after": {
+          "food": 100,
+          "wood": 25,
+          "ore": 5,
+          "faith": 80.607
+        }
+      },
+      {
+        "label": "rain near worker",
+        "simulationTime": 159.45,
+        "before": {
+          "food": 106,
+          "wood": 25,
+          "ore": 5,
+          "faith": 147.055
+        },
+        "after": {
+          "food": 124,
+          "wood": 25,
+          "ore": 5,
+          "faith": 132.167
+        }
+      }
+    ],
+    "pageErrors": [],
+    "inputErrors": []
+  },
+  {
+    "id": "before-food-fix/defense-1",
+    "phase": "before-food-fix",
+    "strategy": "defense",
+    "repeat": 1,
+    "gameSeconds": 240.45,
+    "wallSeconds": 614.156,
+    "stopReason": "target game time reached",
+    "initial": {
+      "gameSeconds": 0.15,
+      "day": 1,
+      "time": 8.216,
+      "era": 1,
+      "progress": 0.052,
+      "population": 7,
+      "roles": {
+        "villager": 4,
+        "child": 1,
+        "soldier": 2
+      },
+      "resources": {
+        "food": 35,
+        "wood": 20,
+        "ore": 15,
+        "faith": 60.068
+      },
+      "structures": {
+        "temple": 1,
+        "house": 3,
+        "tower": 1
+      },
+      "monsters": 0
+    },
+    "firstNight": {
+      "gameSeconds": 107.45,
+      "day": 1,
+      "time": 20.02,
+      "era": 1,
+      "progress": 37.607,
+      "population": 9,
+      "roles": {
+        "villager": 2,
+        "child": 1,
+        "soldier": 6
+      },
+      "resources": {
+        "food": 29,
+        "wood": 25,
+        "ore": 4,
+        "faith": 35.753
+      },
+      "structures": {
+        "temple": 1,
+        "house": 3,
+        "tower": 3
+      },
+      "monsters": 7
+    },
+    "firstDawn": {
+      "gameSeconds": 198.45,
+      "day": 2,
+      "time": 6.03,
+      "era": 1,
+      "progress": 69.457,
+      "population": 1,
+      "roles": {
+        "child": 1
+      },
+      "resources": {
+        "food": 33,
+        "wood": 25,
+        "ore": 4,
+        "faith": 117.602
+      },
+      "structures": {
+        "temple": 1,
+        "house": 3,
+        "tower": 3
+      },
+      "monsters": 0
+    },
+    "final": {
+      "gameSeconds": 240.6,
+      "day": 2,
+      "time": 10.666,
+      "era": 1,
+      "progress": 84.21,
+      "population": 1,
+      "roles": {
+        "child": 1
+      },
+      "resources": {
+        "food": 33,
+        "wood": 25,
+        "ore": 4,
+        "faith": 136.57
+      },
+      "structures": {
+        "temple": 1,
+        "house": 3,
+        "tower": 3
+      },
+      "monsters": 0
+    },
+    "minPopulationInEra1": 1,
+    "peakMonstersInEra1": 7,
+    "maxHiddenCiviliansAtNight": 1,
+    "firstWaveBosses": 4,
+    "starvationDeaths": [],
+    "combatDeaths": [
+      "[วันที่ 1 20:59]⚠️ ⚔️ อัศวิน รินรดา #6 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 1 21:27]⚠️ 🧑‍🔧 ช่างเมือง ธาม #3 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 1 21:49]⚠️ 🧑‍🔧 ช่างเมือง ลลนา #4 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 2 00:57]⚠️ ⚔️ อัศวิน อัคคี #9 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 2 01:14]⚠️ ⚔️ อัศวิน ปฐพี #11 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 2 01:21]⚠️ ⚔️ อัศวิน นารา #8 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 2 01:43]⚠️ ⚔️ อัศวิน วายุ #10 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 2 01:42]⚠️ ⚔️ อัศวิน กวี #7 พ่ายแพ้ในการปกป้องหมู่บ้าน!"
+    ],
+    "construction": [],
+    "eraTransitions": [],
+    "potentialForageStalls": [],
+    "events": [
+      {
+        "simulationTime": 89.35,
+        "category": "⚖️ ข้อพิพาทในสภาหมู่บ้าน (Council Dispute)",
+        "choice": "dl-choice-1"
+      }
+    ],
+    "actions": [
+      {
+        "label": "train soldier",
+        "simulationTime": 0.15,
+        "before": {
+          "food": 35,
+          "wood": 20,
+          "ore": 15,
+          "faith": 60.068
+        },
+        "after": {
+          "food": 35,
+          "wood": 20,
+          "ore": 15,
+          "faith": 35.293
+        }
+      },
+      {
+        "label": "train soldier",
+        "simulationTime": 1.4,
+        "before": {
+          "food": 35,
+          "wood": 20,
+          "ore": 15,
+          "faith": 35.63
+        },
+        "after": {
+          "food": 35,
+          "wood": 20,
+          "ore": 15,
+          "faith": 10.855
+        }
+      },
+      {
+        "label": "attempt extra tower",
+        "simulationTime": 45.2,
+        "before": {
+          "food": 31,
+          "wood": 20,
+          "ore": 15,
+          "faith": 30.34
+        },
+        "after": {
+          "food": 31,
+          "wood": 20,
+          "ore": 15,
+          "faith": 30.34
+        }
+      },
+      {
+        "label": "attempt extra tower",
+        "simulationTime": 45.65,
+        "before": {
+          "food": 31,
+          "wood": 20,
+          "ore": 15,
+          "faith": 30.543
+        },
+        "after": {
+          "food": 33,
+          "wood": 20,
+          "ore": 15,
+          "faith": 30.88
+        }
+      },
+      {
+        "label": "attempt extra tower",
+        "simulationTime": 46.65,
+        "before": {
+          "food": 33,
+          "wood": 20,
+          "ore": 15,
+          "faith": 30.993
+        },
+        "after": {
+          "food": 33,
+          "wood": 20,
+          "ore": 15,
+          "faith": 6.105
+        }
+      },
+      {
+        "label": "natural event: ⚖️ ข้อพิพาทในสภาหมู่บ้าน (Council Dispute) -> dl-choice-1",
+        "simulationTime": 89.35,
+        "before": {
+          "food": 33,
+          "wood": 25,
+          "ore": 19,
+          "faith": 27.608
+        },
+        "after": {
+          "food": 33,
+          "wood": 25,
+          "ore": 4,
+          "faith": 27.608
+        }
+      },
+      {
+        "label": "lightning on enemy cluster",
+        "simulationTime": 108.2,
+        "before": {
+          "food": 29,
+          "wood": 25,
+          "ore": 4,
+          "faith": 36.09
+        },
+        "after": {
+          "food": 29,
+          "wood": 25,
+          "ore": 4,
+          "faith": 16.54
+        }
+      },
+      {
+        "label": "lightning on enemy cluster",
+        "simulationTime": 120.4,
+        "before": {
+          "food": 31,
+          "wood": 25,
+          "ore": 4,
+          "faith": 51.58
+        },
+        "after": {
+          "food": 31,
+          "wood": 25,
+          "ore": 4,
+          "faith": 31.693
+        }
+      },
+      {
+        "label": "lightning on enemy cluster",
+        "simulationTime": 148.7,
+        "before": {
+          "food": 31,
+          "wood": 25,
+          "ore": 4,
+          "faith": 63.753
+        },
+        "after": {
+          "food": 31,
+          "wood": 25,
+          "ore": 4,
+          "faith": 43.978
+        }
+      },
+      {
+        "label": "lightning on enemy cluster",
+        "simulationTime": 160.6,
+        "before": {
+          "food": 31,
+          "wood": 25,
+          "ore": 4,
+          "faith": 78.463
+        },
+        "after": {
+          "food": 31,
+          "wood": 25,
+          "ore": 4,
+          "faith": 66.138
+        }
+      }
+    ],
+    "pageErrors": [],
+    "inputErrors": []
+  },
+  {
+    "id": "after-npc-fix/observe-1",
+    "phase": "after-npc-fix",
+    "strategy": "observe",
+    "repeat": 1,
+    "gameSeconds": 240.95000000000002,
+    "wallSeconds": 576.889,
+    "stopReason": "target game time reached",
+    "initial": {
+      "gameSeconds": 0.1,
+      "day": 1,
+      "time": 8.211,
+      "era": 1,
+      "progress": 0.035,
+      "population": 7,
+      "roles": {
+        "villager": 4,
+        "child": 1,
+        "soldier": 2
+      },
+      "resources": {
+        "food": 35,
+        "wood": 20,
+        "ore": 15,
+        "faith": 60.045
+      },
+      "structures": {
+        "temple": 1,
+        "house": 3,
+        "tower": 1
+      },
+      "monsters": 0
+    },
+    "firstNight": {
+      "gameSeconds": 107.5,
+      "day": 1,
+      "time": 20.025,
+      "era": 1,
+      "progress": 37.625,
+      "population": 7,
+      "roles": {
+        "villager": 4,
+        "child": 1,
+        "soldier": 2
+      },
+      "resources": {
+        "food": 35,
+        "wood": 5,
+        "ore": 11,
+        "faith": 126.375
+      },
+      "structures": {
+        "temple": 1,
+        "house": 4,
+        "tower": 2
+      },
+      "monsters": 7
+    },
+    "firstDawn": {
+      "gameSeconds": 198.4,
+      "day": 2,
+      "time": 6.024,
+      "era": 1,
+      "progress": 69.44,
+      "population": 2,
+      "roles": {
+        "villager": 1,
+        "child": 1
+      },
+      "resources": {
+        "food": 27,
+        "wood": 5,
+        "ore": 11,
+        "faith": 200
+      },
+      "structures": {
+        "temple": 1,
+        "house": 2
+      },
+      "monsters": 6
+    },
+    "final": {
+      "gameSeconds": 241.05,
+      "day": 2,
+      "time": 10.716,
+      "era": 1,
+      "progress": 84.367,
+      "population": 1,
+      "roles": {
+        "child": 1
+      },
+      "resources": {
+        "food": 27,
+        "wood": 5,
+        "ore": 11,
+        "faith": 200
+      },
+      "structures": {
+        "temple": 1,
+        "house": 2
+      },
+      "monsters": 1
+    },
+    "minPopulationInEra1": 1,
+    "peakMonstersInEra1": 11,
+    "maxHiddenCiviliansAtNight": 4,
+    "firstWaveBosses": 2,
+    "starvationDeaths": [],
+    "combatDeaths": [
+      "[วันที่ 1 20:50]⚠️ ⚔️ อัศวิน รินรดา #6 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 1 20:59]⚠️ ⚔️ อัศวิน กวี #7 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 1 22:18]⚠️ 🧑‍🔧 ช่างเมือง คีริน #1 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 1 22:17]⚠️ 🧑‍🔧 ช่างเมือง ลลนา #4 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 2 02:23]⚠️ 🧑‍🔧 ช่างเมือง อารยา #2 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 2 06:18]⚠️ 🧑‍🔧 ช่างเมือง ธาม #3 พ่ายแพ้ในการปกป้องหมู่บ้าน!"
+    ],
+    "construction": [
+      "[วันที่ 1 11:49]🏗️ ชาวบ้านเริ่มก่อสร้างที่พักอาศัยหลังใหม่!",
+      "[วันที่ 1 12:39]✨ ก่อสร้าง ⛺ กระโจมชนเผ่าดึกดำบรรพ์ (Tribal Hide Lodge) เสร็จสมบูรณ์!",
+      "[วันที่ 1 19:28]🏗️ ชาวบ้านเริ่มก่อสร้างหอคอย/ป้อมปราการแห่งใหม่!"
+    ],
+    "eraTransitions": [],
+    "potentialForageStalls": [],
+    "events": [
+      {
+        "simulationTime": 89.7,
+        "category": "🌙 ยุทธศาสตร์ป้องกันอาณาจักร (Military Command)",
+        "choice": "close"
+      }
+    ],
+    "actions": [
+      {
+        "label": "close natural event: 🌙 ยุทธศาสตร์ป้องกันอาณาจักร (Military Command)",
+        "simulationTime": 89.7,
+        "before": {
+          "food": 39,
+          "wood": 25,
+          "ore": 21,
+          "faith": 114.765
+        },
+        "after": {
+          "food": 39,
+          "wood": 25,
+          "ore": 21,
+          "faith": 114.765
+        }
+      }
+    ],
+    "pageErrors": [],
+    "inputErrors": []
+  },
+  {
+    "id": "after-npc-fix/economy-1",
+    "phase": "after-npc-fix",
+    "strategy": "economy",
+    "repeat": 1,
+    "gameSeconds": 240.75,
+    "wallSeconds": 581.079,
+    "stopReason": "target game time reached",
+    "initial": {
+      "gameSeconds": 0.1,
+      "day": 1,
+      "time": 8.211,
+      "era": 1,
+      "progress": 0.035,
+      "population": 7,
+      "roles": {
+        "villager": 4,
+        "child": 1,
+        "soldier": 2
+      },
+      "resources": {
+        "food": 35,
+        "wood": 20,
+        "ore": 15,
+        "faith": 60.045
+      },
+      "structures": {
+        "temple": 1,
+        "house": 3,
+        "tower": 1
+      },
+      "monsters": 0
+    },
+    "firstNight": {
+      "gameSeconds": 107.6,
+      "day": 1,
+      "time": 20.036,
+      "era": 1,
+      "progress": 52.66,
+      "population": 9,
+      "roles": {
+        "villager": 6,
+        "child": 1,
+        "soldier": 2
+      },
+      "resources": {
+        "food": 100,
+        "wood": 25,
+        "ore": 33,
+        "faith": 41.42
+      },
+      "structures": {
+        "temple": 1,
+        "house": 4,
+        "tower": 1
+      },
+      "monsters": 7
+    },
+    "firstDawn": {
+      "gameSeconds": 198.6,
+      "day": 2,
+      "time": 6.046,
+      "era": 1,
+      "progress": 84.51,
+      "population": 0,
+      "roles": {},
+      "resources": {
+        "food": 118,
+        "wood": 25,
+        "ore": 33,
+        "faith": 128.212
+      },
+      "structures": {
+        "temple": 1,
+        "house": 1
+      },
+      "monsters": 6
+    },
+    "final": {
+      "gameSeconds": 240.85,
+      "day": 2,
+      "time": 10.694,
+      "era": 1,
+      "progress": 99.297,
+      "population": 0,
+      "roles": {},
+      "resources": {
+        "food": 118,
+        "wood": 25,
+        "ore": 33,
+        "faith": 147.225
+      },
+      "structures": {
+        "temple": 1,
+        "house": 1
+      },
+      "monsters": 0
+    },
+    "minPopulationInEra1": 0,
+    "peakMonstersInEra1": 12,
+    "maxHiddenCiviliansAtNight": 7,
+    "firstWaveBosses": 4,
+    "starvationDeaths": [],
+    "combatDeaths": [
+      "[วันที่ 1 20:52]⚠️ ⚔️ อัศวิน รินรดา #6 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 1 20:58]⚠️ ⚔️ อัศวิน กวี #7 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 1 21:51]⚠️ 👧 เด็กน้อย ภาคิน #5 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 1 22:12]⚠️ 🧑‍🔧 ช่างเมือง นารา #8 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 1 22:17]⚠️ 🧑‍🔧 ช่างเมือง อารยา #2 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 1 22:23]⚠️ 🧑‍🔧 ช่างเมือง อัคคี #9 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 1 22:23]⚠️ 🧑‍🔧 ช่างเมือง ลลนา #4 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 1 22:22]⚠️ 🧑‍🔧 ช่างเมือง ธาม #3 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 1 22:25]⚠️ 🧑‍🔧 ช่างเมือง คีริน #1 พ่ายแพ้ในการปกป้องหมู่บ้าน!"
+    ],
+    "construction": [
+      "[วันที่ 1 11:31]🏗️ ชาวบ้านเริ่มก่อสร้างที่พักอาศัยหลังใหม่!",
+      "[วันที่ 1 11:49]✨ ก่อสร้าง ⛺ กระโจมชนเผ่าดึกดำบรรพ์ (Tribal Hide Lodge) เสร็จสมบูรณ์!"
+    ],
+    "eraTransitions": [],
+    "potentialForageStalls": [],
+    "events": [
+      {
+        "simulationTime": 89.5,
+        "category": "🍎 คำร้องทุกข์จากชาวบ้าน (Villager Petition)",
+        "choice": "dl-choice-0"
+      }
+    ],
+    "actions": [
+      {
+        "label": "recruit worker",
+        "simulationTime": 0.1,
+        "before": {
+          "food": 35,
+          "wood": 20,
+          "ore": 15,
+          "faith": 60.045
+        },
+        "after": {
+          "food": 35,
+          "wood": 20,
+          "ore": 15,
+          "faith": 40.158
+        }
+      },
+      {
+        "label": "recruit worker",
+        "simulationTime": 0.85,
+        "before": {
+          "food": 35,
+          "wood": 20,
+          "ore": 15,
+          "faith": 40.383
+        },
+        "after": {
+          "food": 35,
+          "wood": 20,
+          "ore": 15,
+          "faith": 20.608
+        }
+      },
+      {
+        "label": "rain near worker",
+        "simulationTime": 20,
+        "before": {
+          "food": 35,
+          "wood": 25,
+          "ore": 15,
+          "faith": 30.2
+        },
+        "after": {
+          "food": 53,
+          "wood": 25,
+          "ore": 15,
+          "faith": 15.2
+        }
+      },
+      {
+        "label": "rain near worker",
+        "simulationTime": 65.15,
+        "before": {
+          "food": 53,
+          "wood": 15,
+          "ore": 17,
+          "faith": 45.118
+        },
+        "after": {
+          "food": 71,
+          "wood": 15,
+          "ore": 17,
+          "faith": 30.343
+        }
+      },
+      {
+        "label": "natural event: 🍎 คำร้องทุกข์จากชาวบ้าน (Villager Petition) -> dl-choice-0",
+        "simulationTime": 89.5,
+        "before": {
+          "food": 65,
+          "wood": 25,
+          "ore": 25,
+          "faith": 45.875
+        },
+        "after": {
+          "food": 100,
+          "wood": 25,
+          "ore": 25,
+          "faith": 30.875
+        }
+      },
+      {
+        "label": "rain near worker",
+        "simulationTime": 120.75,
+        "before": {
+          "food": 100,
+          "wood": 25,
+          "ore": 33,
+          "faith": 69.118
+        },
+        "after": {
+          "food": 118,
+          "wood": 25,
+          "ore": 33,
+          "faith": 54.905
+        }
+      }
+    ],
+    "pageErrors": [],
+    "inputErrors": []
+  },
+  {
+    "id": "after-npc-fix/defense-1",
+    "phase": "after-npc-fix",
+    "strategy": "defense",
+    "repeat": 1,
+    "gameSeconds": 240.45000000000002,
+    "wallSeconds": 602.122,
+    "stopReason": "target game time reached",
+    "initial": {
+      "gameSeconds": 0.1,
+      "day": 1,
+      "time": 8.211,
+      "era": 1,
+      "progress": 0.035,
+      "population": 7,
+      "roles": {
+        "villager": 4,
+        "child": 1,
+        "soldier": 2
+      },
+      "resources": {
+        "food": 35,
+        "wood": 20,
+        "ore": 15,
+        "faith": 60.045
+      },
+      "structures": {
+        "temple": 1,
+        "house": 3,
+        "tower": 1
+      },
+      "monsters": 0
+    },
+    "firstNight": {
+      "gameSeconds": 107.55,
+      "day": 1,
+      "time": 20.031,
+      "era": 1,
+      "progress": 37.642,
+      "population": 7,
+      "roles": {
+        "villager": 2,
+        "child": 1,
+        "soldier": 4
+      },
+      "resources": {
+        "food": 27,
+        "wood": 5,
+        "ore": 9,
+        "faith": 84.397
+      },
+      "structures": {
+        "temple": 1,
+        "house": 4,
+        "tower": 2
+      },
+      "monsters": 7
+    },
+    "firstDawn": {
+      "gameSeconds": 198.9,
+      "day": 2,
+      "time": 6.079,
+      "era": 1,
+      "progress": 69.615,
+      "population": 2,
+      "roles": {
+        "villager": 1,
+        "child": 1
+      },
+      "resources": {
+        "food": 25,
+        "wood": 5,
+        "ore": 9,
+        "faith": 153.83
+      },
+      "structures": {
+        "temple": 1,
+        "house": 3
+      },
+      "monsters": 0
+    },
+    "final": {
+      "gameSeconds": 240.55,
+      "day": 2,
+      "time": 10.661,
+      "era": 1,
+      "progress": 84.192,
+      "population": 2,
+      "roles": {
+        "villager": 1,
+        "child": 1
+      },
+      "resources": {
+        "food": 23,
+        "wood": 5,
+        "ore": 17,
+        "faith": 174.972
+      },
+      "structures": {
+        "temple": 1,
+        "house": 3
+      },
+      "monsters": 0
+    },
+    "minPopulationInEra1": 2,
+    "peakMonstersInEra1": 7,
+    "maxHiddenCiviliansAtNight": 3,
+    "firstWaveBosses": 2,
+    "starvationDeaths": [],
+    "combatDeaths": [
+      "[วันที่ 1 20:50]⚠️ ⚔️ อัศวิน รินรดา #6 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 1 21:07]⚠️ ⚔️ อัศวิน อัคคี #9 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 1 21:11]⚠️ ⚔️ อัศวิน กวี #7 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 1 21:22]⚠️ ⚔️ อัศวิน นารา #8 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+      "[วันที่ 2 02:15]⚠️ 🧑‍🔧 ช่างเมือง ลลนา #4 พ่ายแพ้ในการปกป้องหมู่บ้าน!"
+    ],
+    "construction": [
+      "[วันที่ 1 14:18]🏗️ ชาวบ้านเริ่มก่อสร้างที่พักอาศัยหลังใหม่!",
+      "[วันที่ 1 15:05]✨ ก่อสร้าง ⛺ กระโจมชนเผ่าดึกดำบรรพ์ (Tribal Hide Lodge) เสร็จสมบูรณ์!"
+    ],
+    "eraTransitions": [],
+    "potentialForageStalls": [],
+    "events": [
+      {
+        "simulationTime": 89.7,
+        "category": "🌙 ยุทธศาสตร์ป้องกันอาณาจักร (Military Command)",
+        "choice": "dl-choice-2"
+      }
+    ],
+    "actions": [
+      {
+        "label": "train soldier",
+        "simulationTime": 0.1,
+        "before": {
+          "food": 35,
+          "wood": 20,
+          "ore": 15,
+          "faith": 60.045
+        },
+        "after": {
+          "food": 35,
+          "wood": 20,
+          "ore": 15,
+          "faith": 35.27
+        }
+      },
+      {
+        "label": "train soldier",
+        "simulationTime": 0.85,
+        "before": {
+          "food": 35,
+          "wood": 20,
+          "ore": 15,
+          "faith": 35.383
+        },
+        "after": {
+          "food": 35,
+          "wood": 20,
+          "ore": 15,
+          "faith": 10.495
+        }
+      },
+      {
+        "label": "attempt extra tower",
+        "simulationTime": 39.8,
+        "before": {
+          "food": 34,
+          "wood": 25,
+          "ore": 19,
+          "faith": 30.31
+        },
+        "after": {
+          "food": 34,
+          "wood": 25,
+          "ore": 19,
+          "faith": 30.535
+        }
+      },
+      {
+        "label": "attempt extra tower",
+        "simulationTime": 40.8,
+        "before": {
+          "food": 34,
+          "wood": 25,
+          "ore": 19,
+          "faith": 30.76
+        },
+        "after": {
+          "food": 34,
+          "wood": 25,
+          "ore": 19,
+          "faith": 30.873
+        }
+      },
+      {
+        "label": "attempt extra tower",
+        "simulationTime": 41.3,
+        "before": {
+          "food": 34,
+          "wood": 25,
+          "ore": 19,
+          "faith": 30.985
+        },
+        "after": {
+          "food": 33,
+          "wood": 25,
+          "ore": 19,
+          "faith": 6.098
+        }
+      },
+      {
+        "label": "natural event: 🌙 ยุทธศาสตร์ป้องกันอาณาจักร (Military Command) -> dl-choice-2",
+        "simulationTime": 89.7,
+        "before": {
+          "food": 31,
+          "wood": 5,
+          "ore": 9,
+          "faith": 31.365
+        },
+        "after": {
+          "food": 31,
+          "wood": 5,
+          "ore": 9,
+          "faith": 76.365
+        }
+      },
+      {
+        "label": "lightning on enemy cluster",
+        "simulationTime": 108.3,
+        "before": {
+          "food": 27,
+          "wood": 5,
+          "ore": 9,
+          "faith": 84.735
+        },
+        "after": {
+          "food": 27,
+          "wood": 5,
+          "ore": 9,
+          "faith": 64.847
+        }
+      },
+      {
+        "label": "lightning on enemy cluster",
+        "simulationTime": 120.25,
+        "before": {
+          "food": 27,
+          "wood": 5,
+          "ore": 9,
+          "faith": 104.047
+        },
+        "after": {
+          "food": 27,
+          "wood": 5,
+          "ore": 9,
+          "faith": 91.497
+        }
+      },
+      {
+        "label": "lightning on enemy cluster",
+        "simulationTime": 133.1,
+        "before": {
+          "food": 27,
+          "wood": 5,
+          "ore": 9,
+          "faith": 119.11
+        },
+        "after": {
+          "food": 27,
+          "wood": 5,
+          "ore": 9,
+          "faith": 107.122
+        }
+      },
+      {
+        "label": "lightning on enemy cluster",
+        "simulationTime": 149,
+        "before": {
+          "food": 25,
+          "wood": 5,
+          "ore": 9,
+          "faith": 129.51
+        },
+        "after": {
+          "food": 25,
+          "wood": 5,
+          "ore": 9,
+          "faith": 109.96
+        }
+      },
+      {
+        "label": "lightning on enemy cluster",
+        "simulationTime": 160.95,
+        "before": {
+          "food": 25,
+          "wood": 5,
+          "ore": 9,
+          "faith": 131.02
+        },
+        "after": {
+          "food": 25,
+          "wood": 5,
+          "ore": 9,
+          "faith": 118.47
+        }
+      },
+      {
+        "label": "lightning on enemy cluster",
+        "simulationTime": 173.1,
+        "before": {
+          "food": 25,
+          "wood": 5,
+          "ore": 9,
+          "faith": 132.307
+        },
+        "after": {
+          "food": 25,
+          "wood": 5,
+          "ore": 9,
+          "faith": 119.307
+        }
+      },
+      {
+        "label": "lightning on enemy cluster",
+        "simulationTime": 185.5,
+        "before": {
+          "food": 27,
+          "wood": 5,
+          "ore": 9,
+          "faith": 133.235
+        },
+        "after": {
+          "food": 27,
+          "wood": 5,
+          "ore": 9,
+          "faith": 120.46
+        }
+      }
+    ],
+    "pageErrors": [],
+    "inputErrors": []
+  }
+]

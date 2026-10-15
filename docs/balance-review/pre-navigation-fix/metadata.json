@@ -1,0 +1,27 @@
+{
+  "startedAt": "2026-10-15T17:18:34.031Z",
+  "commit": "13ab0ac32d89ac7d46dc28abde5b9d46374a3b69",
+  "viewport": {
+    "width": 400,
+    "height": 300
+  },
+  "screenshotViewport": {
+    "width": 800,
+    "height": 600
+  },
+  "renderer": "Chromium ANGLE/SwiftShader",
+  "strategies": [
+    "observe",
+    "economy",
+    "defense"
+  ],
+  "repeats": 2,
+  "targetGameSeconds": 300,
+  "method": "Fresh browser context per run; natural random world; 5x UI speed; actual WebGL; no API writes, forced events, era/day jumps, clock/RNG overrides or render stubs.",
+  "policy": {
+    "observe": "No powers/recruitment; close naturally occurring events.",
+    "economy": "Recruit two workers before night; rain near workers at most once per 45 game seconds while faith >= 30 and food < 65 or mean hunger > 45; choose affordable economic options in natural events.",
+    "defense": "Train two soldiers; attempt one extra tower on visibly accessible free ground before night; use lightning on a visible enemy cluster at most once per 12 game seconds while faith >= 25; choose affordable defensive options in natural events.",
+    "common": "Stop at 300 game seconds; record automatic era transition if reached; do not force progression. Input may pause via the visible pause button for aiming/screenshots. Policies are simple scripted play styles, not expert human players."
+  }
+}

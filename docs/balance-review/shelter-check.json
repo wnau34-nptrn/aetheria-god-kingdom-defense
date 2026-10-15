@@ -1,0 +1,83 @@
+{
+  "baseline": "0dec70f",
+  "sourceSha256": {
+    "before": "2c42a97dc9a58da50dce67e573ec58d5596ec8109ce92b4e2afed1d49932f72b",
+    "after": "80afb0bf28048fe70ad0dbea5c6ce994b5eb6ac0f128a12d383f5bcb5778ece8"
+  },
+  "method": "Controlled jsdom logic/geometry; stubbed pixels/audio; not a natural browser playthrough.",
+  "gameSeconds": 15,
+  "results": [
+    {
+      "variant": "before",
+      "speed": 1,
+      "visible": true,
+      "state": "SHELTER",
+      "x": -3.5607617710602186,
+      "z": 3.256609416848175,
+      "houses": [
+        {
+          "x": -6.5,
+          "z": 5.2
+        },
+        {
+          "x": 7.8,
+          "z": 5.5
+        }
+      ]
+    },
+    {
+      "variant": "before",
+      "speed": 5,
+      "visible": true,
+      "state": "SHELTER",
+      "x": -3.5607617710602186,
+      "z": 3.256609416848175,
+      "houses": [
+        {
+          "x": -6.5,
+          "z": 5.2
+        },
+        {
+          "x": 7.8,
+          "z": 5.5
+        }
+      ]
+    },
+    {
+      "variant": "after",
+      "speed": 1,
+      "visible": false,
+      "state": "SHELTER",
+      "x": 7.8,
+      "z": 5.5,
+      "houses": [
+        {
+          "x": -6.5,
+          "z": 5.2
+        },
+        {
+          "x": 7.8,
+          "z": 5.5
+        }
+      ]
+    },
+    {
+      "variant": "after",
+      "speed": 5,
+      "visible": false,
+      "state": "SHELTER",
+      "x": 7.8,
+      "z": 5.5,
+      "houses": [
+        {
+          "x": -6.5,
+          "z": 5.2
+        },
+        {
+          "x": 7.8,
+          "z": 5.5
+        }
+      ]
+    }
+  ]
+}

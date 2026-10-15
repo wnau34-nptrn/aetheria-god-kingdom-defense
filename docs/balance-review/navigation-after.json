@@ -1,0 +1,142 @@
+{
+  "sourceSha256": "4b4056452f57ba0f07b756fc5f858e4564d4c3fd63d88e21e7723f5d5eccbcbc",
+  "method": "Controlled jsdom logic integration, seed 1234; geometry/game logic run; pixels/audio stubbed. Not a natural browser playthrough.",
+  "cases": [
+    {
+      "scenario": "initial-worker",
+      "speed": 1,
+      "seconds": 88,
+      "elapsedGameSeconds": 87.99999999999714,
+      "start": {
+        "x": -4.388219952445436,
+        "z": 6.735557395310443e-16
+      },
+      "alive": true,
+      "hp": 90,
+      "hunger": 64.37999999999946,
+      "x": 31.64501385407727,
+      "z": -22.129579636894345,
+      "food": 40,
+      "ore": 5
+    },
+    {
+      "scenario": "bridge-meal",
+      "speed": 1,
+      "seconds": 10,
+      "elapsedGameSeconds": 10.000000000000007,
+      "start": {
+        "x": 5.45,
+        "z": 13
+      },
+      "alive": true,
+      "hp": 160,
+      "hunger": 11.744999999999973,
+      "x": -10.777077661761906,
+      "z": 11.989677291490056,
+      "food": 9,
+      "ore": 15
+    },
+    {
+      "scenario": "south-haul",
+      "speed": 1,
+      "seconds": 30,
+      "elapsedGameSeconds": 30.00000000000029,
+      "start": {
+        "x": -28,
+        "z": 20
+      },
+      "alive": true,
+      "hp": 90,
+      "hunger": 43.49999999999999,
+      "x": 81.08973870792018,
+      "z": 10.951507169307943,
+      "food": 35,
+      "ore": 5
+    },
+    {
+      "scenario": "north-haul",
+      "speed": 1,
+      "seconds": 30,
+      "elapsedGameSeconds": 30.00000000000029,
+      "start": {
+        "x": -28,
+        "z": -25
+      },
+      "alive": true,
+      "hp": 90,
+      "hunger": 43.49999999999999,
+      "x": 83.0836899354247,
+      "z": 11.219716924680455,
+      "food": 35,
+      "ore": 5
+    },
+    {
+      "scenario": "initial-worker",
+      "speed": 5,
+      "seconds": 88,
+      "elapsedGameSeconds": 87.99999999999714,
+      "start": {
+        "x": -4.388219952445436,
+        "z": 6.735557395310443e-16
+      },
+      "alive": true,
+      "hp": 90,
+      "hunger": 64.37999999999946,
+      "x": 37.56250662543952,
+      "z": -26.276264646333978,
+      "food": 40,
+      "ore": 5
+    },
+    {
+      "scenario": "bridge-meal",
+      "speed": 5,
+      "seconds": 10,
+      "elapsedGameSeconds": 10.000000000000007,
+      "start": {
+        "x": 5.45,
+        "z": 13
+      },
+      "alive": true,
+      "hp": 160,
+      "hunger": 11.744999999999973,
+      "x": -10.777077661761906,
+      "z": 11.989677291490056,
+      "food": 9,
+      "ore": 15
+    },
+    {
+      "scenario": "south-haul",
+      "speed": 5,
+      "seconds": 30,
+      "elapsedGameSeconds": 30.00000000000029,
+      "start": {
+        "x": -28,
+        "z": 20
+      },
+      "alive": true,
+      "hp": 90,
+      "hunger": 43.49999999999999,
+      "x": 81.08973870792018,
+      "z": 10.951507169307943,
+      "food": 35,
+      "ore": 5
+    },
+    {
+      "scenario": "north-haul",
+      "speed": 5,
+      "seconds": 30,
+      "elapsedGameSeconds": 30.00000000000029,
+      "start": {
+        "x": -28,
+        "z": -25
+      },
+      "alive": true,
+      "hp": 90,
+      "hunger": 43.49999999999999,
+      "x": 83.0836899354247,
+      "z": 11.219716924680455,
+      "food": 35,
+      "ore": 5
+    }
+  ]
+}
