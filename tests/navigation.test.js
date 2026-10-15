@@ -16,6 +16,32 @@ test('the initial river-bank worker can move, eat and survive the first daytime'
 });
 
 for (const speed of [1, 5]) {
+  test(`a civilian chooses an accessible house instead of the blocked river house at ${speed}x`, () => {
+    const h = createGameHarness(), a = h.api;
+    try {
+      const worker = a.agents.find(x => x.role === 'villager'), houses = a.buildings.filter(x => x.type === 'house').slice(0, 2);
+      isolate(h, { agents: [worker], buildings: houses, time: 21 });
+      Object.assign(worker, { id: 0, x: 0, z: 0 });
+      h.play(15, speed);
+      assert.equal(worker.state, 'SHELTER'); assert.equal(worker.mesh.visible, false);
+      assert.ok(Math.hypot(worker.x - houses[1].x, worker.z - houses[1].z) < 2.2);
+    } finally { h.close(); }
+  });
+
+  test(`a civilian returns to the temple when its remaining house is inaccessible at ${speed}x`, () => {
+    const h = createGameHarness(), a = h.api;
+    try {
+      const worker = a.agents.find(x => x.role === 'villager');
+      const temple = a.buildings.find(x => x.type === 'temple'), blocked = a.buildings.find(x => x.type === 'house');
+      isolate(h, { agents: [worker], buildings: [temple, blocked], time: 21 });
+      Object.assign(worker, { id: 0, x: 8, z: 0 }); const faith = a.state.faith;
+      h.play(15, speed);
+      assert.ok(Math.hypot(worker.x, worker.z) < 2.2);
+      assert.equal(worker.state, 'SHELTER'); assert.equal(worker.mesh.visible, true);
+      assert.ok(a.state.faith > faith + 15 * 0.45 + 2, 'sheltering at the temple must contribute faith');
+    } finally { h.close(); }
+  });
+
   test(`a hungry soldier can leave the east bridge landing and reach food at ${speed}x`, () => {
     const h = createGameHarness(), a = h.api;
     try {

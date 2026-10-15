@@ -310,6 +310,10 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     if (z < -62 || z > 100) return false;
     return Math.abs(x - getRiverCenterX(z)) < getRiverWidth(z) * 1.25;
   }
+  function isOnBridgeDeck(x, z) {
+    const levels = currentCivEra >= 3 ? [14, -16] : [14];
+    return levels.some(bz => Math.abs(z - bz) <= 2.2 && Math.abs(x - getRiverCenterX(bz)) <= getRiverWidth(bz) * 1.45 + 4.4);
+  }
   function getTerrainSlopeAt(x, z) {
     const eps = 1.2;
     return Math.hypot((getTerrainHeightAt(x + eps, z) - getTerrainHeightAt(x - eps, z)) / (2 * eps), (getTerrainHeightAt(x, z + eps) - getTerrainHeightAt(x, z - eps)) / (2 * eps));
@@ -1868,9 +1872,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   function createAgent(x, z, role = 'villager') {
     // Fixed city spawn coordinates can overlap the river's walking exclusion band.
     // Place people on the nearest bank, while preserving legitimate bridge spawns.
-    const bridgeLevels = currentCivEra >= 3 ? [14, -16] : [14];
-    const onBridge = bridgeLevels.some(bz => Math.abs(z - bz) <= 2.2 && Math.abs(x - getRiverCenterX(bz)) <= getRiverWidth(bz) * 1.45 + 4.4);
-    if (isPointInRiver(x, z) && !onBridge) {
+    if (isPointInRiver(x, z) && !isOnBridgeDeck(x, z)) {
       const center = getRiverCenterX(z), side = x >= center ? 1 : -1;
       x = center + side * (getRiverWidth(z) * 1.25 + 0.6);
     }
@@ -2690,7 +2692,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
         }
         if (ag.role === 'fisherman') {
           ag.state = 'FISH'; ag.stateLabel = '🎣 ตกปลาริมสะพานท่าเทียบเรือ'; ag.stateGem.material.color.setHex(0x38bdf8); cForage++;
-          const fx = getRiverCenterX(2.0) + getRiverWidth(2.0) + 0.6, fz = 2.0 + (ag.id % 2) * 1.2;
+          const fz = 2.0 + (ag.id % 2) * 1.2, fx = getRiverCenterX(fz) + getRiverWidth(fz) * 1.25 + 0.6;
           if (moveTowards(ag, fx, fz, 4.0, dt) < 1.2) {
             ag.mesh.rotation.y = -Math.PI / 2;
             ag.rightArm.rotation.x = -0.6 + Math.sin(elapsedTime * 3 + ag.id) * 0.15;
@@ -2712,7 +2714,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
         }
       } else if (state.isNight) {
         ag.state = 'SHELTER'; ag.stateLabel = '🏮 จุดไฟเดินกลับเข้าบ้านพัก'; ag.stateGem.material.color.setHex(0xfde047); cShelter++;
-        const myHouses = buildings.filter(b => b.type === 'house' && b.progress >= 1.0), targetHouse = myHouses.length > 0 ? myHouses[ag.id % myHouses.length] : templeObj;
+        const myHouses = buildings.filter(b => b.type === 'house' && b.progress >= 1.0 && (!isPointInRiver(b.x, b.z) || isOnBridgeDeck(b.x, b.z))), targetHouse = myHouses.length > 0 ? myHouses[ag.id % myHouses.length] : templeObj;
         if (moveTowards(ag, targetHouse ? targetHouse.x : 0, targetHouse ? targetHouse.z : 0, 4.8, dt) < 2.2) {
           if (targetHouse && targetHouse.type === 'house') ag.mesh.visible = false;
           state.faith = Math.min(state.maxFaith, state.faith + dt * 0.45);

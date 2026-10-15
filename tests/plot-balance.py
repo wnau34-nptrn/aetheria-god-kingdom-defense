@@ -15,7 +15,7 @@ fig, axes = plt.subplots(2, 1, figsize=(10, 6.5), sharex=True, constrained_layou
 for run in runs:
     samples = run['samples']
     x = [s['gameSeconds'] for s in samples]
-    style = '-' if run['phase'] == 'after-food-fix' else '--'
+    style = '-' if run['phase'] == 'after-npc-fix' else '--'
     for ax, field in zip(axes, ['population', 'food']):
         ax.plot(x, [s[field] for s in samples], style, color=colors[run['strategy']], label=run['id'], linewidth=1.5)
     for previous, current in zip(samples, samples[1:]):
@@ -30,6 +30,6 @@ axes[0].set_ylabel('Living population')
 axes[1].set_ylabel('Food in store')
 axes[1].set_xlabel('Elapsed game seconds (UI speed 5x)')
 axes[0].legend(loc='upper right', ncol=4, fontsize=8)
-fig.suptitle(f'AETHERIA: {len(runs)} exploratory UI-driven runs\nBefore/after food selection; unpaired random worlds/events; not a controlled ranking', fontsize=11)
+fig.suptitle(f'AETHERIA: {len(runs)} exploratory UI-driven runs\nBefore/after NPC food and access fixes; unpaired worlds/events; not a controlled ranking', fontsize=11)
 fig.savefig(root / 'population-food.svg')
 fig.savefig(root / 'population-food.png', dpi=150)

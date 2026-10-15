@@ -2,7 +2,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 
 const root = process.env.BALANCE_EVIDENCE || 'docs/balance-review';
 const runs = [];
-for (const phase of ['before-food-fix', 'after-food-fix']) {
+for (const phase of ['before-food-fix', 'after-npc-fix']) {
   try {
     const phaseRuns = JSON.parse(await readFile(`${root}/${phase}/summary.json`, 'utf8'));
     runs.push(...phaseRuns.map(run => ({ ...run, phase, directory: `${phase}/${run.id}` })));
@@ -43,6 +43,7 @@ for (const run of runs) {
     initial: compact(run.initial), firstNight: compact(firstNight), firstDawn: compact(firstDawn), final: compact(run.final),
     minPopulationInEra1: Math.min(...firstEra.map(s => s.population)),
     peakMonstersInEra1: Math.max(...firstEra.map(s => s.monsters.length)),
+    maxHiddenCiviliansAtNight: Math.max(0, ...firstEra.filter(s => s.night).map(s => s.units.filter(u => u.role !== 'soldier' && u.state === 'SHELTER' && !u.visible).length)),
     firstWaveBosses: firstNight?.monsters.filter(x => x.boss).length,
     starvationDeaths: logs.filter(x => x.includes('สิ้นใจจากความอดอยาก')),
     combatDeaths: logs.filter(x => x.includes('พ่ายแพ้ในการปกป้องหมู่บ้าน')),

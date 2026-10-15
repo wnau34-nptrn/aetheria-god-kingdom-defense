@@ -1,5 +1,25 @@
 import { test, expect } from '@playwright/test';
 
+test('a fisherman produces food from the walkable river bank in real WebGL', async ({ page }) => {
+  await page.setViewportSize({ width: 400, height: 300 });
+  const errors = []; page.on('pageerror', e => errors.push(e.message));
+  await page.goto('/'); await page.waitForFunction(() => window.AETHERIA_API);
+  await page.click('[data-speed="0"]');
+  // Controlled era-2 work fixture; this is not natural progression into the era.
+  const start = await page.evaluate(() => {
+    const a = AETHERIA_API; a.evolveToEra(2);
+    const fisher = a.agents.find(x => x.role === 'fisherman');
+    for (const other of a.agents) if (other !== fisher) { other.alive = false; other.mesh.visible = false; }
+    fisher.hunger = 0; a.state.food = 0; a.state.autoBuildCooldown = 1000;
+    return a.simulationTime;
+  });
+  await page.click('[data-speed="5"]');
+  await page.waitForFunction(time => AETHERIA_API.simulationTime >= time + 13, start);
+  await page.click('[data-speed="0"]');
+  expect(await page.evaluate(() => AETHERIA_API.state.food)).toBeGreaterThanOrEqual(8);
+  expect(errors).toEqual([]);
+});
+
 test('the river-bank worker moves and a nearby meal works in real WebGL', async ({ page }) => {
   await page.setViewportSize({ width: 800, height: 600 });
   const errors = []; page.on('pageerror', e => errors.push(e.message));
