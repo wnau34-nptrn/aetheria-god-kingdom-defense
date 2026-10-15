@@ -1,0 +1,782 @@
+{
+  "wallSeconds": 1503,
+  "day": 2,
+  "time": 20.25,
+  "night": true,
+  "era": 4,
+  "progress": 100,
+  "speed": 0,
+  "resources": {
+    "food": 358,
+    "wood": 5,
+    "ore": 17,
+    "faith": 155.09
+  },
+  "population": 29,
+  "soldiers": 7,
+  "roles": {
+    "farmer": 4,
+    "merchant": 3,
+    "fisherman": 2,
+    "child": 6,
+    "villager": 7,
+    "soldier": 7
+  },
+  "activities": {
+    "FARM": 4,
+    "MARKET": 3,
+    "FISH": 2,
+    "PLAY": 6,
+    "GATHER": 7,
+    "PATROL": 7
+  },
+  "buildings": {
+    "temple": 1,
+    "house": 12,
+    "windmill": 1,
+    "market": 4,
+    "tower": 4
+  },
+  "units": [
+    {
+      "id": 51,
+      "name": "🌾 ชาวนา ธาม #51",
+      "role": "farmer",
+      "state": "FARM",
+      "hunger": 28.27,
+      "hp": 90,
+      "x": -29.26,
+      "z": 19.42,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 52,
+      "name": "🌾 ชาวนา ลลนา #52",
+      "role": "farmer",
+      "state": "FARM",
+      "hunger": 19.65,
+      "hp": 90,
+      "x": -34.1,
+      "z": 22.02,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 53,
+      "name": "🌾 ชาวนา ภาคิน #53",
+      "role": "farmer",
+      "state": "FARM",
+      "hunger": 26.5,
+      "hp": 90,
+      "x": -30.43,
+      "z": 26.75,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 54,
+      "name": "🌾 ชาวนา รินรดา #54",
+      "role": "farmer",
+      "state": "FARM",
+      "hunger": 31.91,
+      "hp": 90,
+      "x": -35.12,
+      "z": 29.26,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 55,
+      "name": "🎪 พ่อค้า กวี #55",
+      "role": "merchant",
+      "state": "MARKET",
+      "hunger": 17.92,
+      "hp": 90,
+      "x": 17.08,
+      "z": 13.68,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 56,
+      "name": "🎪 พ่อค้า นารา #56",
+      "role": "merchant",
+      "state": "MARKET",
+      "hunger": 22.81,
+      "hp": 90,
+      "x": 18.12,
+      "z": 12.5,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 57,
+      "name": "🎪 พ่อค้า อัคคี #57",
+      "role": "merchant",
+      "state": "MARKET",
+      "hunger": 25.75,
+      "hp": 90,
+      "x": 19.08,
+      "z": 14.32,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 58,
+      "name": "🎣 ชาวประมง วายุ #58",
+      "role": "fisherman",
+      "state": "FISH",
+      "hunger": 21.17,
+      "hp": 90,
+      "x": -4.38,
+      "z": 2,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 59,
+      "name": "🎣 ชาวประมง ปฐพี #59",
+      "role": "fisherman",
+      "state": "FISH",
+      "hunger": 16.36,
+      "hp": 90,
+      "x": -3.6,
+      "z": 4,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 60,
+      "name": "👧 เด็กน้อย วารี #60",
+      "role": "child",
+      "state": "PLAY",
+      "hunger": 18.01,
+      "hp": 90,
+      "x": 4.21,
+      "z": 8.07,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 61,
+      "name": "👧 เด็กน้อย เมฆา #61",
+      "role": "child",
+      "state": "PLAY",
+      "hunger": 32.92,
+      "hp": 90,
+      "x": 6.52,
+      "z": 13.55,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 62,
+      "name": "👧 เด็กน้อย ทิวา #62",
+      "role": "child",
+      "state": "PLAY",
+      "hunger": 25.3,
+      "hp": 90,
+      "x": 1.34,
+      "z": 13.03,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 63,
+      "name": "👧 เด็กน้อย ราตรี #63",
+      "role": "child",
+      "state": "PLAY",
+      "hunger": 34.61,
+      "hp": 90,
+      "x": -1.16,
+      "z": 7.92,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 64,
+      "name": "👧 เด็กน้อย แสงดาว #64",
+      "role": "child",
+      "state": "PLAY",
+      "hunger": 40.07,
+      "hp": 90,
+      "x": 0.12,
+      "z": 6.07,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 65,
+      "name": "👧 เด็กน้อย คีริน #65",
+      "role": "child",
+      "state": "PLAY",
+      "hunger": 36.08,
+      "hp": 90,
+      "x": 7.8,
+      "z": 10.53,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 66,
+      "name": "🧑‍🔧 ช่างเมือง อารยา #66",
+      "role": "villager",
+      "state": "GATHER",
+      "hunger": 20.83,
+      "hp": 90,
+      "x": 9.42,
+      "z": -2.26,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 67,
+      "name": "🧑‍🔧 ช่างเมือง ธาม #67",
+      "role": "villager",
+      "state": "GATHER",
+      "hunger": 31.18,
+      "hp": 90,
+      "x": 4.72,
+      "z": 10.07,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 68,
+      "name": "🧑‍🔧 ช่างเมือง ลลนา #68",
+      "role": "villager",
+      "state": "GATHER",
+      "hunger": 21.93,
+      "hp": 90,
+      "x": -4.5,
+      "z": 7.79,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 69,
+      "name": "🧑‍🔧 ช่างเมือง ภาคิน #69",
+      "role": "villager",
+      "state": "GATHER",
+      "hunger": 16.11,
+      "hp": 90,
+      "x": -9,
+      "z": 0,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 70,
+      "name": "🧑‍🔧 ช่างเมือง รินรดา #70",
+      "role": "villager",
+      "state": "GATHER",
+      "hunger": 36.67,
+      "hp": 90,
+      "x": -3.39,
+      "z": -5.78,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 71,
+      "name": "🧑‍🔧 ช่างเมือง กวี #71",
+      "role": "villager",
+      "state": "GATHER",
+      "hunger": 24.53,
+      "hp": 90,
+      "x": 2.72,
+      "z": -9.24,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 72,
+      "name": "🧑‍🔧 ช่างเมือง นารา #72",
+      "role": "villager",
+      "state": "GATHER",
+      "hunger": 22.69,
+      "hp": 90,
+      "x": 8.72,
+      "z": 2.28,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 73,
+      "name": "⚔️ อัศวิน อัคคี #73",
+      "role": "soldier",
+      "state": "PATROL",
+      "hunger": 25.43,
+      "hp": 160,
+      "x": 36.54,
+      "z": -24.53,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 74,
+      "name": "⚔️ อัศวิน วายุ #74",
+      "role": "soldier",
+      "state": "PATROL",
+      "hunger": 20.88,
+      "hp": 160,
+      "x": 34.68,
+      "z": -20.91,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 75,
+      "name": "⚔️ อัศวิน ปฐพี #75",
+      "role": "soldier",
+      "state": "PATROL",
+      "hunger": 32.72,
+      "hp": 160,
+      "x": 29.93,
+      "z": -22.19,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 76,
+      "name": "⚔️ อัศวิน วารี #76",
+      "role": "soldier",
+      "state": "PATROL",
+      "hunger": 28.89,
+      "hp": 160,
+      "x": 28.06,
+      "z": -25.2,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 77,
+      "name": "⚔️ อัศวิน เมฆา #77",
+      "role": "soldier",
+      "state": "PATROL",
+      "hunger": 26.41,
+      "hp": 160,
+      "x": 30.36,
+      "z": -28.16,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 78,
+      "name": "⚔️ อัศวิน ทิวา #78",
+      "role": "soldier",
+      "state": "PATROL",
+      "hunger": 28.53,
+      "hp": 160,
+      "x": 34.02,
+      "z": -28.87,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 79,
+      "name": "⚔️ อัศวิน ราตรี #79",
+      "role": "soldier",
+      "state": "PATROL",
+      "hunger": 22.2,
+      "hp": 160,
+      "x": 36.04,
+      "z": -25.57,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    }
+  ],
+  "structures": [
+    {
+      "type": "temple",
+      "name": "✨ มหาวิหารจักรวรรดิเอเธอเรียม (Celestial Aetherium Pantheon)",
+      "hp": 1200,
+      "maxHp": 1200,
+      "progress": null,
+      "x": 0,
+      "z": 0
+    },
+    {
+      "type": "house",
+      "name": "🏛️ คฤหาสน์จักรวรรดิหลังคาทอง (Imperial Aetherium Manor)",
+      "hp": 300,
+      "maxHp": 300,
+      "progress": 1,
+      "x": -6.5,
+      "z": 5.2
+    },
+    {
+      "type": "house",
+      "name": "🏛️ คฤหาสน์จักรวรรดิหลังคาทอง (Imperial Aetherium Manor)",
+      "hp": 300,
+      "maxHp": 300,
+      "progress": 1,
+      "x": 7.8,
+      "z": 5.5
+    },
+    {
+      "type": "house",
+      "name": "🏛️ คฤหาสน์จักรวรรดิหลังคาทอง (Imperial Aetherium Manor)",
+      "hp": 300,
+      "maxHp": 300,
+      "progress": 1,
+      "x": 5.2,
+      "z": -6.2
+    },
+    {
+      "type": "house",
+      "name": "🏛️ คฤหาสน์จักรวรรดิหลังคาทอง (Imperial Aetherium Manor)",
+      "hp": 300,
+      "maxHp": 300,
+      "progress": 1,
+      "x": -23,
+      "z": 6
+    },
+    {
+      "type": "house",
+      "name": "🏛️ คฤหาสน์จักรวรรดิหลังคาทอง (Imperial Aetherium Manor)",
+      "hp": 300,
+      "maxHp": 300,
+      "progress": 1,
+      "x": 12,
+      "z": -8
+    },
+    {
+      "type": "house",
+      "name": "🏛️ คฤหาสน์จักรวรรดิหลังคาทอง (Imperial Aetherium Manor)",
+      "hp": 300,
+      "maxHp": 300,
+      "progress": 1,
+      "x": 6,
+      "z": 22
+    },
+    {
+      "type": "house",
+      "name": "🏛️ คฤหาสน์จักรวรรดิหลังคาทอง (Imperial Aetherium Manor)",
+      "hp": 300,
+      "maxHp": 300,
+      "progress": 1,
+      "x": 23,
+      "z": -4
+    },
+    {
+      "type": "house",
+      "name": "🏛️ คฤหาสน์จักรวรรดิหลังคาทอง (Imperial Aetherium Manor)",
+      "hp": 300,
+      "maxHp": 300,
+      "progress": 1,
+      "x": 27,
+      "z": 6
+    },
+    {
+      "type": "house",
+      "name": "🏛️ คฤหาสน์จักรวรรดิหลังคาทอง (Imperial Aetherium Manor)",
+      "hp": 300,
+      "maxHp": 300,
+      "progress": 1,
+      "x": -29,
+      "z": -4
+    },
+    {
+      "type": "house",
+      "name": "🏛️ คฤหาสน์จักรวรรดิหลังคาทอง (Imperial Aetherium Manor)",
+      "hp": 300,
+      "maxHp": 300,
+      "progress": 1,
+      "x": 14,
+      "z": 22
+    },
+    {
+      "type": "house",
+      "name": "🏛️ คฤหาสน์จักรวรรดิหลังคาทอง (Imperial Aetherium Manor)",
+      "hp": 300,
+      "maxHp": 300,
+      "progress": 1,
+      "x": -22,
+      "z": -14
+    },
+    {
+      "type": "house",
+      "name": "🏛️ คฤหาสน์จักรวรรดิหลังคาทอง (Imperial Aetherium Manor)",
+      "hp": 300,
+      "maxHp": 300,
+      "progress": 1,
+      "x": 8,
+      "z": -21
+    },
+    {
+      "type": "windmill",
+      "name": "🌾 กังหันลมโรงสีข้าว (Grain Windmill)",
+      "hp": 300,
+      "maxHp": 300,
+      "progress": 1,
+      "x": -34,
+      "z": 8
+    },
+    {
+      "type": "market",
+      "name": "🎪 แผงลอยตลาดนัด (Market Stall)",
+      "hp": 140,
+      "maxHp": 140,
+      "progress": 1,
+      "x": 15.5,
+      "z": 11
+    },
+    {
+      "type": "market",
+      "name": "🎪 แผงลอยตลาดนัด (Market Stall)",
+      "hp": 140,
+      "maxHp": 140,
+      "progress": 1,
+      "x": 20.5,
+      "z": 11
+    },
+    {
+      "type": "market",
+      "name": "🎪 แผงลอยตลาดนัด (Market Stall)",
+      "hp": 140,
+      "maxHp": 140,
+      "progress": 1,
+      "x": 15.5,
+      "z": 17.5
+    },
+    {
+      "type": "market",
+      "name": "🎪 แผงลอยตลาดนัด (Market Stall)",
+      "hp": 140,
+      "maxHp": 140,
+      "progress": 1,
+      "x": 20.5,
+      "z": 17.5
+    },
+    {
+      "type": "tower",
+      "name": "✨ ป้อมปราการเวทมนตร์จักรวรรดิ (Imperial Arcane Bastion)",
+      "hp": 440,
+      "maxHp": 440,
+      "progress": 1,
+      "x": 28,
+      "z": -20
+    },
+    {
+      "type": "tower",
+      "name": "✨ ป้อมปราการเวทมนตร์จักรวรรดิ (Imperial Arcane Bastion)",
+      "hp": 440,
+      "maxHp": 440,
+      "progress": 1,
+      "x": 36,
+      "z": -28
+    },
+    {
+      "type": "tower",
+      "name": "✨ ป้อมปราการเวทมนตร์จักรวรรดิ (Imperial Arcane Bastion)",
+      "hp": 440,
+      "maxHp": 440,
+      "progress": 1,
+      "x": 44,
+      "z": -36
+    },
+    {
+      "type": "tower",
+      "name": "✨ ป้อมปราการเวทมนตร์จักรวรรดิ (Imperial Arcane Bastion)",
+      "hp": 440,
+      "maxHp": 440,
+      "progress": 1,
+      "x": 32,
+      "z": -34
+    }
+  ],
+  "monsters": [
+    {
+      "name": "🐾 อสูรเงาว่องไว (Shadow Stalker)",
+      "hp": 682,
+      "maxHp": 682,
+      "isBoss": false,
+      "x": 67.44,
+      "z": -55.56
+    },
+    {
+      "name": "🪨 โกเลมศิลาทมิฬ (Siege Brute)",
+      "hp": 1128,
+      "maxHp": 1128,
+      "isBoss": false,
+      "x": 65.52,
+      "z": -58.34
+    },
+    {
+      "name": "🐾 อสูรเงาว่องไว (Shadow Stalker)",
+      "hp": 682,
+      "maxHp": 682,
+      "isBoss": false,
+      "x": 66.97,
+      "z": -60.28
+    },
+    {
+      "name": "🐾 อสูรเงาว่องไว (Shadow Stalker)",
+      "hp": 682,
+      "maxHp": 682,
+      "isBoss": false,
+      "x": 68.04,
+      "z": -55.5
+    },
+    {
+      "name": "🐾 อสูรเงาว่องไว (Shadow Stalker)",
+      "hp": 682,
+      "maxHp": 682,
+      "isBoss": false,
+      "x": 65.5,
+      "z": -58.05
+    },
+    {
+      "name": "🪨 โกเลมศิลาทมิฬ (Siege Brute)",
+      "hp": 1128,
+      "maxHp": 1128,
+      "isBoss": false,
+      "x": 65.61,
+      "z": -57.26
+    },
+    {
+      "name": "🐾 อสูรเงาว่องไว (Shadow Stalker)",
+      "hp": 682,
+      "maxHp": 682,
+      "isBoss": false,
+      "x": 67.88,
+      "z": -55.5
+    },
+    {
+      "name": "🔥 จอมอสูรแม่ทัพอเวจี (Void Overlord)",
+      "hp": 2103,
+      "maxHp": 2103,
+      "isBoss": true,
+      "x": 65.6,
+      "z": -57.3
+    },
+    {
+      "name": "🐾 อสูรเงาว่องไว (Shadow Stalker)",
+      "hp": 682,
+      "maxHp": 682,
+      "isBoss": false,
+      "x": 67.47,
+      "z": -55.56
+    },
+    {
+      "name": "🪨 โกเลมศิลาทมิฬ (Siege Brute)",
+      "hp": 1128,
+      "maxHp": 1128,
+      "isBoss": false,
+      "x": 69.36,
+      "z": -60.1
+    },
+    {
+      "name": "🔥 จอมอสูรแม่ทัพอเวจี (Void Overlord)",
+      "hp": 2103,
+      "maxHp": 2103,
+      "isBoss": true,
+      "x": 68.59,
+      "z": -55.57
+    },
+    {
+      "name": "🪨 โกเลมศิลาทมิฬ (Siege Brute)",
+      "hp": 1128,
+      "maxHp": 1128,
+      "isBoss": false,
+      "x": 70.37,
+      "z": -57.2
+    },
+    {
+      "name": "🐾 อสูรเงาว่องไว (Shadow Stalker)",
+      "hp": 682,
+      "maxHp": 682,
+      "isBoss": false,
+      "x": 67.53,
+      "z": -60.45
+    },
+    {
+      "name": "🔥 จอมอสูรแม่ทัพอเวจี (Void Overlord)",
+      "hp": 2103,
+      "maxHp": 2103,
+      "isBoss": true,
+      "x": 69.41,
+      "z": -60.06
+    },
+    {
+      "name": "🪨 โกเลมศิลาทมิฬ (Siege Brute)",
+      "hp": 1128,
+      "maxHp": 1128,
+      "isBoss": false,
+      "x": 70.26,
+      "z": -59.06
+    }
+  ],
+  "nature": {
+    "trees": 86,
+    "fruitTrees": 24,
+    "ores": 22
+  },
+  "props": {
+    "wagons": 3,
+    "livestock": 9,
+    "windmills": 1,
+    "cropFields": 4
+  },
+  "selection": null,
+  "dilemma": null,
+  "log": [
+    "[วันที่ 2 20:15]💾 บันทึกความก้าวหน้าอารยธรรมและทรัพยากรลงเครื่องเรียบร้อยแล้ว!",
+    "[วันที่ 2 20:15]🌙 รัตติกาลมาเยือน! กองทัพอสูรระลอกแรก 15 ตัวบุกจากประตูมิติ!",
+    "[วันที่ 2 19:24]🏛️ วิวัฒนาการครั้งประวัติศาสตร์! ชนเผ่าพัฒนาเข้าสู่ \"✨ ยุคที่ 4: จักรวรรดิเอเธอเรียม\" เรียบร้อยแล้ว!",
+    "[วันที่ 2 17:04]🏛️ วิวัฒนาการครั้งประวัติศาสตร์! ชนเผ่าพัฒนาเข้าสู่ \"🏰 ยุคที่ 3: เมืองศักดินาและการค้า\" เรียบร้อยแล้ว!",
+    "[วันที่ 2 16:56]⚠️ 🧑‍🔧 ช่างเมือง วายุ #26 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+    "[วันที่ 2 16:46]⚠️ 🌾 ชาวนา เมฆา #13 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+    "[วันที่ 2 16:31]⚠️ 🧑‍🔧 ช่างเมือง ภาคิน #21 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+    "[วันที่ 2 16:11]⚠️ 🧑‍🔧 ช่างเมือง ธาม #19 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+    "[วันที่ 2 16:00]⚠️ 🧑‍🔧 ช่างเมือง รินรดา #22 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+    "[วันที่ 2 15:50]⚠️ 👧 เด็กน้อย ราตรี #15 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+    "[วันที่ 2 15:35]⚖️ [ผลการตัดสินใจ] 🔧 เสริมความแข็งแกร่งอาคารทุกหลัง (+50 Max HP & ซ่อมแซมเต็ม 100%)!",
+    "[วันที่ 2 15:27]⚠️ 👧 เด็กน้อย แสงดาว #16 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+    "[วันที่ 2 15:12]⚠️ 👧 เด็กน้อย คีริน #17 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+    "[วันที่ 2 15:04]⚠️ 🎣 ชาวประมง ทิวา #14 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+    "[วันที่ 2 14:39]⚠️ 🧑‍🔧 ช่างเมือง อารยา #18 พ่ายแพ้ในการปกป้องหมู่บ้าน!",
+    "[วันที่ 2 13:52]⚖️ [ผลการตัดสินใจ] 🔥 ทลายผนึก! ได้รับ +80 ศรัทธา & +30% ความก้าวหน้า แต่ปลุกอสูร 2 ตัว!",
+    "[วันที่ 2 12:48]⚖️ [ผลการตัดสินใจ] 🐎 ได้รับเกวียนเทียมม้าขบวนใหม่ 1 คัน และ +30 อาหาร!",
+    "[วันที่ 2 12:32]⚖️ [ผลการตัดสินใจ] 🏠 สร้างบ้านใหม่ 1 หลัง พร้อมต้อนรับชาวบ้านใหม่ 2 คน!",
+    "[วันที่ 2 10:56]🏛️ วิวัฒนาการครั้งประวัติศาสตร์! ชนเผ่าพัฒนาเข้าสู่ \"🌾 ยุคที่ 2: ชุมชนเกษตรกรรม\" เรียบร้อยแล้ว!",
+    "[วันที่ 2 10:36]✨ ประทานพรกำเนิด 🧑‍🔧 ช่างเมือง ปฐพี #11 เข้าร่วมหมู่บ้าน!",
+    "[วันที่ 2 10:35]✨ ประทานพรกำเนิด 🧑‍🔧 ช่างเมือง วายุ #10 เข้าร่วมหมู่บ้าน!",
+    "[วันที่ 2 10:02]💥 อุกกาบาตพุ่งชนพื้นเกาะเกิดคลื่นกระแทก! กวาดล้างมอนสเตอร์ 0 ตัว",
+    "[วันที่ 2 09:30]☄️ อุกกาบาตเพลิงกำลังพุ่งลงมาจากฟากฟ้า!",
+    "[วันที่ 2 06:57]🛡️ เกราะศักดิ์สิทธิ์แห่งมหาวิหารทำงาน! สะท้อนพลังโจมตีใส่อสูรและฟื้นฟูวิหาร",
+    "[วันที่ 2 06:22]🛡️ เกราะศักดิ์สิทธิ์แห่งมหาวิหารทำงาน! สะท้อนพลังโจมตีใส่อสูรและฟื้นฟูวิหาร"
+  ],
+  "hudHidden": true
+}

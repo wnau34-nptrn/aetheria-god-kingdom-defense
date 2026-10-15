@@ -1,0 +1,190 @@
+{
+  "wallSeconds": 103,
+  "day": 1,
+  "time": 8.5,
+  "night": false,
+  "era": 1,
+  "progress": 0.94,
+  "speed": 1,
+  "resources": {
+    "food": 35,
+    "wood": 20,
+    "ore": 15,
+    "faith": 61.21
+  },
+  "population": 7,
+  "soldiers": 2,
+  "roles": {
+    "villager": 4,
+    "child": 1,
+    "soldier": 2
+  },
+  "activities": {
+    "GATHER": 4,
+    "PLAY": 1,
+    "PATROL": 2
+  },
+  "buildings": {
+    "temple": 1,
+    "house": 3,
+    "tower": 1
+  },
+  "units": [
+    {
+      "id": 1,
+      "name": "🧑‍🔧 ช่างเมือง คีริน #1",
+      "role": "villager",
+      "state": "GATHER",
+      "hunger": 42.98,
+      "hp": 90,
+      "x": 7.08,
+      "z": -11.72,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 2,
+      "name": "🧑‍🔧 ช่างเมือง อารยา #2",
+      "role": "villager",
+      "state": "GATHER",
+      "hunger": 39.8,
+      "hp": 90,
+      "x": 11.8,
+      "z": 8.1,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 3,
+      "name": "🧑‍🔧 ช่างเมือง ธาม #3",
+      "role": "villager",
+      "state": "GATHER",
+      "hunger": 26.24,
+      "hp": 90,
+      "x": -5.5,
+      "z": 0,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 4,
+      "name": "🧑‍🔧 ช่างเมือง ลลนา #4",
+      "role": "villager",
+      "state": "GATHER",
+      "hunger": 34.03,
+      "hp": 90,
+      "x": 5.03,
+      "z": 5.3,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 5,
+      "name": "👧 เด็กน้อย ภาคิน #5",
+      "role": "child",
+      "state": "PLAY",
+      "hunger": 24.63,
+      "hp": 90,
+      "x": 5.16,
+      "z": 13.67,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 6,
+      "name": "⚔️ อัศวิน รินรดา #6",
+      "role": "soldier",
+      "state": "PATROL",
+      "hunger": 25.88,
+      "hp": 160,
+      "x": 6.46,
+      "z": -0.32,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    },
+    {
+      "id": 7,
+      "name": "⚔️ อัศวิน กวี #7",
+      "role": "soldier",
+      "state": "PATROL",
+      "hunger": 27.49,
+      "hp": 160,
+      "x": 9.8,
+      "z": 0.89,
+      "carrying": null,
+      "amount": 0,
+      "visible": true
+    }
+  ],
+  "structures": [
+    {
+      "type": "temple",
+      "name": "🔥 กองไฟศักดิ์สิทธิ์และเสาโทเท็มชนเผ่า (Sacred Tribal Bonfire & Totem)",
+      "hp": 600,
+      "maxHp": 600,
+      "progress": null,
+      "x": 0,
+      "z": 0
+    },
+    {
+      "type": "house",
+      "name": "⛺ กระโจมชนเผ่าดึกดำบรรพ์ (Tribal Hide Lodge)",
+      "hp": 180,
+      "maxHp": 180,
+      "progress": 1,
+      "x": -6.5,
+      "z": 5.2
+    },
+    {
+      "type": "house",
+      "name": "⛺ กระโจมชนเผ่าดึกดำบรรพ์ (Tribal Hide Lodge)",
+      "hp": 180,
+      "maxHp": 180,
+      "progress": 1,
+      "x": 7.8,
+      "z": 5.5
+    },
+    {
+      "type": "house",
+      "name": "⛺ กระโจมชนเผ่าดึกดำบรรพ์ (Tribal Hide Lodge)",
+      "hp": 180,
+      "maxHp": 180,
+      "progress": 1,
+      "x": 5.2,
+      "z": -6.2
+    },
+    {
+      "type": "tower",
+      "name": "🗼 หอคอยไม้สังเกตการณ์ชนเผ่า (Timber Lookout Tower)",
+      "hp": 260,
+      "maxHp": 260,
+      "progress": 1,
+      "x": 28,
+      "z": -20
+    }
+  ],
+  "monsters": [],
+  "nature": {
+    "trees": 90,
+    "fruitTrees": 24,
+    "ores": 22
+  },
+  "props": {
+    "wagons": 0,
+    "livestock": 0,
+    "windmills": 0,
+    "cropFields": 0
+  },
+  "selection": null,
+  "dilemma": null,
+  "log": [
+    "[วันที่ 1 08:11]อาณาจักรลอยฟ้า Aetheria กำเนิดขึ้น! ชาวบ้านเริ่มออกเก็บทรัพยากรและสร้างเมือง"
+  ],
+  "hudHidden": false
+}

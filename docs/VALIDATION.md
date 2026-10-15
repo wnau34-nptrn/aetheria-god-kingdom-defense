@@ -38,3 +38,7 @@ Screenshots are representative states, not a controlled before/after art compari
 ## Limits
 
 No hardware GPU FPS benchmark, SpectorJS capture, real iOS/Android or Safari test, 30-minute soak, full economy balance pass, or comprehensive GPU memory measurement was performed. Full world save is not implemented. CI is configured for future pushes; local results do not claim that GitHub Actions has already passed.
+
+## Extended gameplay review
+
+A later UI-driven session played the preserved original for 1,503 seconds, recording 606 snapshots. It followed the first day/night cycle and actual progression into era 2, then separately surveyed event branches and eras 3–4 with UI controls. See [PLAYTHROUGH.th.md](PLAYTHROUGH.th.md) for player actions, evidence and limits. This does not claim full progression to era 4 or complete coverage of all 15 event choices.

@@ -1,0 +1,12 @@
+{
+  "startedAt": "2026-10-15T16:10:15.774Z",
+  "target": "original",
+  "url": "http://127.0.0.1:5173/original/aetheria_3d_floating_island_god_simulator_kingdom_defense.html",
+  "viewport": {
+    "width": 1100,
+    "height": 760
+  },
+  "method": "Playwright UI input; read-only API snapshots; no resource/time/era/spawn mutations through API.",
+  "headless": true,
+  "renderer": "Chromium ANGLE/SwiftShader"
+}
