@@ -1865,6 +1865,14 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
 
   // Detailed Articulated Human Character (Villager & Royal Knight Soldier)
   function createAgent(x, z, role = 'villager') {
+    // Fixed city spawn coordinates can overlap the river's walking exclusion band.
+    // Place people on the nearest bank, while preserving legitimate bridge spawns.
+    const bridgeLevels = currentCivEra >= 3 ? [14, -16] : [14];
+    const onBridge = bridgeLevels.some(bz => Math.abs(z - bz) <= 2.2 && Math.abs(x - getRiverCenterX(bz)) <= getRiverWidth(bz) * 1.45 + 4.4);
+    if (isPointInRiver(x, z) && !onBridge) {
+      const center = getRiverCenterX(z), side = x >= center ? 1 : -1;
+      x = center + side * (getRiverWidth(z) * 1.25 + 0.6);
+    }
     const y = getTerrainHeightAt(x, z), g = new THREE.Group();
     g.castShadow = true; g.position.set(x, y, z);
 
@@ -2518,7 +2526,9 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     const myOffset = entity.x - getRiverCenterX(entity.z), targetOffset = tx - getRiverCenterX(tz);
     const inBridgeLane = Math.abs(entity.z - bridgeZ) <= 2.4 && Math.abs(entity.x - bridgeX) <= halfSpan + 1.8;
 
-    if ((myOffset * targetOffset < 0) || inBridgeLane) {
+    // Once on the destination bank, allow the direct route away from the bridge.
+    // Routing every nearby person back to its exit creates a permanent oscillation.
+    if ((myOffset * targetOffset < 0) || isPointInRiver(entity.x, entity.z)) {
       const destSide = targetOffset >= 0 ? 1 : -1;
       const exitX = bridgeX + destSide * (halfSpan + 1.4);
       if (inBridgeLane || Math.abs(entity.z - bridgeZ) <= 2.2) {
