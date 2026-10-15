@@ -1,0 +1,44 @@
+[
+  {
+    "scenario": "all-trades-unaffordable",
+    "before": {
+      "wood": 0,
+      "food": 0,
+      "faith": 0,
+      "pop": 7,
+      "houses": 3,
+      "wagons": 0
+    },
+    "after": {
+      "wood": 0,
+      "food": 0,
+      "faith": 0,
+      "pop": 7,
+      "houses": 3,
+      "wagons": 0
+    },
+    "modalOpen": true,
+    "toast": "⚠️ ไม่สามารถเลือกได้: ศรัทธาไม่พอ (มี 0/15)"
+  },
+  {
+    "scenario": "council-no-plot",
+    "before": {
+      "wood": 20,
+      "food": 35,
+      "faith": 60,
+      "pop": 7,
+      "houses": 172,
+      "wagons": 0
+    },
+    "after": {
+      "wood": 20,
+      "food": 35,
+      "faith": 60,
+      "pop": 7,
+      "houses": 172,
+      "wagons": 0
+    },
+    "modalOpen": true,
+    "toast": "🚫 ไม่พบพื้นที่เหมาะสมสำหรับบ้าน ยังไม่ใช้ไม้ซุง กรุณาเลือกทางอื่นหรือปิดหน้าต่าง"
+  }
+]

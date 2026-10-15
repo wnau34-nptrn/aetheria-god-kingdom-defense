@@ -42,3 +42,7 @@ No hardware GPU FPS benchmark, SpectorJS capture, real iOS/Android or Safari tes
 ## Extended gameplay review
 
 A later UI-driven session played the preserved original for 1,503 seconds, recording 606 snapshots. It followed the first day/night cycle and actual progression into era 2, then separately surveyed event branches and eras 3–4 with UI controls. See [PLAYTHROUGH.th.md](PLAYTHROUGH.th.md) for player actions, evidence and limits. This does not claim full progression to era 4 or complete coverage of all 15 event choices.
+
+## Simulation speed and event fixes
+
+See [SPEED_REVIEW.th.md](SPEED_REVIEW.th.md) for 56 passing unit/integration tests, five real-WebGL browser scenarios, controlled before/after measurements, and explicit limitations. jsdom is a development-only harness dependency pinned to 26.1.0 to retain the project Node.js 22.12 minimum.

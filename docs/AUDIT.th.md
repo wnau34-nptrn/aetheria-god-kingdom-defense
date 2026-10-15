@@ -4,6 +4,8 @@
 
 ## ข้อสรุป
 
+ผลแก้และตรวจรอบถัดมา: [ความสม่ำเสมอ 1x/5x และผลตัวเลือกเหตุการณ์](SPEED_REVIEW.th.md)
+
 ต้นแบบมีเนื้อหา procedural มากกว่าที่หน้าจอแรกบอก: เกาะและแม่น้ำปั้นได้ ต้นไม้และแร่ ชาวบ้านหลายอาชีพ อาคาร สัตว์ รถม้า บอลลูน เรือเหาะ อารยธรรม 4 ยุค พลังเทพ 6 แบบ เหตุการณ์ 5 กลุ่ม เสียงสังเคราะห์ และศึกกลางคืน เป็นฐานที่เหมาะกับการสร้าง vertical slice แต่ยังมีลักษณะ simulation sandbox มากกว่า kingdom defense ที่มีกติกาแพ้ชนะชัดเจน
 
 **ข้อแก้ความเข้าใจสำคัญ:** ไม่มีการ import `three` หรือโหลด Three.js จาก CDN ในต้นฉบับ ฟังก์ชัน `ensureThreeEngine()` สร้างคลาสเองและกำหนด `window.THREE` API อย่าง `MeshStandardMaterial` เป็น alias ของ material ภายใน, `setPixelRatio()` และ `updateProjectionMatrix()` ว่าง, `HemisphereLight` เป็น alias ของ `Object3D` จึงไม่ควรประเมินคุณสมบัติหรือเพิ่มปลั๊กอินตามชื่อ API อย่างเดียว
@@ -20,7 +22,7 @@
 | P2 | เปลี่ยนยุคผ่านปุ่มพัฒนาได้ก่อน progress เต็ม | handler เดิมเช็กเพียง `civEra < 4` | ปุ่มพัฒนาต้องครบ 100%; ปุ่มสลับยุค sandbox ยังอยู่และระบุชัด |
 | ต้องยืนยันเจตนา | วิหารคุ้มครองเมืองและเปิดให้เล่นฟื้นเมืองต่อ | `updateMonstersAndTowers()` เมื่อวิหาร HP หมดจะฟื้น 65% และสะท้อน 85 damage ทุกครั้ง; การเล่นต่อเนื่องยืนยันว่าเกมยังเดินแม้ประชากรหมด | พฤติกรรม sandbox ไม่ควรถูกจัดเป็นบั๊กหรือบังคับเปลี่ยนโหมดก่อนยืนยันเจตนา |
 | P2 | ชื่อ material และ shadow options ให้ความคาดหวังเกินระบบจริง | shadowSize hard-code 1024 แม้เกมตั้ง mapSize 2048; shader เลือกประเภทวัสดุจากสี; ไม่มี GLTFLoader หรือ PBR pipeline มาตรฐาน | แผนย้าย renderer ระยะถัดไป |
-| P2 | render loop จำกัดความลื่นไว้เอง | `setTimeout(...requestAnimationFrame...,42)` เพิ่มอย่างน้อย 42ms ทุกเฟรม; raw delta จำกัด 50ms จึงมี slow motion เมื่อเครื่องช้า | คงไว้เพื่อรักษาฐานเปรียบเทียบ; ควรเปลี่ยนพร้อม fixed-step และ profiling |
+| P2 | render loop จำกัดความลื่นไว้เอง | `setTimeout(...requestAnimationFrame...,42)` เพิ่มอย่างน้อย 42ms ทุกเฟรม; raw delta จำกัด 50ms จึงมี slow motion เมื่อเครื่องช้า | เพิ่ม fixed-step แล้วในรอบตรวจ 1x/5x; render delay เดิมยังอยู่และต้อง profiling ก่อนเปลี่ยน |
 | P2 | mesh ใหญ่เสี่ยง index overflow | `_ensureGLBuffers()` เดิมแปลงทุก index เป็น Uint16 แม้ Geometry เก็บ Uint32; เกิน 65,535 จะ wrap | แก้เลือกชนิด index ตามข้อมูลและ capability |
 | P2 | GPU resource lifecycle ไม่ครบ | FX/กระสุน/อาคารส่วนใหญ่ใช้ `remove()` โดยไม่ dispose; มี geometry ใช้ร่วมกัน จึง dispose แบบเหมารวมไม่ได้ | ต้องเพิ่ม ownership/ref-count และ stress test; ยังไม่ได้ยืนยันอัตรารั่วเชิงตัวเลข |
 | P2 | ผู้เล่นเห็นหน้าว่างได้เมื่อ WebGL ใช้ไม่ได้ | renderer เดิมยอมรับ gl=null และ render กลับเฉย ๆ; ไม่มีตรวจ compile/link shader | เพิ่มข้อความเริ่มเกมไม่ได้และ context-loss feedback |

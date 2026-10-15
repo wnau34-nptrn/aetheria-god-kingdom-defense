@@ -17,6 +17,8 @@ Milestone ต่อไปนี้เรียงตาม dependency ไม่�
 
 ## M1 — เข้าใจและปรับระบบที่มีอยู่แล้ว
 
+ผลรอบแรกอยู่ใน [SPEED_REVIEW.th.md](SPEED_REVIEW.th.md): แก้และตรวจความสม่ำเสมอในสถานการณ์ควบคุมแล้ว ส่วนสมดุลหลาย run และอุปกรณ์จริงยังต้องตรวจต่อ
+
 อ่าน SYSTEMS.th.md และ PLAYTHROUGH.th.md ก่อนเลือกงาน เกมมีศัตรูเร็ว/ถึก/แม่ทัพ การวางป้อมด้วยพร และทางเลือกเศรษฐกิจ/การทหารอยู่แล้ว งานต่อไปควรเริ่มจาก:
 
 - เทียบการต่อสู้ 1x กับ 5x ในเวอร์ชันที่แก้ time base แล้ว ทำหลาย run เพื่อแยกบั๊ก สมดุล และความแปรปรวนของการสุ่ม
@@ -31,7 +33,7 @@ Milestone ต่อไปนี้เรียงตาม dependency ไม่�
 
 ## M2 — Simulation และเซฟที่เชื่อถือได้
 
-แยก world state/IDs ออกจาก mesh, ใช้ simulation fixed-step ที่ 30Hz พร้อมขีดจำกัด catch-up, RNG แยก terrain/simulation/visual และระบบคำสั่ง input ที่ทดสอบได้
+แยก world state/IDs ออกจาก mesh, ใช้ simulation fixed-step ปัจจุบันที่ 20Hz และประเมินความถี่จากผลวัดเมื่อแยก world systems พร้อมขีดจำกัด catch-up, RNG แยก terrain/simulation/visual และระบบคำสั่ง input ที่ทดสอบได้
 
 Save V2 ต้องมี schema version, seed, terrain offsets, game mode, wave/timers, resources, structures/progress/hp, agents/roles/hunger/jobs, nature state และ RNG state ใช้ migration V1 แบบระบุว่าเป็น checkpoint สร้างโลกใหม่ มี validation ก่อน apply และ backup ก่อน overwrite
 

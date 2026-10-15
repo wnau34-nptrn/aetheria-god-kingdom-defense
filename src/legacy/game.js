@@ -1,3 +1,4 @@
+import { createFixedStepper } from '../systems/fixed-step.js';
 import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
 
 (() => {
@@ -2840,6 +2841,10 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       addLog(`🔥 ศึกหนักยามเที่ยงคืน! ประตูมิติอเวจีส่งทัพหนุนและจอมอสูรบุกซ้ำอีก ${wave2Count} ตัว!`, 'warn');
     }
 
+  }
+
+  function renderDayNightCycle() {
+    const t = state.timeOfDay;
     const sunAngle = ((t - 6.0) / 24.0) * Math.PI * 2, orbitR = 165;
     const sx = Math.cos(sunAngle) * orbitR, sy = Math.sin(sunAngle) * orbitR, sz = 38 * Math.sin(sunAngle * 0.5);
     sunOrb.position.set(sx, sy, sz); sunLight.position.set(sx * 0.55, Math.max(18, Math.abs(sy) * 0.55), sz * 0.55);
@@ -3378,12 +3383,15 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
           cost: 'ใช้ 15 🪵 ไม้ซุง',
           effect: '➔ สร้างบ้านพักใหม่ 1 หลังทันที + เสกชาวบ้านใหม่ 2 คนเข้าร่วมเมือง',
           action: () => {
-            state.wood = Math.max(0, state.wood - 15);
+            let plot = null;
             for (let i = 0; i < 25; i++) {
               const a = Math.random() * Math.PI * 2, r = 10 + Math.random() * 16;
               const hx = Math.cos(a) * r, hz = Math.sin(a) * r;
-              if (canPlaceBuildingAt(hx, hz)) { createHouse(hx, hz, 1.0, state.civEra); break; }
+              if (canPlaceBuildingAt(hx, hz)) { plot = { x: hx, z: hz }; break; }
             }
+            if (!plot) return { resolved: false, message: '🚫 ไม่พบพื้นที่เหมาะสมสำหรับบ้าน ยังไม่ใช้ไม้ซุง กรุณาเลือกทางอื่นหรือปิดหน้าต่าง' };
+            state.wood -= 15;
+            createHouse(plot.x, plot.z, 1.0, state.civEra);
             createAgent(-3, 5, 'villager');
             createAgent(4, 6, 'farmer');
             audio.playBlessChime();
@@ -3396,11 +3404,14 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
           cost: 'ใช้ 15 ⛏️ แร่ศิลา',
           effect: '➔ สร้างป้อมปราการแนวหน้า 1 ป้อมทันที + เสกอัศวินองครักษ์ 2 นาย',
           action: () => {
-            state.ore = Math.max(0, state.ore - 15);
+            let plot = null;
             for (let i = 0; i < 25; i++) {
               const bx = 26 + (Math.random() - 0.5) * 18, bz = -18 + (Math.random() - 0.5) * 18;
-              if (canPlaceBuildingAt(bx, bz)) { createWatchtower(bx, bz, 1.0, state.civEra); break; }
+              if (canPlaceBuildingAt(bx, bz)) { plot = { x: bx, z: bz }; break; }
             }
+            if (!plot) return { resolved: false, message: '🚫 ไม่พบพื้นที่เหมาะสมสำหรับป้อม ยังไม่ใช้แร่ศิลา กรุณาเลือกทางอื่นหรือปิดหน้าต่าง' };
+            state.ore -= 15;
+            createWatchtower(plot.x, plot.z, 1.0, state.civEra);
             createAgent(28, -20, 'soldier');
             createAgent(32, -24, 'soldier');
             audio.playVillageBell(true);
@@ -4189,6 +4200,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     if (!switching) preDilemmaSpeed = state.timeScale;
     dilemmaActive = true;
     state.timeScale = 0; // Pause simulation while player makes their decision!
+    document.querySelectorAll('[data-speed]').forEach(b => b.classList.toggle('active', Number(b.dataset.speed) === 0));
 
     let idx = forceIdx !== null ? forceIdx : Math.floor(Math.random() * DILEMMA_EVENTS.length);
     if (forceIdx === null && idx === lastDilemmaIdx) idx = (idx + 1) % DILEMMA_EVENTS.length;
@@ -4222,6 +4234,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       const btn = document.createElement('button');
       btn.className = 'dl-choice-btn' + (afford.ok ? '' : ' disabled');
       btn.id = `dl-choice-${cIdx}`;
+      btn.setAttribute('aria-disabled', String(!afford.ok));
       const badgeColor = afford.ok ? 'rgba(251,191,36,0.4)' : 'rgba(248,113,113,0.7)';
       const badgeText = afford.ok ? ch.cost : `❌ ${afford.reason}`;
       btn.innerHTML = `
@@ -4233,13 +4246,18 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       `;
       btn.addEventListener('click', () => {
         audio.init();
-        const anyAffordable = ev.choices.some(c => checkChoiceAffordability(c.cost).ok);
         const nowAfford = checkChoiceAffordability(ch.cost);
-        if (!nowAfford.ok && anyAffordable) {
+        if (!nowAfford.ok) {
           showDilemmaToast(`⚠️ ไม่สามารถเลือกได้: ${nowAfford.reason}`);
           return;
         }
-        const resultMsg = ch.action();
+        const result = ch.action();
+        if (typeof result === 'object' && result.resolved === false) {
+          showDilemmaToast(result.message);
+          addLog(result.message, 'warn');
+          return;
+        }
+        const resultMsg = typeof result === 'string' ? result : result.message;
         closeInteractiveDilemma(resultMsg);
         addLog(`⚖️ [ผลการตัดสินใจ] ${resultMsg}`, 'bless');
       });
@@ -4429,18 +4447,11 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   document.getElementById('btn-close-insp').addEventListener('click', () => { state.selectedEntity = null; camCtrl.followEntity = null; document.getElementById('inspector-card').classList.remove('visible'); });
 
   const clock = new THREE.Clock();
+  const simulationClock = createFixedStepper();
   let elapsedTime = 0;
 
-  function animate() {
-    const rawDt = Math.min(clock.getDelta(), 0.05);
-    const effectiveScale = dilemmaActive ? 0 : state.timeScale;
-    const dt = rawDt * effectiveScale;
-    elapsedTime += rawDt;
-
-    camCtrl.update(rawDt);
+  function updateSimulation(dt, simulationTime) {
     updateDayNightCycle(dt);
-    audio.modulateAmbience(elapsedTime, camera.position.y);
-
     state.faith = Math.min(state.maxFaith, state.faith + dt * 0.45);
     if (state.civEra < 4 && dt > 0) {
       const eraSpeedDiv = state.civEra === 1 ? 1.0 : (state.civEra === 2 ? 1.45 : 1.95);
@@ -4459,39 +4470,11 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
         }
       }
     }
-    if (godFxPointLight.intensity > 0) godFxPointLight.intensity = Math.max(0, godFxPointLight.intensity - rawDt * 4.5);
-
     for (const t of trees) {
       if (t.growth < 1.0) {
         t.growth = Math.min(1.0, t.growth + dt * 0.012); t.mesh.scale.setScalar(t.growth);
         if (t.species === 'fruit' && t.growth >= 0.78 && !t.hasFruit) { t.hasFruit = true; t.fruitMeshes.forEach(fm => { fm.visible = true; }); }
       }
-    }
-    if (templeObj && templeObj.flameMesh) { templeObj.flameMesh.rotation.y += rawDt * 3.2; templeObj.flameMesh.scale.setScalar(0.9 + Math.sin(elapsedTime * 8) * 0.15); }
-    if (portalRingMesh) portalRingMesh.rotation.z += rawDt * (state.isNight ? 3.5 : 0.8);
-
-    // Animate Rotating Windmills, Bobbing Rowboats, Horse-Drawn Wagons & Grazing Livestock
-    for (const wm of windmills) if (wm.rotor) wm.rotor.rotation.z -= rawDt * 1.35;
-    for (const b of boats) b.mesh.position.y = b.baseY + Math.sin(elapsedTime * 2.4) * 0.12;
-    for (const sa of skyAirships) {
-      const spd = sa.orbitSpeed || 0.14;
-      const cx = sa.centerX !== undefined ? sa.centerX : -8;
-      const cz = sa.centerZ !== undefined ? sa.centerZ : 14;
-      const rx = sa.radX || 18, rz = sa.radZ || 12;
-      sa.orbitAngle += rawDt * spd;
-      sa.x = cx + Math.cos(sa.orbitAngle) * rx;
-      sa.z = cz + Math.sin(sa.orbitAngle) * rz;
-      sa.mesh.position.set(sa.x, sa.baseY + Math.sin(elapsedTime * 1.8 + sa.orbitAngle) * 0.85, sa.z);
-      const dirSign = spd >= 0 ? 1 : -1;
-      sa.mesh.rotation.y = Math.atan2(-Math.sin(sa.orbitAngle) * rx * dirSign, Math.cos(sa.orbitAngle) * rz * dirSign);
-      if (sa.propeller) sa.propeller.rotation.z += rawDt * 18.0;
-      if (sa.burnerFlame) sa.burnerFlame.scale.setScalar(0.88 + Math.sin(elapsedTime * 14.0 + sa.orbitAngle) * 0.18);
-    }
-    if (ancientRelicObj) {
-      ancientRelicObj.crystal.position.y = 3.2 + Math.sin(elapsedTime * 2.5) * 0.32;
-      ancientRelicObj.crystal.rotation.y += rawDt * 0.9;
-      ancientRelicObj.ring.rotation.z -= rawDt * 1.6;
-      ancientRelicObj.gem.rotation.y -= rawDt * 2.4;
     }
     if (dt > 0) {
       for (const wg of wagons) {
@@ -4552,6 +4535,69 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       }
     }
 
+    for (let i = projectiles.length - 1; i >= 0; i--) {
+      const p = projectiles[i];
+      if (p.type === 'meteor') {
+        const dx = p.tx - p.x, dy = p.ty - p.y, dz = p.tz - p.z, dist = Math.hypot(dx, dy, dz), step = p.speed * dt;
+        p.mesh.rotation.x += dt * 6; p.mesh.rotation.y += dt * 5;
+        if (dist <= step + 1.2) { scene.remove(p.mesh); projectiles.splice(i, 1); detonateMeteor(p.tx, p.ty, p.tz); }
+        else { p.x += (dx / dist) * step; p.y += (dy / dist) * step; p.z += (dz / dist) * step; p.mesh.position.set(p.x, p.y, p.z); }
+      } else if (p.type === 'arcane_bolt') {
+        if (!p.target || !p.target.alive) { scene.remove(p.mesh); projectiles.splice(i, 1); continue; }
+        const ty = getTerrainHeightAt(p.target.x, p.target.z) + 1.0, dx = p.target.x - p.x, dy = ty - p.y, dz = p.target.z - p.z, dist = Math.hypot(dx, dy, dz), step = p.speed * dt;
+        if (dist <= step + 0.6) {
+          p.target.hp -= 28;
+          if (p.target.hp <= 0) { p.target.alive = false; worldObjectsGroup.remove(p.target.mesh); state.faith = Math.min(state.maxFaith, state.faith + 5); }
+          scene.remove(p.mesh); projectiles.splice(i, 1);
+        } else { p.x += (dx / dist) * step; p.y += (dy / dist) * step; p.z += (dz / dist) * step; p.mesh.position.set(p.x, p.y, p.z); }
+      }
+    }
+
+    updateAutonomousAgents(dt, simulationTime);
+    updateMonstersAndTowers(dt, simulationTime);
+  }
+
+  function animate() {
+    const rawDt = Math.min(clock.getDelta(), 0.05);
+    const effectiveScale = dilemmaActive ? 0 : state.timeScale;
+    elapsedTime += rawDt;
+
+    camCtrl.update(rawDt);
+    simulationClock.advance(rawDt, effectiveScale, (dt, simulationTime) => {
+      updateSimulation(dt, simulationTime);
+      return !dilemmaActive && state.timeScale > 0;
+    });
+    renderDayNightCycle();
+    audio.modulateAmbience(elapsedTime, camera.position.y);
+
+    if (godFxPointLight.intensity > 0) godFxPointLight.intensity = Math.max(0, godFxPointLight.intensity - rawDt * 4.5);
+
+    if (templeObj && templeObj.flameMesh) { templeObj.flameMesh.rotation.y += rawDt * 3.2; templeObj.flameMesh.scale.setScalar(0.9 + Math.sin(elapsedTime * 8) * 0.15); }
+    if (portalRingMesh) portalRingMesh.rotation.z += rawDt * (state.isNight ? 3.5 : 0.8);
+
+    // Animate Rotating Windmills, Bobbing Rowboats, Horse-Drawn Wagons & Grazing Livestock
+    for (const wm of windmills) if (wm.rotor) wm.rotor.rotation.z -= rawDt * 1.35;
+    for (const b of boats) b.mesh.position.y = b.baseY + Math.sin(elapsedTime * 2.4) * 0.12;
+    for (const sa of skyAirships) {
+      const spd = sa.orbitSpeed || 0.14;
+      const cx = sa.centerX !== undefined ? sa.centerX : -8;
+      const cz = sa.centerZ !== undefined ? sa.centerZ : 14;
+      const rx = sa.radX || 18, rz = sa.radZ || 12;
+      sa.orbitAngle += rawDt * spd;
+      sa.x = cx + Math.cos(sa.orbitAngle) * rx;
+      sa.z = cz + Math.sin(sa.orbitAngle) * rz;
+      sa.mesh.position.set(sa.x, sa.baseY + Math.sin(elapsedTime * 1.8 + sa.orbitAngle) * 0.85, sa.z);
+      const dirSign = spd >= 0 ? 1 : -1;
+      sa.mesh.rotation.y = Math.atan2(-Math.sin(sa.orbitAngle) * rx * dirSign, Math.cos(sa.orbitAngle) * rz * dirSign);
+      if (sa.propeller) sa.propeller.rotation.z += rawDt * 18.0;
+      if (sa.burnerFlame) sa.burnerFlame.scale.setScalar(0.88 + Math.sin(elapsedTime * 14.0 + sa.orbitAngle) * 0.18);
+    }
+    if (ancientRelicObj) {
+      ancientRelicObj.crystal.position.y = 3.2 + Math.sin(elapsedTime * 2.5) * 0.32;
+      ancientRelicObj.crystal.rotation.y += rawDt * 0.9;
+      ancientRelicObj.ring.rotation.z -= rawDt * 1.6;
+      ancientRelicObj.gem.rotation.y -= rawDt * 2.4;
+    }
     for (const sr of floatingRocks) {
       sr.ang += rawDt * sr.speed; sr.mesh.position.x = Math.cos(sr.ang) * sr.dist; sr.mesh.position.z = Math.sin(sr.ang) * sr.dist;
       sr.mesh.position.y = sr.yBase + Math.sin(elapsedTime * 1.4 + sr.phase) * 1.6; sr.mesh.rotation.y += rawDt * 0.25;
@@ -4570,25 +4616,6 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     }
     wfAttr.needsUpdate = true;
 
-    for (let i = projectiles.length - 1; i >= 0; i--) {
-      if (dt <= 0) continue; // A paused simulation cannot resolve projectile damage.
-      const p = projectiles[i];
-      if (p.type === 'meteor') {
-        const dx = p.tx - p.x, dy = p.ty - p.y, dz = p.tz - p.z, dist = Math.hypot(dx, dy, dz), step = p.speed * dt;
-        p.mesh.rotation.x += dt * 6; p.mesh.rotation.y += dt * 5;
-        if (dist <= step + 1.2) { scene.remove(p.mesh); projectiles.splice(i, 1); detonateMeteor(p.tx, p.ty, p.tz); }
-        else { p.x += (dx / dist) * step; p.y += (dy / dist) * step; p.z += (dz / dist) * step; p.mesh.position.set(p.x, p.y, p.z); }
-      } else if (p.type === 'arcane_bolt') {
-        if (!p.target || !p.target.alive) { scene.remove(p.mesh); projectiles.splice(i, 1); continue; }
-        const ty = getTerrainHeightAt(p.target.x, p.target.z) + 1.0, dx = p.target.x - p.x, dy = ty - p.y, dz = p.target.z - p.z, dist = Math.hypot(dx, dy, dz), step = p.speed * dt;
-        if (dist <= step + 0.6) {
-          p.target.hp -= 28;
-          if (p.target.hp <= 0) { p.target.alive = false; worldObjectsGroup.remove(p.target.mesh); state.faith = Math.min(state.maxFaith, state.faith + 5); }
-          scene.remove(p.mesh); projectiles.splice(i, 1);
-        } else { p.x += (dx / dist) * step; p.y += (dy / dist) * step; p.z += (dz / dist) * step; p.mesh.position.set(p.x, p.y, p.z); }
-      }
-    }
-
     for (let i = fxParticles.length - 1; i >= 0; i--) {
       const fx = fxParticles[i]; fx.life -= rawDt;
       if (fx.life <= 0) { scene.remove(fx.mesh); fxParticles.splice(i, 1); continue; }
@@ -4598,19 +4625,11 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     }
 
     if (customReactionTimer > 0) customReactionTimer = Math.max(0, customReactionTimer - rawDt);
-    if (!dilemmaActive && dt > 0) {
+    if (!dilemmaActive && state.timeScale > 0) {
       dilemmaTimer -= rawDt;
       if (dilemmaTimer <= 0) {
         dilemmaTimer = 42.0;
         openInteractiveDilemma();
-      }
-    }
-    if (dt > 0) {
-      const subSteps = effectiveScale > 2.6 ? 2 : 1;
-      const subDt = dt / subSteps;
-      for (let s = 0; s < subSteps; s++) {
-        updateAutonomousAgents(subDt, elapsedTime);
-        updateMonstersAndTowers(subDt, elapsedTime);
       }
     }
     if (dilemmaActive) renderDilemmaSceneCanvas(elapsedTime);
@@ -4829,6 +4848,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   });
 
   window.AETHERIA_API = {
+    get simulationTime() { return simulationClock.time; },
     setAllHudHidden, evolveToEra, openInteractiveDilemma,
     isNearBuildingFoundation, canPlaceBuildingAt, state, camCtrl, agents, monsters, projectiles, buildings, trees, ores, wagons, livestock, windmills, cropFields,
     setGodPower, castRainPower, applyTerraforming, castMeteorStrike, detonateMeteor, castLightningStrike, castMiracleBeam,

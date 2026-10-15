@@ -1,0 +1,150 @@
+[
+  {
+    "seed": 1234,
+    "speed": 1,
+    "scenario": "soldier",
+    "damage": 624,
+    "hunger": 18.850000000000023
+  },
+  {
+    "seed": 1234,
+    "speed": 1,
+    "scenario": "tower",
+    "damage": 252,
+    "shotsInFlight": 0
+  },
+  {
+    "seed": 1234,
+    "speed": 1,
+    "scenario": "farmer",
+    "food": 15,
+    "x": -30.231619198570563,
+    "z": 18.159583140322983
+  },
+  {
+    "seed": 1234,
+    "speed": 1,
+    "scenario": "patrol",
+    "x": 5.439577809239821,
+    "z": 13.519097320127706
+  },
+  {
+    "seed": 1234,
+    "speed": 1,
+    "scenario": "caravan-affordability",
+    "food": 30,
+    "wagons": 1,
+    "modalOpen": false
+  },
+  {
+    "seed": 1234,
+    "speed": 5,
+    "scenario": "soldier",
+    "damage": 624,
+    "hunger": 18.849999999999998
+  },
+  {
+    "seed": 1234,
+    "speed": 5,
+    "scenario": "tower",
+    "damage": 224,
+    "shotsInFlight": 0
+  },
+  {
+    "seed": 1234,
+    "speed": 5,
+    "scenario": "farmer",
+    "food": 15,
+    "x": -25.869729945126593,
+    "z": 21.803455893591515
+  },
+  {
+    "seed": 1234,
+    "speed": 5,
+    "scenario": "patrol",
+    "x": 1.2342696429416549,
+    "z": 13.956497538048444
+  },
+  {
+    "seed": 1234,
+    "speed": 5,
+    "scenario": "caravan-affordability",
+    "food": 30,
+    "wagons": 1,
+    "modalOpen": false
+  },
+  {
+    "seed": 5678,
+    "speed": 1,
+    "scenario": "soldier",
+    "damage": 624,
+    "hunger": 18.850000000000023
+  },
+  {
+    "seed": 5678,
+    "speed": 1,
+    "scenario": "tower",
+    "damage": 252,
+    "shotsInFlight": 0
+  },
+  {
+    "seed": 5678,
+    "speed": 1,
+    "scenario": "farmer",
+    "food": 15,
+    "x": -30.231619198570563,
+    "z": 18.159583140322983
+  },
+  {
+    "seed": 5678,
+    "speed": 1,
+    "scenario": "patrol",
+    "x": 5.439577809239821,
+    "z": 13.519097320127706
+  },
+  {
+    "seed": 5678,
+    "speed": 1,
+    "scenario": "caravan-affordability",
+    "food": 30,
+    "wagons": 1,
+    "modalOpen": false
+  },
+  {
+    "seed": 5678,
+    "speed": 5,
+    "scenario": "soldier",
+    "damage": 624,
+    "hunger": 18.849999999999998
+  },
+  {
+    "seed": 5678,
+    "speed": 5,
+    "scenario": "tower",
+    "damage": 224,
+    "shotsInFlight": 0
+  },
+  {
+    "seed": 5678,
+    "speed": 5,
+    "scenario": "farmer",
+    "food": 15,
+    "x": -25.869729945126593,
+    "z": 21.803455893591515
+  },
+  {
+    "seed": 5678,
+    "speed": 5,
+    "scenario": "patrol",
+    "x": 1.2342696429416549,
+    "z": 13.956497538048444
+  },
+  {
+    "seed": 5678,
+    "speed": 5,
+    "scenario": "caravan-affordability",
+    "food": 30,
+    "wagons": 1,
+    "modalOpen": false
+  }
+]
