@@ -1,0 +1,157 @@
+{
+  "target": "http://127.0.0.1:37835/aetheria-god-kingdom-defense/",
+  "mode": "local-production-subpath",
+  "expectedCommit": null,
+  "runs": [
+    {
+      "mobile": false,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "speeds": [
+        {
+          "speed": 1,
+          "before": {
+            "time": 0.15000000000000002,
+            "speed": 1,
+            "faith": 60.0675,
+            "power": "observe",
+            "people": 7,
+            "hudPeople": 7
+          },
+          "paused": {
+            "time": 0.5499999999999999,
+            "speed": 0,
+            "faith": 60.24750000000001,
+            "power": "observe",
+            "people": 7,
+            "hudPeople": 7
+          }
+        },
+        {
+          "speed": 5,
+          "before": {
+            "time": 0.5499999999999999,
+            "speed": 5,
+            "faith": 60.24750000000001,
+            "power": "observe",
+            "people": 7,
+            "hudPeople": 7
+          },
+          "paused": {
+            "time": 1.5500000000000007,
+            "speed": 0,
+            "faith": 60.697500000000026,
+            "power": "observe",
+            "people": 7,
+            "hudPeople": 7
+          }
+        }
+      ],
+      "final": {
+        "time": 1.5500000000000007,
+        "speed": 0,
+        "faith": 60.697500000000026,
+        "power": "observe",
+        "people": 7,
+        "hudPeople": 7
+      },
+      "assets": [
+        {
+          "url": "http://127.0.0.1:37835/aetheria-god-kingdom-defense/",
+          "status": 200
+        },
+        {
+          "url": "http://127.0.0.1:37835/aetheria-god-kingdom-defense/assets/index-BtjFeL1E.css",
+          "status": 200
+        },
+        {
+          "url": "http://127.0.0.1:37835/aetheria-god-kingdom-defense/assets/index-CZVHy019.js",
+          "status": 200
+        },
+        {
+          "url": "http://127.0.0.1:37835/aetheria-god-kingdom-defense/assets/game-DfPGFqrG.js",
+          "status": 200
+        }
+      ],
+      "errors": [],
+      "failures": []
+    },
+    {
+      "mobile": true,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "speeds": [
+        {
+          "speed": 1,
+          "before": {
+            "time": 0.25,
+            "speed": 1,
+            "faith": 60.112500000000004,
+            "power": "observe",
+            "people": 7,
+            "hudPeople": 7
+          },
+          "paused": {
+            "time": 0.5499999999999999,
+            "speed": 0,
+            "faith": 60.24750000000001,
+            "power": "observe",
+            "people": 7,
+            "hudPeople": 7
+          }
+        },
+        {
+          "speed": 5,
+          "before": {
+            "time": 0.5499999999999999,
+            "speed": 5,
+            "faith": 60.24750000000001,
+            "power": "observe",
+            "people": 7,
+            "hudPeople": 7
+          },
+          "paused": {
+            "time": 1.0500000000000003,
+            "speed": 0,
+            "faith": 60.47250000000002,
+            "power": "observe",
+            "people": 7,
+            "hudPeople": 7
+          }
+        }
+      ],
+      "final": {
+        "time": 1.0500000000000003,
+        "speed": 0,
+        "faith": 45.47250000000002,
+        "power": "observe",
+        "people": 7,
+        "hudPeople": 7
+      },
+      "assets": [
+        {
+          "url": "http://127.0.0.1:37835/aetheria-god-kingdom-defense/",
+          "status": 200
+        },
+        {
+          "url": "http://127.0.0.1:37835/aetheria-god-kingdom-defense/assets/index-BtjFeL1E.css",
+          "status": 200
+        },
+        {
+          "url": "http://127.0.0.1:37835/aetheria-god-kingdom-defense/assets/index-CZVHy019.js",
+          "status": 200
+        },
+        {
+          "url": "http://127.0.0.1:37835/aetheria-god-kingdom-defense/assets/game-DfPGFqrG.js",
+          "status": 200
+        }
+      ],
+      "errors": [],
+      "failures": []
+    }
+  ]
+}

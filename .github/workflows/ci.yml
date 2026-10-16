@@ -2,9 +2,19 @@ name: Validate game
 on:
   push:
   pull_request:
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
+  pages-configuration:
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: read
+    steps:
+      - uses: actions/configure-pages@v5
+
   validate:
     runs-on: ubuntu-latest
     steps:
@@ -16,8 +26,15 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+      - name: Stamp deployment version
+        if: github.ref == 'refs/heads/main'
+        run: node tests/write-build-info.mjs
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
+      - name: Check production build under project path
+        run: npm run test:production
+        env:
+          GAME_SMOKE_EVIDENCE: test-results/production-smoke
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -27,3 +44,54 @@ jobs:
             docs/screenshots/current-*.png
             docs/speed-review/screenshots/*.png
             docs/readability-review/*.png
+      - name: Package playable site
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy-pages:
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    needs: [validate, pages-configuration]
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy game
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  verify-pages:
+    needs: deploy-pages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Play the deployed game
+        run: npm run test:production
+        env:
+          GAME_SMOKE_URL: ${{ needs.deploy-pages.outputs.page_url }}
+          EXPECTED_GAME_COMMIT: ${{ github.sha }}
+          GAME_SMOKE_EVIDENCE: test-results/deployed-smoke
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: deployed-game-evidence
+          path: test-results/deployed-smoke/

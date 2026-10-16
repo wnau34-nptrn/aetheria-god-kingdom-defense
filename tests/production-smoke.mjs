@@ -1,0 +1,93 @@
+import { chromium } from '@playwright/test';
+import { createServer } from 'node:http';
+import { readFile, mkdir, writeFile, stat } from 'node:fs/promises';
+import { resolve, extname, sep } from 'node:path';
+import assert from 'node:assert/strict';
+
+const evidence = process.env.GAME_SMOKE_EVIDENCE || `/tmp/aetheria-production-${Date.now()}`;
+await mkdir(evidence, { recursive: true });
+const root = resolve('dist'), prefix = '/aetheria-god-kingdom-defense/';
+const types = { '.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.json':'application/json', '.png':'image/png', '.svg':'image/svg+xml', '.ico':'image/x-icon' };
+let server, target = process.env.GAME_SMOKE_URL;
+if (!target) {
+  server = createServer(async (req, res) => {
+    try {
+      const path = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+      if (!path.startsWith(prefix)) { res.writeHead(404).end(); return; }
+      const file = resolve(root, path.slice(prefix.length) || 'index.html');
+      if (!file.startsWith(root + sep) || !(await stat(file)).isFile()) { res.writeHead(404).end(); return; }
+      res.writeHead(200, { 'Content-Type': types[extname(file)] || 'application/octet-stream' });
+      res.end(await readFile(file));
+    } catch { res.writeHead(404).end(); }
+  });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  target = `http://127.0.0.1:${server.address().port}${prefix}`;
+}
+target = target.endsWith('/') ? target : target + '/';
+const browser = await chromium.launch({
+  ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}),
+  args: ['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']
+});
+const runs = [];
+try {
+  for (const mobile of [false, true]) {
+    const viewport = mobile ? { width:390,height:844 } : { width:1280,height:800 };
+    const context = await browser.newContext({ viewport, hasTouch:mobile, isMobile:mobile });
+    const page = await context.newPage(), errors = [], failures = [], assets = [];
+    page.on('pageerror', e => errors.push(e.message));
+    page.on('requestfailed', req => failures.push({url:req.url(),error:req.failure()?.errorText}));
+    page.on('response', response => {
+      if (new URL(response.url()).origin === new URL(target).origin) {
+        assets.push({url:response.url(),status:response.status()});
+        if (response.status() >= 400) failures.push({url:response.url(),status:response.status()});
+      }
+    });
+    try {
+      const response = await page.goto(target, {timeout:60000}); assert.equal(response.status(), 200);
+      await page.waitForFunction(() => window.AETHERIA_API, null, {timeout:60000});
+      await page.click('[data-speed="0"]'); await page.click('#btn-toggle-bubbles');
+      const read = () => page.evaluate(() => {
+        const a = AETHERIA_API;
+        return { time:a.simulationTime, speed:a.state.timeScale, faith:a.state.faith,
+          power:a.state.activePower, people:a.agents.filter(v=>v.alive).length,
+          hudPeople:Number(document.getElementById('quick-pop').textContent) };
+      });
+      const speeds = [];
+      for (const speed of [1,5]) {
+        await page.click(`[data-speed="${speed}"]`); const before = await read();
+        await page.waitForFunction(time => AETHERIA_API.simulationTime >= time + .2, before.time, {timeout:60000});
+        await page.click('[data-speed="0"]'); const paused = await read();
+        await page.waitForTimeout(600); assert.equal((await read()).time, paused.time);
+        speeds.push({speed,before,paused});
+      }
+      await page.click('[data-power="miracle"]');
+      assert.equal((await read()).power, 'miracle');
+      assert.equal(await page.locator('#placement-feedback').isVisible(), true);
+      await page.click('[data-power="rain"]');
+      if (mobile) {
+        const before = await read(); await page.touchscreen.tap(195,460); const after = await read();
+        assert.equal(before.faith - after.faith, 15, 'one touch must spend one rain cost');
+      }
+      await page.click('[data-power="observe"]');
+      const final = await read(); assert.equal(final.people, final.hudPeople);
+      for (const id of ['#top-bar','#god-dock','#kingdom-readout']) {
+        const box = await page.locator(id).boundingBox();
+        assert.ok(box.x >= 0 && box.x + box.width <= viewport.width + 1, `${id} fits viewport`);
+      }
+      if (process.env.EXPECTED_GAME_COMMIT) {
+        const url = new URL('version.json', target); url.searchParams.set('commit',process.env.EXPECTED_GAME_COMMIT);
+        const version = await context.request.get(url.href); assert.equal(version.status(),200);
+        assert.equal((await version.json()).commit, process.env.EXPECTED_GAME_COMMIT);
+      }
+      await page.screenshot({path:`${evidence}/${mobile?'mobile':'desktop'}.png`});
+      assert.ok(assets.some(v=>v.url.includes('/assets/')&&v.url.includes('.js')), 'bundled modules loaded');
+      assert.deepEqual(failures,[]); assert.deepEqual(errors,[]);
+      runs.push({mobile,viewport,speeds,final,assets,errors,failures});
+    } finally { await context.close(); }
+  }
+  await writeFile(`${evidence}/summary.json`, JSON.stringify({target,mode:process.env.GAME_SMOKE_URL?'deployed':'local-production-subpath',expectedCommit:process.env.EXPECTED_GAME_COMMIT||null,runs},null,2));
+  console.log(JSON.stringify({target,scenarios:runs.length,errors:0,evidence}));
+} finally {
+  await browser.close();
+  if (server) { server.closeAllConnections(); await new Promise(resolve=>server.close(resolve)); }
+}
