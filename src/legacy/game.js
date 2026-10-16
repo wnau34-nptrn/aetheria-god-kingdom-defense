@@ -2803,7 +2803,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
           ag.rightArm.rotation.x = Math.sin(elapsedTime * 16) * 0.95;
           if (incomplete) {
             targetB.progress = Math.min(1, targetB.progress + dt * 0.24); targetB.mesh.scale.setScalar(0.3 + 0.7 * targetB.progress);
-            if (targetB.progress >= 1) { audio.playVillageBell(false); addLog(`✨ ก่อสร้าง ${targetB.name} เสร็จสมบูรณ์!`, 'bless'); economy?.updatePanel(); }
+            if (targetB.progress >= 1) { audio.playVillageBell(false); addLog(`✨ ก่อสร้าง ${targetB.name} เสร็จสมบูรณ์!`, 'bless'); updateHUD(); }
           } else targetB.hp = Math.min(targetB.maxHp, targetB.hp + dt * 28);
         }
       } else {

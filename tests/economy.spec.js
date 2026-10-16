@@ -61,6 +61,7 @@ for(const mobile of [false,true])test(`resource orders, deliveries and a paid bu
   await press('#btn-confirm-construction');const after=await snapshot();expect(after.wood).toBe(before.wood-25);expect(after.ore).toBe(before.ore-18);expect(after.buildings).toBe(before.buildings+1);
   expect(await page.evaluate(()=>AETHERIA_API.buildings.at(-1).progress)).toBe(.05);
   await progressUntil(()=>AETHERIA_API.buildings.at(-1).progress===1);
+  await expect(page.locator('#insp-body')).toContainText('ก่อสร้างเสร็จแล้ว');
   await page.screenshot({path:`test-results/economy-${mobile?'mobile':'desktop'}-completed.png`,animations:'disabled',timeout:90000});
   expect(errors).toEqual([]);
  }finally{await context.close();}

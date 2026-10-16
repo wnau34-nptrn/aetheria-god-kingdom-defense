@@ -119,3 +119,16 @@ test('choosing a job reveals its nearest source without assigning work or spendi
   a.economy.beginOrder(worker,'ore');assert.match(h.window.document.getElementById('work-command-hint').textContent,/ยังไม่มีแหล่ง/);
  }finally{h.close();}
 });
+
+test('the selected building reports completion on the exact simulation step it finishes',()=>{
+ const h=createGameHarness(),a=h.api;
+ try{const worker=a.agents.find(x=>x.role==='villager');isolate(h,{agents:[worker],buildings:a.buildings});a.state.wood=25;a.state.ore=18;
+  a.economy.beginConstruction('house');a.economy.chooseConstructionSite({x:-3,z:-8});assert.ok(a.economy.confirmConstruction());
+  const house=a.buildings.at(-1);
+  // Controlled on-site finishing fixture; no simulation time has passed yet.
+  Object.assign(worker,{x:house.x,z:house.z});house.progress=.99;a.updateHUD();
+  assert.match(h.window.document.getElementById('insp-body').textContent,/99%/);
+  h.play(.05,1);assert.equal(house.progress,1);
+  assert.match(h.window.document.getElementById('insp-body').textContent,/ก่อสร้างเสร็จแล้ว/);
+ }finally{h.close();}
+});
