@@ -4990,6 +4990,8 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
 
   window.AETHERIA_API = {
     get simulationTime() { return simulationClock.time; },
+    // Copied camera pose for read-only diagnostics, including between render frames.
+    get cameraView() { return { position: { ...camera.position }, target: { ...camera._lookTarget }, fov: camera.fov }; },
     economy, setAllHudHidden, evolveToEra, openInteractiveDilemma,
     isNearBuildingFoundation, getBuildingPlacementIssue, canPlaceBuildingAt, state, camCtrl, agents, monsters, projectiles, buildings, trees, ores, wagons, livestock, windmills, cropFields,
     setGodPower, castRainPower, applyTerraforming, castMeteorStrike, detonateMeteor, castLightningStrike, castMiracleBeam,

@@ -11,6 +11,11 @@ for(const mobile of [false,true])test(`resource orders, deliveries and a paid bu
   const press=selector=>mobile?page.locator(selector).tap():page.locator(selector).click();
   const tap=point=>mobile?page.touchscreen.tap(point.x,point.y):page.mouse.click(point.x,point.y);
   const snapshot=()=>page.evaluate(()=>{const a=AETHERIA_API;return {wood:a.state.wood,ore:a.state.ore,time:a.simulationTime,buildings:a.buildings.length,auto:a.state.autoBuild};});
+  // A fixed wall delay can finish before software WebGL has drawn the new view.
+  const cameraReady=()=>page.waitForFunction(()=>{
+   const a=AETHERIA_API,t=a.camCtrl.target,v=a.cameraView.target;
+   return Math.hypot(t.x-v.x,t.y-v.y,t.z-v.z)<1e-6;
+  },null,{timeout:30000});
   async function aim(kind){return page.evaluate(kind=>{
    const a=AETHERIA_API,c=a.camCtrl,t=c.target,r=c.radius,eye=[t.x+r*Math.sin(c.phi)*Math.sin(c.theta),t.y+r*Math.cos(c.phi),t.z+r*Math.sin(c.phi)*Math.cos(c.theta)];
    const f=[t.x-eye[0],t.y-eye[1],t.z-eye[2]],fl=Math.hypot(...f);f.forEach((v,i)=>f[i]=v/fl);const rt=[-f[2],0,f[0]],rl=Math.hypot(...rt);rt.forEach((v,i)=>rt[i]=v/rl);const up=[rt[1]*f[2]-rt[2]*f[1],rt[2]*f[0]-rt[0]*f[2],rt[0]*f[1]-rt[1]*f[0]],dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0);
@@ -32,7 +37,7 @@ for(const mobile of [false,true])test(`resource orders, deliveries and a paid bu
    await press('#btn-economy-worker');await expect(page.locator('#economy-panel')).toBeHidden();
    const id=await page.evaluate(()=>AETHERIA_API.state.selectedEntity.id);
    await press(`[data-worker-resource="${resource}"]`);await expect(page.locator('#work-command-bar')).toBeVisible();
-   await page.waitForTimeout(750);const points=await aim(resource);expect(points.length).toBeGreaterThan(0);await tap(points[0]);
+   await cameraReady();const points=await aim(resource);expect(points.length).toBeGreaterThan(0);await tap(points[0]);
    await expect(page.locator('#work-command-bar')).toBeHidden();
    expect(await page.evaluate(id=>AETHERIA_API.agents.find(a=>a.id===id).workOrder.resource,id)).toBe(resource);
    const before=await snapshot();
@@ -44,8 +49,9 @@ for(const mobile of [false,true])test(`resource orders, deliveries and a paid bu
    await progressUntil(({id,resource})=>{const a=AETHERIA_API,w=a.agents.find(p=>p.id===id);return [...document.querySelectorAll('.log-entry')].some(e=>e.textContent.includes(w.name)&&e.textContent.includes(`ส่ง${resource==='wood'?'ไม้':'แร่ศิลา'}`)&&e.textContent.includes('เข้าคลังแล้ว'));},{id,resource});
    expect((await snapshot())[resource]).toBeGreaterThanOrEqual(before[resource]+cargo);
   }
+  await press('#btn-mob-reset-cam');
   await press('#btn-toggle-left-hud');await press('[data-build="house"]');await expect(page.locator('#construction-bar')).toBeVisible();
-  await page.waitForTimeout(750);const points=await aim('build');expect(points.length).toBeGreaterThan(0);
+  await cameraReady();const points=await aim('build');expect(points.length).toBeGreaterThan(0);
   for(const point of points.slice(0,20)){await tap(point);if(await page.locator('#btn-confirm-construction').isEnabled())break;}
   await expect(page.locator('#btn-confirm-construction')).toBeEnabled();
   const before=await snapshot();await press('#btn-cancel-construction');expect(await snapshot()).toEqual(before);

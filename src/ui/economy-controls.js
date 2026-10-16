@@ -34,6 +34,16 @@ export function createEconomyControls(env) {
     el('inspector-card').classList.remove('visible');
     el('work-command-bar').hidden = false;
     text('work-command-hint', `${worker.name} · แตะ${kind === 'ore' ? 'ก้อนแร่' : kind === 'food' ? 'ต้นผลไม้ที่มีผลสุก' : 'ต้นไม้'}เพื่อสั่งเก็บ · ส่งคลังก่อนตัวเลขเพิ่ม`);
+    // A narrow touch viewport may contain no resource nodes around the worker.
+    // Show the nearest source, but let the player make the actual assignment.
+    const source = nodes(kind).sort((a,b) => Math.hypot(a.x-worker.x,a.z-worker.z)-Math.hypot(b.x-worker.x,b.z-worker.z))[0];
+    if (source) {
+      camCtrl.followEntity = null;
+      camCtrl.target.copy(source.mesh.position); camCtrl.targetRadius = 48;
+      env.showReticle(source, false);
+    } else {
+      text('work-command-hint', `ยังไม่มีแหล่ง${RESOURCE_INFO[kind].name}ที่เก็บได้ · ยกเลิกแล้วเลือกงานอื่น หรือรอต้นไม้เติบโต`);
+    }
   }
   function issueOrder(worker, kind, target) {
     if (!worker?.alive || worker.role !== 'villager' || !nodes(kind).includes(target)) return false;

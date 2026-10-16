@@ -104,3 +104,18 @@ test('construction cancellation, blocked foundations, insufficient stock and cha
   assert.equal(a.economy.confirmConstruction(),false);assert.equal(a.state.wood,25);
  }finally{h.close();}
 });
+
+test('choosing a job reveals its nearest source without assigning work or spending',()=>{
+ const h=createGameHarness(),a=h.api;
+ try{const worker=a.agents.find(x=>x.role==='villager');
+  const stock={wood:a.state.wood,ore:a.state.ore,faith:a.state.faith};
+  a.economy.select(worker);a.economy.beginOrder(worker,'ore');
+  const nearest=a.ores.filter(n=>n.oreAmount>0).sort((x,y)=>Math.hypot(x.x-worker.x,x.z-worker.z)-Math.hypot(y.x-worker.x,y.z-worker.z))[0];
+  assert.equal(a.camCtrl.target.x,nearest.mesh.position.x);assert.equal(a.camCtrl.target.z,nearest.mesh.position.z);
+  assert.equal(worker.workOrder,undefined);assert.equal(a.economy.pendingResource,'ore');
+  assert.deepEqual({wood:a.state.wood,ore:a.state.ore,faith:a.state.faith},stock);
+  a.economy.reset();assert.equal(a.economy.active,false);
+  for(const ore of a.ores)ore.oreAmount=0;
+  a.economy.beginOrder(worker,'ore');assert.match(h.window.document.getElementById('work-command-hint').textContent,/ยังไม่มีแหล่ง/);
+ }finally{h.close();}
+});
