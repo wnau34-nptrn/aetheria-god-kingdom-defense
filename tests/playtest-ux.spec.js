@@ -12,7 +12,7 @@ for(const viewport of [{width:400,height:300},{width:390,height:844}]){
    await page.goto(process.env.PLAYTEST_URL||'http://127.0.0.1:5173');await page.waitForFunction(()=>window.AETHERIA_API);
    await press('[data-speed="0"]');await press('[data-power="rain"]');
    const start=await page.evaluate(()=>AETHERIA_API.state.faith);
-   const point={x:viewport.width/2,y:viewport.height*.55};
+   const point=await page.evaluate(()=>{const nav=document.getElementById('hud-master-control').getBoundingClientRect(),dock=document.getElementById('god-dock-wrapper').getBoundingClientRect();return{x:innerWidth/2,y:(nav.bottom+dock.top)/2};});
    const cast=()=>mobile?page.touchscreen.tap(point.x,point.y):page.mouse.click(point.x,point.y);
    await cast();await cast();
    expect(await page.evaluate(()=>AETHERIA_API.state.faith)).toBeCloseTo(start-30,5);
@@ -43,6 +43,6 @@ test('empty-city guidance leads to the existing recovery action',async({page})=>
  await page.evaluate(()=>{for(const a of AETHERIA_API.agents){a.alive=false;a.mesh.visible=false;}AETHERIA_API.updateHUD();});
  await expect(page.locator('#night-guidance')).toContainText('เพิ่มชาวบ้าน');
  await page.screenshot({path:'test-results/empty-city-recovery.png',animations:'disabled',timeout:90000});
- const faith=await page.evaluate(()=>AETHERIA_API.state.faith);await page.click('#btn-toggle-left-hud');await page.click('#btn-spawn-villager');
+ const faith=await page.evaluate(()=>AETHERIA_API.state.faith);await page.click('#btn-spawn-villager');
  await expect(page.locator('#quick-pop')).toHaveText('1');expect(await page.evaluate(()=>AETHERIA_API.state.faith)).toBeCloseTo(faith-20,5);await expect(page.locator('#night-guidance')).not.toContainText('ฟื้นเมือง');
 });

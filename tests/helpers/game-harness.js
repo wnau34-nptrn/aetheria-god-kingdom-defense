@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { RESOURCE_INFO, availableNode, nearestResourceNode, workerResource, depositCargo } from '../../src/systems/economy.js';
 import { createEconomyControls } from '../../src/ui/economy-controls.js';
+import { recruitmentIssue, constructionRequirement } from '../../src/systems/command-rules.js';
+import { createDecisionControls } from '../../src/ui/decision-controls.js';
 import { JSDOM } from 'jsdom';
 import { createFixedStepper } from '../../src/systems/fixed-step.js';
 import { chooseFoodTree } from '../../src/systems/food-target.js';
@@ -37,7 +39,7 @@ export function createGameHarness({ seed = 1234, source } = {}) {
     render() {}
   };
   w.THREE.Clock = class { getDelta() { return frameDelta; } };
-  Object.assign(w, { RESOURCE_INFO, availableNode, nearestResourceNode, workerResource, depositCargo, createEconomyControls, parseProgress, PROGRESS_KEY, createFixedStepper, chooseFoodTree });
+  Object.assign(w, { RESOURCE_INFO, availableNode, nearestResourceNode, workerResource, depositCargo, createEconomyControls, recruitmentIssue, constructionRequirement, createDecisionControls, parseProgress, PROGRESS_KEY, createFixedStepper, chooseFoodTree });
   w.eval((source ?? readFileSync(new URL('../../src/legacy/game.js', import.meta.url), 'utf8')).replace(/^import .+;\n/gm, ''));
   const api = w.AETHERIA_API;
   // Avoid unnecessary thought-bubble DOM churn; this does not change simulation.
@@ -61,6 +63,7 @@ export function createGameHarness({ seed = 1234, source } = {}) {
       this.click(`[data-speed="${speed}"]`);
       while (api.simulationTime < end - 1e-8) {
         if (w.document.getElementById('dilemma-overlay').classList.contains('visible')) this.click('#btn-close-dilemma');
+        else if (!w.document.getElementById('btn-decision-continue').hidden && !w.document.getElementById('decision-card').hidden) this.click('#btn-decision-continue');
         this.frame(Math.min(delta, (end - api.simulationTime) / speed));
       }
     },

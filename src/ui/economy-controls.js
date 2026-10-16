@@ -1,4 +1,5 @@
 import { RESOURCE_INFO, CONSTRUCTION_COST, availableNode, nearestResourceNode, resourceSummary } from '../systems/economy.js';
+import { constructionRequirement } from '../systems/command-rules.js';
 
 // DOM/input adapter. Simulation keeps ownership of inventory and work progress.
 export function createEconomyControls(env) {
@@ -12,6 +13,7 @@ export function createEconomyControls(env) {
   function select(entity, focus = false) {
     state.selectedEntity = entity;
     el('inspector-card').classList.toggle('visible', !!entity);
+    env.updateWorkerCommands();
     if (entity) {
       if (focus) { camCtrl.followEntity = null; camCtrl.target.copy(entity.mesh.position); camCtrl.targetRadius = 48; }
       env.updateInspector();
@@ -20,6 +22,7 @@ export function createEconomyControls(env) {
   function reset() {
     plan = null;
     el('construction-bar').hidden = true;
+    env.updateLayout();
     env.hideReticle();
   }
   function chooseWorker() {
@@ -41,11 +44,7 @@ export function createEconomyControls(env) {
     if (!plan?.point) return 'แตะพื้นเกาะเพื่อเลือกตำแหน่ง';
     const issue = env.placementIssue(plan.point.x, plan.point.z);
     if (issue) return issue;
-    if (!agents.some(a => a.alive && a.role === 'villager')) return 'ต้องมีคนงานอย่างน้อย 1 คน';
-    const limit = plan.type === 'house' ? 3 + state.civEra * 3 : 1 + state.civEra * 2;
-    if (buildings.filter(b => b.type === plan.type).length >= limit) return 'อาคารชนิดนี้เต็มจำนวนของยุคแล้ว';
-    if (state.wood < CONSTRUCTION_COST.wood || state.ore < CONSTRUCTION_COST.ore) return 'ทรัพยากรไม่พอ · ต้องมีไม้ 25 + แร่ 18 ในคลัง';
-    return null;
+    return constructionRequirement(plan.type, state, agents, buildings);
   }
   function preview(point) {
     if (!plan) return;
@@ -60,6 +59,7 @@ export function createEconomyControls(env) {
     text('construction-hint', `${plan.type === 'house' ? 'บ้าน' : 'ป้อม'} · ไม้ 25 + แร่ 18 · ${issue || 'ตำแหน่งพร้อม · ยืนยันเพื่อให้คนงานเริ่มสร้าง'}`);
     el('btn-confirm-construction').disabled = !!issue;
     if (plan.point) env.showReticle(plan.point, !!issue);
+    env.updateLayout();
   }
   function beginConstruction(type) {
     if (!['house', 'tower'].includes(type)) return;
@@ -119,7 +119,7 @@ export function createEconomyControls(env) {
     env.updateHUD();
   }
   function render() {
-    updatePlan(); updatePanel();
+    updatePlan(); updatePanel(); env.updateWorkerCommands();
     for (let i = deliveries.length - 1; i >= 0; i--) {
       const item = deliveries[i];
       if (env.time() >= item.until) { item.node.remove(); deliveries.splice(i, 1); continue; }
@@ -139,8 +139,8 @@ export function createEconomyControls(env) {
   el('auto-build').addEventListener('change', e => { state.autoBuild = e.target.checked; env.log(state.autoBuild ? 'เปิดสร้างอัตโนมัติ · ไม้ 25 + แร่ 18 ต่อหลัง' : 'ปิดสร้างอัตโนมัติ · เลือกตำแหน่งและยืนยันเอง'); });
   el('btn-cancel-construction').addEventListener('click', reset);
   el('btn-confirm-construction').addEventListener('click', confirmConstruction);
-  // Delegate because inspector contents refresh as the unit's status changes.
-  el('insp-body').addEventListener('click', e => {
+  // Job buttons stay on the HUD while a worker is selected.
+  el('worker-task-bar').addEventListener('click', e => {
     const button = e.target.closest('[data-worker-resource]'); if (!button) return;
     const worker = state.selectedEntity; if (!worker?.alive || worker.role !== 'villager') return;
     if (button.dataset.workerResource === 'auto') {

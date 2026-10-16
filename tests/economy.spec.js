@@ -38,7 +38,7 @@ for(const mobile of [false,true])test(`resource orders, deliveries and a paid bu
    const id=await page.evaluate(()=>AETHERIA_API.state.selectedEntity.id);
    await press(`[data-worker-resource="${resource}"]`);
    await expect(page.locator(`[data-worker-resource="${resource}"]`)).toHaveAttribute('aria-pressed','true');
-   await expect(page.locator('#inspector-card')).toBeVisible();
+   await expect(page.locator('#worker-task-bar')).toBeVisible();
    expect(await page.evaluate(()=>AETHERIA_API.economy.active)).toBe(false);
    expect(await page.evaluate(()=>AETHERIA_API.state.selectedEntity.id)).toBe(id);
    expect(await page.evaluate(id=>AETHERIA_API.agents.find(a=>a.id===id).workOrder.resource,id)).toBe(resource);
@@ -53,13 +53,13 @@ for(const mobile of [false,true])test(`resource orders, deliveries and a paid bu
    expect((await snapshot())[resource]).toBeGreaterThanOrEqual(before[resource]+cargo);
   }
   await press('#btn-mob-reset-cam');
-  await press('#btn-toggle-left-hud');await press('[data-build="house"]');await expect(page.locator('#construction-bar')).toBeVisible();
+  await press('[data-build="house"]');await expect(page.locator('#construction-bar')).toBeVisible();
   await cameraReady();const points=await aimConstruction();expect(points.length).toBeGreaterThan(0);
   for(const point of points.slice(0,20)){await tap(point);if(await page.locator('#btn-confirm-construction').isEnabled())break;}
   await expect(page.locator('#btn-confirm-construction')).toBeEnabled();
   const before=await snapshot();await press('#btn-cancel-construction');expect(await snapshot()).toEqual(before);
   // Choose again and explicitly confirm. Aiming/cancelling never spends.
-  await press('#btn-toggle-left-hud');await press('[data-build="house"]');
+  await press('[data-build="house"]');
   for(const point of points.slice(0,20)){await tap(point);if(await page.locator('#btn-confirm-construction').isEnabled())break;}
   await press('#btn-confirm-construction');const after=await snapshot();expect(after.wood).toBe(before.wood-25);expect(after.ore).toBe(before.ore-18);expect(after.buildings).toBe(before.buildings+1);
   expect(await page.evaluate(()=>AETHERIA_API.buildings.at(-1).progress)).toBe(.05);

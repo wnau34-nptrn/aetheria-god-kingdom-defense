@@ -7,19 +7,19 @@ test('boots, pauses combat, preserves dilemma speed, changes era and saves progr
   const top=await page.locator('#top-bar').boundingBox();
   const hud=await page.locator('#hud-master-control').boundingBox();
   expect(top.x+top.width).toBeLessThanOrEqual(hud.x);
-  await page.click('#btn-trigger-dilemma');
+  await page.click('#btn-trigger-dilemma');await page.click('#btn-decision-details');
   if (await page.locator('.event-stories').getAttribute('open') === null) await page.locator('.event-stories > summary').click();
   await page.click('[data-dl-idx="1"]');
   await page.click('#btn-close-dilemma');
   expect(await page.evaluate(()=>AETHERIA_API.state.timeScale)).toBe(0);
+  await page.locator('#dl-choice-2').click({force:true});
   // Inspect actual state over rendered animation frames; projectiles and daylight must freeze.
   await page.evaluate(()=>{const a=AETHERIA_API;a.state.timeOfDay=9;a.state.isNight=false;a.state.faith=200;a.spawnMonster(1);a.castMeteorStrike(6,6);});
   const frozen=await page.evaluate(()=>({time:AETHERIA_API.state.timeOfDay,hp:AETHERIA_API.monsters.map(m=>m.hp),projectiles:AETHERIA_API.projectiles.map(p=>[p.x,p.y,p.z])}));
   await page.waitForTimeout(1600);
   expect(await page.evaluate(()=>({time:AETHERIA_API.state.timeOfDay,hp:AETHERIA_API.monsters.map(m=>m.hp),projectiles:AETHERIA_API.projectiles.map(p=>[p.x,p.y,p.z])}))).toEqual(frozen);
   await page.evaluate(()=>{AETHERIA_API.state.civProgress=0;});
-  await page.click('#btn-toggle-left-hud');
-  await page.click('#btn-advance-era');
+  await page.locator('#btn-advance-era').click({force:true});
   expect(await page.evaluate(()=>AETHERIA_API.state.civEra)).toBe(1);
   await page.click('#btn-menu');
   await page.getByText('เครื่องมือโลกและยุค', {exact:true}).click();

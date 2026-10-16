@@ -2,11 +2,14 @@ import { createFixedStepper } from '../systems/fixed-step.js';
 import { chooseFoodTree } from '../systems/food-target.js';
 import { RESOURCE_INFO, availableNode, nearestResourceNode, depositCargo } from '../systems/economy.js';
 import { createEconomyControls } from '../ui/economy-controls.js';
+import { recruitmentIssue, constructionRequirement } from '../systems/command-rules.js';
+import { createDecisionControls } from '../ui/decision-controls.js';
 import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
 
 (() => {
   'use strict';
-  let economy;
+  let economy, decisionUI;
+  let pendingDilemmaIdx = null;
 
   class SimplexNoise2D {
     constructor(seed = 1337) { this.reseed(seed); }
@@ -2281,8 +2284,6 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     if (badge) badge.textContent = info.badge;
     const lbl = document.getElementById('civ-progress-label');
     if (lbl) lbl.textContent = info.nextLabel;
-    const advBtn = document.getElementById('btn-advance-era');
-    if (advBtn) advBtn.style.display = targetEra >= 4 ? 'none' : 'block';
     addLog(`🏛️ วิวัฒนาการครั้งประวัติศาสตร์! ชนเผ่าพัฒนาเข้าสู่ "${info.badge}" เรียบร้อยแล้ว!`, 'bless');
     updateHUD();
   }
@@ -3000,6 +3001,8 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     setReadoutText('quick-wood', `${Math.floor(state.wood)}`);
     setReadoutText('quick-ore', `${Math.floor(state.ore)}`);
     setReadoutText('quick-pop', `${people.length}`);
+    setReadoutText('quick-capacity', `${6 + buildings.filter(b => b.type === 'house').length * 4}`);
+    setReadoutText('quick-soldiers', `${people.filter(a => a.role === 'soldier').length}`);
     setReadoutText('quick-enemies', `${enemies}`);
     const night = state.timeOfDay >= 20 || state.timeOfDay < 5.5;
     const remaining = Math.max(0, Math.ceil((20 - state.timeOfDay) * 60 - 1e-8));
@@ -3007,12 +3010,61 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     const firstWarning = state.day === 1 && state.timeOfDay >= 18 && state.timeOfDay < 20;
     document.getElementById('kingdom-readout').dataset.threat = enemies ? 'combat' : firstWarning ? 'warning' : 'calm';
     setReadoutText('night-countdown', night ? 'กลางคืน' : `บุก 20:00 · อีก ${clock} ชม.ในเกม`);
-    const recovery = people.length === 0 ? (night ? 'เมืองฟื้นได้: รอรุ่งเช้า แล้วเพิ่มคนในอาณาจักร' : enemies ? 'เมืองฟื้นได้: จัดการอสูร แล้วเพิ่มคนในอาณาจักร' : 'ฟื้นเมือง: อาณาจักร → เพิ่มชาวบ้าน (20 ศรัทธา)') : null;
+    const recovery = people.length === 0 ? (night ? 'เมืองฟื้นได้: รอรุ่งเช้า แล้วกดชาวบ้าน +1' : enemies ? 'เมืองฟื้นได้: จัดการอสูร แล้วกดชาวบ้าน +1' : 'ฟื้นเมือง: กดชาวบ้าน +1 (เพิ่มชาวบ้าน · 20 ศรัทธา)') : null;
     setReadoutText('night-guidance', recovery || (firstWarning ? 'ก่อนคืนแรก: เตรียมทหารและศรัทธา' : enemies ? 'ยังมีอสูรมีชีวิตบนเกาะ' : night ? (state.secondWaveTonight ? 'แสงอาทิตย์เริ่มเผาอสูร 05:30' : 'เฝ้าระวังทัพหนุน 00:30') : 'แตะทรัพยากรเพื่อสั่งคนงาน'));
+  }
+
+  function syncHudDockHeight() {
+    const height = `${Math.ceil(document.getElementById('god-dock-wrapper').getBoundingClientRect().height)}px`;
+    if (document.documentElement.style.getPropertyValue('--power-dock-height') !== height) document.documentElement.style.setProperty('--power-dock-height', height);
+  }
+
+  function updateWorkerCommands() {
+    const worker = state.selectedEntity;
+    const visible = worker?.alive && worker.role === 'villager';
+    const bar = document.getElementById('worker-task-bar');
+    const changed = bar.hidden !== !visible;
+    bar.hidden = !visible;
+    if (!visible) { if (changed) syncHudDockHeight(); return; }
+    const signature = `${worker.id}|${worker.name}|${worker.workOrder?.resource || 'auto'}`;
+    if (!changed && bar.dataset.worker === signature) return;
+    bar.dataset.worker = signature;
+    setReadoutText('worker-task-name', worker.name);
+    setReadoutText('worker-task-order', worker.workOrder ? `เก็บ${RESOURCE_INFO[worker.workOrder.resource].name} · AI หาแหล่งให้` : 'เลือกงาน · AI เดินไปเก็บเอง');
+    document.querySelectorAll('#worker-task-bar [data-worker-resource]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.workerResource === (worker.workOrder?.resource || 'auto'))));
+    syncHudDockHeight();
+  }
+
+  function updateCommandHUD() {
+    for (const kind of ['soldier', 'villager']) {
+      const button = document.getElementById(kind === 'soldier' ? 'btn-train-soldier' : 'btn-spawn-villager');
+      const issue = recruitmentIssue(kind, state, agents, buildings);
+      button.setAttribute('aria-disabled', String(!!issue));
+      button.title = issue || (kind === 'soldier' ? 'แต่งตั้งคนงานที่ส่งของแล้วเป็นทหาร · 25 ศรัทธา' : 'เพิ่มชาวบ้าน · 20 ศรัทธา');
+      button.setAttribute('aria-description', button.title);
+      const cost = kind === 'soldier' ? 25 : 20;
+      setReadoutText(kind === 'soldier' ? 'soldier-cost' : 'villager-cost', issue?.includes('บ้านพักเต็ม') ? `บ้านเต็ม · ${cost} ศรัทธา` : issue?.includes('ขนของ') ? `รอส่งของ · ${cost} ศรัทธา` : state.faith < cost ? `ศรัทธา ${Math.floor(state.faith)}/${cost}` : `${cost} ศรัทธา`);
+    }
+    document.querySelectorAll('[data-build]').forEach(button => {
+      const issue = constructionRequirement(button.dataset.build, state, agents, buildings);
+      button.dataset.unavailable = String(!!issue);
+      button.title = issue || 'เลือกพื้นเกาะแล้วกดยืนยัน · ไม้ 25 + แร่ 18';
+      button.setAttribute('aria-description', button.title);
+    });
+    const advance = document.getElementById('btn-advance-era');
+    const ready = state.civEra < 4 && state.civProgress >= 100;
+    advance.setAttribute('aria-disabled', String(!ready));
+    advance.classList.toggle('ready', ready);
+    advance.title = state.civEra >= 4 ? 'อารยธรรมอยู่ในยุคสูงสุดแล้ว' : ready ? `พัฒนาสู่ยุคที่ ${state.civEra + 1}` : 'ความก้าวหน้าต้องครบ 100% ก่อนพัฒนายุค';
+    setReadoutText('command-era-progress', state.civEra >= 4 ? 'ยุคสูงสุดแล้ว' : ready ? `พร้อมขึ้นยุค ${state.civEra + 1}` : `ก้าวหน้า ${Math.floor(state.civProgress)}%`);
+    updateWorkerCommands();
+    syncHudDockHeight();
   }
 
   function updateHUD() {
     updateKingdomReadout();
+    updateCommandHUD();
+    refreshDilemmaChoices();
     const aliveAgents = agents.filter(a => a.alive), soldiers = aliveAgents.filter(a => a.role === 'soldier');
     const houses = buildings.filter(b => b.type === 'house'), towers = buildings.filter(b => b.type === 'tower'), maxPop = 6 + houses.length * 4;
     document.getElementById('stat-pop').textContent = `${aliveAgents.length} / ${maxPop}`;
@@ -3420,6 +3472,10 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   const dilemmaOverlay = document.getElementById('dilemma-overlay');
   const dilemmaToast = document.getElementById('dilemma-toast');
   const btnTriggerDilemma = document.getElementById('btn-trigger-dilemma');
+  decisionUI = createDecisionControls(window, {
+    details: () => { if (pendingDilemmaIdx !== null) { pauseForDilemma(); presentDilemma(false); } },
+    continue: () => closeInteractiveDilemma('เล่นต่อได้ · คำถามยังตอบได้บนหน้าจอ')
+  });
 
   let dilemmaToastTimeout;
   function showDilemmaToast(msg) {
@@ -3716,20 +3772,46 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     }
   ];
 
-  function closeInteractiveDilemma(resumeMsg = null) {
-    if (!dilemmaOverlay || !dilemmaActive) return;
-    dilemmaOverlay.classList.remove('visible');
+  function pauseForDilemma() {
+    if (!dilemmaActive) preDilemmaSpeed = state.timeScale;
+    dilemmaActive = true; state.timeScale = 0;
+    camCtrl.keys = {}; camCtrl.isDragging = camCtrl.isPanning = isTerraformDragging = false;
+    document.querySelectorAll('[data-speed]').forEach(b => b.classList.toggle('active', Number(b.dataset.speed) === 0));
+  }
+
+  const DECISION_TITLES = ['ชาวบ้านขอเสบียง', 'สภาขอขยายเมือง', 'พ่อค้าเรือเหาะมาเยือน', 'พบศิลาโบราณ', 'แม่ทัพขอแผนป้องกัน'];
+  const DECISION_CHOICES = [
+    [['ประทานฝนทิพย์', 'อาหาร +35 · ฟื้นเลือด/ความอิ่มทุกคน · ก้าวหน้า +15%'], ['แจกเสบียงสำรอง', 'อาหาร +22 · ความหิวทุกคนเหลือ 45%'], ['เร่งแรงงาน', 'ไม้ +25 · แร่ +20 · พลเรือนเสียเลือด 12']],
+    [['สร้างบ้าน', 'บ้าน +1 · ชาวบ้าน +2'], ['เสริมแนวป้อม', 'ป้อม +1 · ทหาร +2'], ['ประทานพรทั้งสองฝ่าย', 'ชาวบ้าน +1 · ทหาร +1 · ก้าวหน้า +20%']],
+    [['ซื้อเกวียนและเมล็ดพันธุ์', 'เกวียน +1 · อาหาร +30'], ['แลกไม้เป็นแร่และศรัทธา', 'แร่ +35 · ศรัทธา +35'], ['รับทหารอาสา', 'ทหาร +2']],
+    [['ปลุกพลังศรัทธา', 'ศรัทธา +55 · ก้าวหน้า +18%'], ['สกัดศิลา', 'แร่ +35 · ไม้ +30 · อาหาร +20'], ['ทลายผนึกต้องห้าม', 'ศรัทธา +80 · ก้าวหน้า +30% · อสูรบุก 2 ตัว']],
+    [['ผ่าสายฟ้าใส่กองทัพอสูร', 'อสูรทุกตัวเสียเลือด 160 · ฟื้นเลือดทหารเต็ม'], ['เสริมเกราะอาคาร', 'ซ่อม/สร้างอาคารเสร็จ · ความทนทานสูงสุด +50'], ['จัดพิธีภาวนา', 'ศรัทธา +45']]
+  ];
+
+  function presentDilemma(compact) {
+    if (pendingDilemmaIdx === null) return;
+    window.dispatchEvent(new Event('aetheria:close-drawer'));
+    document.body.classList.add('decision-pending');
+    decisionUI.show({ compact, title: DECISION_TITLES[pendingDilemmaIdx], speaker: DILEMMA_SCENE_META[pendingDilemmaIdx].npcName.split(' (')[0], paused: dilemmaActive, resumeSpeed: preDilemmaSpeed });
+    refreshDilemmaChoices();
+  }
+
+  function closeInteractiveDilemma(resumeMsg = null, resolved = false) {
+    if (pendingDilemmaIdx === null) return;
+    if (dilemmaActive) state.timeScale = preDilemmaSpeed;
     dilemmaActive = false;
-    state.timeScale = preDilemmaSpeed;
     document.querySelectorAll('[data-speed]').forEach(b => b.classList.toggle('active', parseFloat(b.dataset.speed) === state.timeScale));
-    dilemmaTimer = 42.0;
+    if (resolved) {
+      pendingDilemmaIdx = null; decisionUI.hide(); document.body.classList.remove('decision-pending');
+      dilemmaTimer = 42.0;
+    } else presentDilemma(true);
     if (resumeMsg) showDilemmaToast(resumeMsg);
     updateHUD();
   }
 
   const btnCloseDilemma = document.getElementById('btn-close-dilemma');
   if (btnCloseDilemma) {
-    btnCloseDilemma.addEventListener('click', () => closeInteractiveDilemma('⏸ พับเก็บเหตุการณ์ไว้ตัดสินใจภายหลัง'));
+    btnCloseDilemma.addEventListener('click', () => closeInteractiveDilemma('เล่นต่อได้ · คำถามยังตอบได้บนหน้าจอ'));
   }
 
   function checkChoiceAffordability(costStr) {
@@ -3742,6 +3824,27 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     if (costStr.includes('แร่ศิลา') && state.ore < amt) return { ok: false, reason: `แร่ศิลาไม่พอ (มี ${Math.floor(state.ore)}/${amt})` };
     if (costStr.includes('อาหาร') && state.food < amt) return { ok: false, reason: `อาหารไม่พอ (มี ${Math.floor(state.food)}/${amt})` };
     return { ok: true };
+  }
+
+  function refreshDilemmaChoices() {
+    if (pendingDilemmaIdx === null) return;
+    DILEMMA_EVENTS[pendingDilemmaIdx].choices.forEach((choice, index) => {
+      const button = document.getElementById(`dl-choice-${index}`);
+      if (!button) return;
+      const afford = checkChoiceAffordability(choice.cost);
+      button.setAttribute('aria-disabled', String(!afford.ok));
+      button.classList.toggle('disabled', !afford.ok);
+      let label = afford.ok ? choice.cost : afford.reason;
+      if (!document.getElementById('decision-card').hidden) {
+        const amount = Number(choice.cost.match(/\d+/)?.[0]);
+        const currency = ['faith', 'wood', 'ore', 'food'].find(key => choice.cost.includes(key === 'wood' ? 'ไม้ซุง' : RESOURCE_INFO[key].name));
+        if (currency) label = afford.ok ? `${amount} ${RESOURCE_INFO[currency].name}` : `${RESOURCE_INFO[currency].name} ${Math.floor(state[currency])}/${amount}`;
+        else label = choice.cost.includes('⚠️') ? `เสี่ยง: อสูร +${amount}` : 'ฟรี';
+      }
+      if (button.querySelector('.dl-choice-cost').textContent !== label) button.querySelector('.dl-choice-cost').textContent = label;
+      button.title = afford.ok ? choice.effect : afford.reason;
+    });
+    decisionUI?.status(dilemmaActive, preDilemmaSpeed);
   }
 
 
@@ -4313,12 +4416,13 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     }
   }
 
-  function openInteractiveDilemma(forceIdx = null, switching = false) {
-    if (!dilemmaOverlay || (dilemmaActive && !switching)) return;
-    if (!switching) preDilemmaSpeed = state.timeScale;
-    dilemmaActive = true;
-    state.timeScale = 0; // Pause simulation while player makes their decision!
-    document.querySelectorAll('[data-speed]').forEach(b => b.classList.toggle('active', Number(b.dataset.speed) === 0));
+  function openInteractiveDilemma(forceIdx = null, switching = false, compact = false) {
+    if (!dilemmaOverlay) return;
+    if (pendingDilemmaIdx !== null && !switching) {
+      if (!compact) pauseForDilemma();
+      presentDilemma(compact); return;
+    }
+    pauseForDilemma();
 
     let idx = forceIdx !== null ? forceIdx : Math.floor(Math.random() * DILEMMA_EVENTS.length);
     if (forceIdx === null && idx === lastDilemmaIdx) idx = (idx + 1) % DILEMMA_EVENTS.length;
@@ -4327,6 +4431,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       else if (state.food < 25 && lastDilemmaIdx !== 0) idx = 0;
     }
     lastDilemmaIdx = idx;
+    pendingDilemmaIdx = idx;
     const ev = DILEMMA_EVENTS[idx];
     const meta = DILEMMA_SCENE_META[idx] || DILEMMA_SCENE_META[0];
     activeDilemmaSceneType = meta.type;
@@ -4353,16 +4458,17 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       btn.className = 'dl-choice-btn' + (afford.ok ? '' : ' disabled');
       btn.id = `dl-choice-${cIdx}`;
       btn.setAttribute('aria-disabled', String(!afford.ok));
-      const badgeColor = afford.ok ? 'rgba(251,191,36,0.4)' : 'rgba(248,113,113,0.7)';
       const badgeText = afford.ok ? ch.cost : `❌ ${afford.reason}`;
+      const summary = DECISION_CHOICES[idx][cIdx];
       btn.innerHTML = `
         <div class="dl-choice-title">
-          <span>${ch.label}</span>
-          <span style="font-size:11px; color:${afford.ok ? '#f8fafc' : '#fca5a5'}; background:rgba(15,23,42,0.85); padding:2px 8px; border-radius:999px; border:1px solid ${badgeColor};">${badgeText}</span>
+          <span class="dl-choice-full">${ch.label}</span><span class="dl-choice-compact">${summary[0]}</span>
+          <span class="dl-choice-cost">${badgeText}</span>
         </div>
-        <div class="dl-choice-effect">${ch.effect}</div>
+        <div class="dl-choice-effect dl-choice-full">${ch.effect}</div><div class="dl-choice-effect dl-choice-compact">${summary[1]}</div>
       `;
       btn.addEventListener('click', () => {
+        if (pendingDilemmaIdx !== idx) return;
         audio.init();
         const nowAfford = checkChoiceAffordability(ch.cost);
         if (!nowAfford.ok) {
@@ -4376,7 +4482,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
           return;
         }
         const resultMsg = typeof result === 'string' ? result : result.message;
-        closeInteractiveDilemma(resultMsg);
+        closeInteractiveDilemma(resultMsg, true);
         addLog(`⚖️ [ผลการตัดสินใจ] ${resultMsg}`, 'bless');
       });
       choicesBox.appendChild(btn);
@@ -4385,7 +4491,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     dilemmaOverlay.classList.remove('peek-3d');
     if (btnPeek3D) { btnPeek3D.classList.remove('active'); btnPeek3D.textContent = '🎥 ส่องฉาก 3D จริง'; }
     document.querySelectorAll('.dl-tab').forEach(tb => tb.classList.toggle('active', parseInt(tb.dataset.dlIdx, 10) === idx));
-    dilemmaOverlay.classList.add('visible');
+    presentDilemma(compact);
     audio.playVillageBell(false);
   }
 
@@ -4450,7 +4556,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   if (btnTriggerDilemma) {
     btnTriggerDilemma.addEventListener('click', () => {
       audio.init();
-      openInteractiveDilemma();
+      openInteractiveDilemma(null, false, true);
     });
   }
 
@@ -4461,18 +4567,17 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       const mind = describeAgentMind(ent);
       const markup = `
         <div style="display:flex; gap:10px; align-items:center; margin-bottom:6px;">
-          <canvas id="insp-portrait-canvas" width="76" height="76" style="width:68px; height:68px; border-radius:12px; border:1.5px solid #fbbf24; background:#091326; flex-shrink:0;"></canvas>
+          <canvas id="insp-portrait-canvas" width="76" height="76" style="width:48px; height:48px; border-radius:12px; border:1.5px solid #fbbf24; background:#091326; flex-shrink:0;"></canvas>
           <div style="min-width:0;">
             <div style="font-weight:800; color:#fde047; font-size:12.5px;">${ent.name}</div>
             <div data-agent-label style="font-size:11px; color:#38bdf8; font-weight:700;">${ent.stateLabel}</div>
             <div data-agent-health style="font-size:10.5px; color:#cbd5e1; margin-top:2px;">❤️ ${Math.ceil(ent.hp)}/${ent.maxHp} • 🍎 หิว ${Math.round(ent.hunger)}%</div>
           </div>
         </div>
-        <div style="padding:5px 7px;background:rgba(15,23,42,0.75);border-left:3px solid #fbbf24;border-radius:6px;">
+        <details class="agent-notes"><summary>ความคิดและแผนของยูนิต</summary><div class="agent-notes-body">
           <div data-agent-thought style="color:#fef08a;font-style:italic;font-size:11px;">${mind.thought}</div>
           <div data-agent-plan style="color:#7dd3fc;font-size:10px;margin-top:2px;">${mind.plan}</div>
-        </div>
-        ${ent.role === 'villager' ? `<div class="worker-order" data-agent-order></div><div class="worker-commands" role="group" aria-label="สั่งงาน · AI หาแหล่งให้เอง"><button class="btn-mini" data-worker-resource="wood">ตัดไม้</button><button class="btn-mini" data-worker-resource="ore">ขุดแร่</button><button class="btn-mini" data-worker-resource="food">เก็บผลไม้</button><button class="btn-mini" data-worker-resource="auto">งานอัตโนมัติ</button></div>` : ''}
+        </div></details>
         <div style="margin-top:6px;"><button class="btn-mini" id="btn-follow-agent" style="width:100%;">🎥 กล้องติดตามยูนิตนี้</button></div>`;
       const key = `agent-${ent.id}-${ent.role}`;
       if (body.dataset.entityKey !== key) { body.innerHTML = markup; body.dataset.entityKey = key; }
@@ -4480,9 +4585,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       body.querySelector('[data-agent-health]').textContent = `❤️ ${Math.ceil(ent.hp)}/${ent.maxHp} • 🍎 หิว ${Math.round(ent.hunger)}%${ent.carryAmount ? ` • แบก${RESOURCE_INFO[ent.carryType].name} ${ent.carryAmount}` : ''}`;
       body.querySelector('[data-agent-thought]').textContent = mind.thought;
       body.querySelector('[data-agent-plan]').textContent = mind.plan;
-      const order = body.querySelector('[data-agent-order]');
-      if (order) order.textContent = `งาน: ${ent.workOrder ? `เก็บ${RESOURCE_INFO[ent.workOrder.resource].name} · AI หาแหล่งให้เอง` : 'อัตโนมัติ'}${ent.buildTarget ? ' · รับงานก่อสร้างแล้ว' : ''}`;
-      body.querySelectorAll('[data-worker-resource]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.workerResource === (ent.workOrder?.resource || 'auto'))));
+      updateWorkerCommands();
       const btn = document.getElementById('btn-follow-agent'); if (btn) btn.onclick = () => { camCtrl.followEntity = ent; };
       const pCan = document.getElementById('insp-portrait-canvas');
       if (pCan) {
@@ -4534,15 +4637,21 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     document.querySelectorAll('.power-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.power === powerName));
     canvas.classList.toggle('power-active', powerName !== 'observe');
     document.getElementById('sub-power-bar').classList.toggle('visible', powerName === 'terraform');
+    syncHudDockHeight();
   }
   document.querySelectorAll('.power-btn').forEach(btn => btn.addEventListener('click', () => { audio.init(); setGodPower(btn.dataset.power); }));
   document.getElementById('btn-terra-raise').addEventListener('click', () => { state.terraMode = 'raise'; document.getElementById('btn-terra-raise').classList.add('active'); document.getElementById('btn-terra-lower').classList.remove('active'); });
   document.getElementById('btn-terra-lower').addEventListener('click', () => { state.terraMode = 'lower'; document.getElementById('btn-terra-lower').classList.add('active'); document.getElementById('btn-terra-raise').classList.remove('active'); });
   document.getElementById('terra-radius').addEventListener('input', (e) => { state.terraRadius = parseFloat(e.target.value); });
-  document.querySelectorAll('[data-speed]').forEach(btn => btn.addEventListener('click', () => { state.timeScale = parseFloat(btn.dataset.speed); document.querySelectorAll('[data-speed]').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }));
+  document.querySelectorAll('[data-speed]').forEach(btn => btn.addEventListener('click', () => {
+    if (dilemmaActive && !document.getElementById('decision-card').hidden) dilemmaActive = false;
+    state.timeScale = parseFloat(btn.dataset.speed);
+    document.querySelectorAll('[data-speed]').forEach(b => b.classList.toggle('active', Number(b.dataset.speed) === (dilemmaActive ? 0 : state.timeScale)));
+    decisionUI?.status(dilemmaActive, preDilemmaSpeed);
+  }));
   document.getElementById('btn-jump-day').addEventListener('click', () => { state.timeOfDay = 9.0; document.getElementById('siege-banner').classList.remove('visible'); });
   document.getElementById('btn-jump-night').addEventListener('click', () => { state.timeOfDay = 20.25; state.isNight = false; state.siegeTriggeredTonight = false; });
-  const btnRegen = document.getElementById('btn-regen-island'); if (btnRegen) btnRegen.addEventListener('click', () => { simplex.reseed(Math.floor(Math.random() * 999999)); userHeightOffsets.fill(0); buildFloatingIslandMeshes(); state.civEra = 1; state.civProgress = 12; populateWorld(1, true); evolveToEra(1); try { window.name = ''; localStorage.removeItem('AETHERIA_CIV_SAVE_V1'); } catch(e) {} addLog('🎲 สุ่มสร้างเกาะลอยฟ้าใบใหม่และเริ่มต้นยุคชนเผ่าเรียบร้อย!', 'bless'); });
+  const btnRegen = document.getElementById('btn-regen-island'); if (btnRegen) btnRegen.addEventListener('click', () => { closeInteractiveDilemma(null, true); simplex.reseed(Math.floor(Math.random() * 999999)); userHeightOffsets.fill(0); buildFloatingIslandMeshes(); state.civEra = 1; state.civProgress = 12; populateWorld(1, true); evolveToEra(1); try { window.name = ''; localStorage.removeItem('AETHERIA_CIV_SAVE_V1'); } catch(e) {} addLog('🎲 สุ่มสร้างเกาะลอยฟ้าใบใหม่และเริ่มต้นยุคชนเผ่าเรียบร้อย!', 'bless'); });
   document.querySelectorAll('[data-era]').forEach(btn => btn.addEventListener('click', () => {
     audio.init();
     evolveToEra(parseInt(btn.dataset.era, 10));
@@ -4551,24 +4660,27 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   if (btnAdvEra) btnAdvEra.addEventListener('click', () => {
     audio.init();
     if (state.civEra < 4 && state.civProgress >= 100) evolveToEra(state.civEra + 1);
+    else reportActionIssue(state.civEra >= 4 ? 'อารยธรรมอยู่ในยุคสูงสุดแล้ว' : `พัฒนายุคเมื่อความก้าวหน้าครบ 100% · ตอนนี้ ${Math.floor(state.civProgress)}%`);
   });
 
   document.getElementById('btn-spawn-villager').addEventListener('click', () => {
     audio.init();
-    const alivePop = agents.filter(a => a.alive).length, maxPop = 6 + buildings.filter(b => b.type === 'house').length * 4;
-    if (alivePop >= maxPop) { reportActionIssue(`🏠 บ้านพักเต็มแล้ว (${alivePop}/${maxPop})! ต้องให้ชาวบ้านสร้างบ้านเพิ่มก่อน`); return; }
-    if (state.faith < 20) { reportActionIssue('พลังศรัทธาไม่พอสำหรับเสกชาวบ้าน (ต้องการ 20 ✨)'); return; }
+    const issue = recruitmentIssue('villager', state, agents, buildings);
+    if (issue) { reportActionIssue(issue); return; }
     state.faith -= 20; audio.playBlessChime();
     const a = Math.random() * Math.PI * 2, ag = createAgent(Math.cos(a) * 4, Math.sin(a) * 4, 'villager');
     addLog(`✨ ประทานพรกำเนิด ${ag.name} เข้าร่วมหมู่บ้าน!`, 'bless');
+    showDilemmaToast(`เพิ่ม ${ag.name} แล้ว · ใช้ 20 ศรัทธา`); updateHUD();
   });
   document.getElementById('btn-train-soldier').addEventListener('click', () => {
     audio.init();
-    if (state.faith < 25) { reportActionIssue('พลังศรัทธาไม่พอสำหรับแต่งตั้งทหาร (ต้องการ 25 ✨)'); return; }
+    const issue = recruitmentIssue('soldier', state, agents, buildings);
+    if (issue) { reportActionIssue(issue); return; }
     state.faith -= 25; audio.playBlessChime();
-    const civilian = agents.find(a => a.alive && a.role === 'villager');
+    const civilian = agents.find(a => a.alive && a.role === 'villager' && !(a.carryAmount > 0));
     if (civilian) { const cx = civilian.x, cz = civilian.z; civilian.alive = false; worldObjectsGroup.remove(civilian.mesh); const sol = createAgent(cx, cz, 'soldier'); addLog(`🛡️ แต่งตั้งชาวบ้านขึ้นเป็น ${sol.name}!`, 'bless'); }
     else { const sol = createAgent(26, -18, 'soldier'); addLog(`🛡️ เสก ${sol.name} ลงมาพิทักษ์แนวหน้า!`, 'bless'); }
+    showDilemmaToast('แต่งตั้งทหาร +1 แล้ว · ใช้ 25 ศรัทธา'); updateHUD();
   });
   document.getElementById('btn-toggle-audio').addEventListener('click', () => audio.toggle());
   document.getElementById('vol-wind').addEventListener('input', (e) => { audio.volWind = parseFloat(e.target.value) / 100; audio.updateVolumes(); });
@@ -4588,19 +4700,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     if (state.civEra < 4 && dt > 0) {
       const eraSpeedDiv = state.civEra === 1 ? 1.0 : (state.civEra === 2 ? 1.45 : 1.95);
       state.civProgress = Math.min(100, state.civProgress + (dt * 0.35) / eraSpeedDiv);
-      const advBtn = document.getElementById('btn-advance-era');
-      if (advBtn) {
-        if (state.civProgress >= 100) {
-          advBtn.style.background = 'linear-gradient(135deg, #f59e0b, #eab308)';
-          advBtn.style.color = '#0f172a';
-          advBtn.textContent = `✨ พร้อมขึ้นสู่ยุคที่ ${state.civEra + 1}! (คลิกเพื่อวิวัฒนาการ)`;
-          if (state.timeScale >= 5.0) evolveToEra(state.civEra + 1);
-        } else {
-          advBtn.style.background = '';
-          advBtn.style.color = '';
-          advBtn.textContent = `🏛️ พัฒนาสู่อารยธรรมยุคถัดไป (${Math.floor(state.civProgress)}%)`;
-        }
-      }
+      if (state.civProgress >= 100 && state.timeScale >= 5.0) evolveToEra(state.civEra + 1);
     }
     for (const t of trees) {
       if (t.growth < 1.0) {
@@ -4758,14 +4858,14 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     }
 
     if (customReactionTimer > 0) customReactionTimer = Math.max(0, customReactionTimer - rawDt);
-    if (!dilemmaActive && state.timeScale > 0) {
+    if (pendingDilemmaIdx === null && state.timeScale > 0) {
       dilemmaTimer -= rawDt;
       if (dilemmaTimer <= 0) {
         dilemmaTimer = 42.0;
-        openInteractiveDilemma();
+        openInteractiveDilemma(null, false, true);
       }
     }
-    if (dilemmaActive) renderDilemmaSceneCanvas(elapsedTime);
+    if (dilemmaActive && dilemmaOverlay.classList.contains('visible')) renderDilemmaSceneCanvas(elapsedTime);
     updateThoughtBubbles(elapsedTime);
     economy?.render();
     updateWorkerSelection();
@@ -4781,7 +4881,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       drawAnalyticsChart(); updateHUD();
     }
 
-    if (!dilemmaActive || dilemmaOverlay.classList.contains("peek-3d") || ((Math.floor(elapsedTime * 60) % 6) === 0)) {
+    if (!dilemmaActive || !dilemmaOverlay.classList.contains('visible') || dilemmaOverlay.classList.contains("peek-3d") || ((Math.floor(elapsedTime * 60) % 6) === 0)) {
       renderer.render(scene, camera);
     }
     setTimeout(() => requestAnimationFrame(animate), 42);
@@ -4829,7 +4929,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
 
   window.addEventListener('keydown', (e) => {
     if (e.code === 'KeyH') setAllHudHidden(!allHudHidden);
-    if (e.code === 'Escape') { economy?.reset(); if (dilemmaActive) closeInteractiveDilemma('⏸ พับเก็บเหตุการณ์ไว้ตัดสินใจภายหลัง'); else { state.selectedEntity = null; camCtrl.followEntity = null; document.getElementById('inspector-card').classList.remove('visible'); } }
+    if (e.code === 'Escape') { economy?.reset(); if (dilemmaActive) closeInteractiveDilemma('คำถามยังตอบได้บนหน้าจอ'); else { state.selectedEntity = null; camCtrl.followEntity = null; document.getElementById('inspector-card').classList.remove('visible'); } }
   });
 
 
@@ -4979,7 +5079,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     if (workerSelection.visible) workerSelection.position.set(agent.x, getTerrainHeightAt(agent.x,agent.z)+0.18, agent.z);
   }
   economy = createEconomyControls({ window, state, agents, trees, ores, buildings, camCtrl,
-    updateInspector: updateInspectorUI, updateHUD, issue: reportActionIssue, log: addLog, notify: showDilemmaToast,
+    updateInspector: updateInspectorUI, updateWorkerCommands, updateLayout: syncHudDockHeight, updateHUD, issue: reportActionIssue, log: addLog, notify: showDilemmaToast,
     setObserve: () => setGodPower('observe'), placementIssue: getBuildingPlacementIssue,
     createBuilding: (type,x,z) => type === 'house' ? createHouse(x,z,0.05,state.civEra) : createWatchtower(x,z,0.05,state.civEra),
     terrainPoint: getTerrainIntersection,

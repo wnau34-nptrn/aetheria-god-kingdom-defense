@@ -50,6 +50,7 @@ try {
         const a = AETHERIA_API;
         return { time:a.simulationTime, speed:a.state.timeScale, faith:a.state.faith,
           power:a.state.activePower, wood:a.state.wood, ore:a.state.ore, autoBuild:a.state.autoBuild, people:a.agents.filter(v=>v.alive).length,
+          soldiers:a.agents.filter(v=>v.alive&&v.role==='soldier').length,
           hudPeople:Number(document.getElementById('quick-pop').textContent) };
       });
       const speeds = [];
@@ -69,6 +70,28 @@ try {
         assert.equal(before.faith - after.faith, 15, 'one touch must spend one rain cost');
       }
       await page.click('[data-power="observe"]');
+      // Important commands are available from the HUD, without a drawer.
+      assert.equal(await page.locator('#left-panel').isVisible(), false);
+      const beforeRecruit = await read();
+      await page.click('#btn-spawn-villager');
+      const afterRecruit = await read();
+      assert.equal(afterRecruit.people, beforeRecruit.people + 1);
+      assert.ok(Math.abs(afterRecruit.faith - (beforeRecruit.faith - 20)) < 1e-6);
+      await page.click('#btn-train-soldier');
+      const afterTraining = await read();
+      assert.equal(afterTraining.soldiers, beforeRecruit.soldiers + 1);
+      assert.ok(Math.abs(afterTraining.faith - (afterRecruit.faith - 25)) < 1e-6);
+      assert.equal(await page.locator('#quick-soldiers').textContent(), String(afterTraining.soldiers));
+      await page.click('#btn-trigger-dilemma');
+      assert.equal(await page.locator('#decision-card').isVisible(), true);
+      assert.equal(await page.locator('#dilemma-overlay').isVisible(), false);
+      assert.equal(await page.locator('#decision-card .dl-choice-btn').count(), 3);
+      // A failed random council plot keeps its choices; try another affordable decision.
+      for (let choice=0;choice<3 && await page.locator('#decision-card').isVisible();choice++) {
+        const button = page.locator(`#dl-choice-${choice}`);
+        if (await button.getAttribute('aria-disabled') === 'false') await button.click();
+      }
+      assert.equal(await page.locator('#decision-card').isVisible(), false);
       // Exercise the economy entry point on the built/deployed version too.
       const beforeOrder = await read(); assert.equal(beforeOrder.autoBuild, false);
       await page.click('#resource-wood');

@@ -31,7 +31,7 @@
         <button class="btn-mini" id="btn-upload-scene-img" title="นำเข้าไฟล์ภาพของคุณเอง (PNG/JPG/WebP) เพื่อใช้เป็นภาพฉากหรือพอร์ตเทรต NPC ในเหตุการณ์นี้" style="padding:2px 8px; color:#fde047; border-color:rgba(251,191,36,0.5);">🖼️ นำเข้ารูปเอง</button>
         <button class="btn-mini" id="btn-peek-3d-scene" title="สลับโหมดโปร่งแสงเพื่อส่องดูสถานที่เกิดเหตุจริงในโลก 3 มิติ" style="padding:2px 8px; color:#38bdf8; border-color:rgba(56,189,248,0.45);">🎥 ส่องฉาก 3D จริง</button>
 
-      </div></details><button class="btn-mini" id="btn-close-dilemma" title="ปิดหน้าต่างนี้ไว้ตัดสินใจภายหลัง [Esc]" style="padding:2px 7px; color:#fda4af; border-color:rgba(251,113,133,0.4);" aria-label="ปิดเหตุการณ์">ปิด</button></div>
+      </div></details><button class="btn-mini" id="btn-close-dilemma" title="กลับไปเล่นต่อ · คำถามยังอยู่บนหน้าจอ [Esc]" style="padding:2px 7px; color:#fda4af; border-color:rgba(251,113,133,0.4);" aria-label="กลับสู่เกม">กลับสู่เกม</button></div>
     <div class="dl-body-grid">
       <div class="dl-visual-pane">
         <canvas id="dl-scene-canvas" width="320" height="310"></canvas>
@@ -47,7 +47,7 @@
       </div>
       <div class="dl-content-pane">
         <div>
-          <div class="dl-title" id="dl-title">คำร้องวิงวอนจากหมู่บ้าน</div>
+          <div class="dl-title" id="dl-title" tabindex="-1">คำร้องวิงวอนจากหมู่บ้าน</div>
           <div class="dl-speaker-box">
             <div class="dl-avatar" id="dl-avatar">🧑‍🌾</div>
             <div>
@@ -57,7 +57,7 @@
           </div>
           <div class="dl-desc" id="dl-desc">รายละเอียดเหตุการณ์</div>
         </div>
-        <div class="dl-choices" id="dl-choices"></div>
+        <div id="dl-choices-host"><div class="dl-choices" id="dl-choices"></div></div>
       </div>
     </div>
   </div>
@@ -113,7 +113,6 @@
       <div class="progress-track" style="border-color:rgba(56,189,248,0.35); margin-bottom:6px;">
         <div class="progress-fill" id="civ-bar-fill" style="width:15%; background:linear-gradient(90deg, #10b981, #38bdf8, #a855f7);"></div>
       </div>
-      <button class="btn-mini" id="btn-advance-era" style="width:100%; padding:5px; margin-bottom:6px; color:#fde047; border-color:rgba(251,191,36,0.5);">🏛️ พัฒนาสู่อารยธรรมยุคถัดไป (Advance Era)</button>
     </div>
     <div class="faith-bar-wrap">
       <div class="faith-bar-top">
@@ -122,17 +121,12 @@
       </div>
       <div class="progress-track"><div class="progress-fill" id="faith-bar-fill" style="width:60%;"></div></div>
     </div>
-    <div style="display:flex; gap:6px; margin-top:9px;">
-      <button class="btn-mini" id="btn-spawn-villager" style="flex:1; padding:6px;">เพิ่มชาวบ้าน · 20 ศรัทธา</button>
-      <button class="btn-mini" id="btn-train-soldier" style="flex:1; padding:6px;">แต่งตั้งทหาร · 25 ศรัทธา</button>
-    </div>
+
   </div>
 
   <div class="glass-card">
     <div class="card-header">จัดการคนงานและก่อสร้าง</div>
-    <button id="btn-select-worker" class="btn-mini" style="width:100%">เลือกคนงาน · สั่งเก็บทรัพยากร</button>
-    <p class="help-copy">เลือกคนงาน → กดตัดไม้ / ขุดแร่ / เก็บผลไม้ · AI หาแหล่งและเดินไปเก็บเอง ของเข้าคลังเมื่อส่งถึงวิหารกลางเมือง</p>
-    <div class="construction-options"><button class="btn-mini" data-build="house">บ้าน · ไม้ 25 + แร่ 18</button><button class="btn-mini" data-build="tower">ป้อม · ไม้ 25 + แร่ 18</button></div>
+    <p class="help-copy">ใช้ปุ่มคนงาน บ้าน และป้อมบนแถบคำสั่งด้านล่างได้ทันที · AI หาแหล่งเก็บและขนกลับคลังให้เอง</p>
     <label class="help-copy auto-build-option"><input type="checkbox" id="auto-build"> สร้างอัตโนมัติ (ใช้ไม้ 25 + แร่ 18 ต่อหลัง)</label>
     <p class="help-copy">ปิดไว้เริ่มต้น · เลือกพื้นเกาะและยืนยันก่อนจ่าย · คนงานขนของเสร็จแล้วไปสร้าง</p>
   </div>
@@ -153,6 +147,14 @@
   </div>
 
   </div>
+
+<section id="decision-card" aria-labelledby="decision-title" hidden>
+  <header class="decision-heading"><span id="decision-status">รอคำตัดสิน</span><button id="btn-decision-details" class="btn-mini">เรื่องราว</button></header>
+  <h2 id="decision-title" tabindex="-1" aria-live="polite"></h2>
+  <p id="decision-speaker"></p>
+  <div id="decision-choices"></div>
+  <button id="btn-decision-continue" class="btn-mini">เล่นต่อ · เก็บคำถามไว้</button>
+</section>
 
 <div class="glass-card" id="inspector-card">
   <div class="card-header">
@@ -202,7 +204,21 @@
       <button id="resource-wood" data-resource="wood" aria-label="ไม้ · ดูแหล่งที่มา"><span class="resource-name">ไม้</span><strong id="quick-wood">20</strong></button>
       <button id="resource-ore" data-resource="ore" aria-label="แร่ศิลา · ดูแหล่งที่มา"><span class="resource-name">แร่ศิลา</span><strong id="quick-ore">15</strong></button>
     </div>
-    <div class="threat-line"><span>คน <strong id="quick-pop">7</strong> · อสูร <strong id="quick-enemies">0</strong> · <span id="night-countdown"></span></span><span id="night-guidance" role="status"></span></div>
+    <div class="threat-line"><span>คน <strong id="quick-pop">7</strong>/<span id="quick-capacity">10</span> · ทหาร <strong id="quick-soldiers">1</strong> · อสูร <strong id="quick-enemies">0</strong> · <span id="night-countdown"></span></span><span id="night-guidance" role="status"></span></div>
+  </div>
+  <section id="worker-task-bar" aria-label="คำสั่งคนงานที่เลือก" hidden>
+    <div class="worker-task-heading"><strong id="worker-task-name"></strong><span id="worker-task-order"></span></div>
+    <div class="worker-commands" role="group" aria-label="สั่งงาน · AI หาแหล่งให้เอง">
+      <button class="btn-mini" data-worker-resource="wood">ตัดไม้</button><button class="btn-mini" data-worker-resource="ore">ขุดแร่</button><button class="btn-mini" data-worker-resource="food">เก็บผลไม้</button><button class="btn-mini" data-worker-resource="auto">งานอัตโนมัติ</button>
+    </div>
+  </section>
+  <div id="command-bar" role="group" aria-label="คำสั่งอาณาจักร · กดใช้ได้ทันที">
+    <button class="command-btn" id="btn-train-soldier" aria-describedby="soldier-cost"><span>ทหาร +1</span><small id="soldier-cost">25 ศรัทธา</small></button>
+    <button class="command-btn" id="btn-spawn-villager" aria-describedby="villager-cost"><span>ชาวบ้าน +1</span><small id="villager-cost">20 ศรัทธา</small></button>
+    <button class="command-btn" id="btn-select-worker"><span>เลือกคนงาน</span><small>สั่งเก็บทรัพยากร</small></button>
+    <button class="command-btn" data-build="house"><span>สร้างบ้าน</span><small>ไม้ 25 · แร่ 18</small></button>
+    <button class="command-btn" data-build="tower"><span>สร้างป้อม</span><small>ไม้ 25 · แร่ 18</small></button>
+    <button class="command-btn" id="btn-advance-era"><span>พัฒนายุค</span><small id="command-era-progress">ก้าวหน้า 0%</small></button>
   </div>
   <div id="construction-bar" class="glass-card" hidden><span id="construction-hint" role="status"></span><div><button id="btn-confirm-construction" class="btn-mini">ยืนยันก่อสร้าง</button><button id="btn-cancel-construction" class="btn-mini">ยกเลิก</button></div></div>
   <div id="placement-feedback" hidden="" role="status"></div>
