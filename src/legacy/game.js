@@ -4,11 +4,13 @@ import { RESOURCE_INFO, availableNode, nearestResourceNode, depositCargo } from 
 import { createEconomyControls } from '../ui/economy-controls.js';
 import { recruitmentIssue, constructionRequirement } from '../systems/command-rules.js';
 import { createDecisionControls } from '../ui/decision-controls.js';
+import { advanceMelee, chooseCombatTarget, clearMelee, meleeReach, separateCombatants } from '../systems/combat.js';
+import { createCombatView } from '../render/combat-view.js';
 import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
 
 (() => {
   'use strict';
-  let economy, decisionUI;
+  let economy, decisionUI, combatView;
   let pendingDilemmaIdx = null;
 
   class SimplexNoise2D {
@@ -129,6 +131,25 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
           osc.connect(gain); gain.connect(this.ctx.destination); osc.start(now + i * 0.07); osc.stop(now + i * 0.07 + 0.7);
         });
       } catch (e) {}
+    }
+    playCombatSound(kind, heavy = false, armor = false) {
+      if (!this.ctx || !this.enabled) return;
+      const now=this.ctx.currentTime;
+      this.combatVoices=(this.combatVoices||[]).filter(end=>end>now);
+      this.lastCombatSound=this.lastCombatSound||{};
+      if(this.combatVoices.length>=10 || now-(this.lastCombatSound[kind]??-1)<0.045)return;
+      this.lastCombatSound[kind]=now;
+      try {
+        const duration=kind==='fall'?0.28:kind==='swing'?0.09:0.14;
+        const osc=this.ctx.createOscillator(),gain=this.ctx.createGain();
+        osc.type=kind==='swing'?'triangle':armor?'square':'sine';
+        const start=kind==='swing'?460:kind==='fall'?95:armor?580:heavy?135:210;
+        osc.frequency.setValueAtTime(start,now);osc.frequency.exponentialRampToValueAtTime(kind==='swing'?180:kind==='fall'?28:armor?110:45,now+duration);
+        gain.gain.setValueAtTime(0.001,now);gain.gain.linearRampToValueAtTime((kind==='swing'?0.025:0.095)*this.volSfx,now+0.008);gain.gain.exponentialRampToValueAtTime(0.0001,now+duration);
+        osc.connect(gain);gain.connect(this.ctx.destination);osc.start(now);osc.stop(now+duration+0.01);
+        this.combatVoices.push(now+duration);
+        osc.onended=()=>{osc.disconnect();gain.disconnect();};
+      } catch(e) {}
     }
     playWorkTick(isMetal = false) {
       if (!this.ctx || !this.enabled) return;
@@ -2006,7 +2027,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     }[role] || '🧑‍🌾 ชาวบ้าน ';
     const agent = {
       id, type: 'agent', role, name: rolePrefix + name,
-      mesh: g, rightArm, leftArm, leftLeg, rightLeg, torchGroup, flameOrb, stateGem, carryBundle, x, z,
+      mesh: g, rightArm, leftArm, leftLeg, rightLeg, torchGroup, flameOrb, stateGem, carryBundle, combatMaterial:tunicMat, x, z,
       hp: isSoldier ? 160 : 90, maxHp: isSoldier ? 160 : 90, hunger: 15 + Math.random() * 25,
       state: isSoldier ? 'PATROL' : 'GATHER', stateLabel: isSoldier ? 'ลาดตระเวน' : 'ตัดไม้/ขุดแร่',
       targetObj: null, workTimer: 0, carryType: null, carryAmount: 0, walkCycle: Math.random() * 10, alive: true
@@ -2085,7 +2106,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     const m = {
       type: 'monster', isBoss, isBrute,
       name: isBoss ? '🔥 จอมอสูรแม่ทัพอเวจี (Void Overlord)' : (isBrute ? '🪨 โกเลมศิลาทมิฬ (Siege Brute)' : '🐾 อสูรเงาว่องไว (Shadow Stalker)'),
-      mesh: g, leftLeg, rightLeg, leftArm, rightArm, x: sx, z: sz,
+      mesh: g, leftLeg, rightLeg, leftArm, rightArm, combatMaterial:skinMat, x: sx, z: sz,
       hp: maxHp, maxHp, dmg: Math.round(baseDmg * eraScale),
       speed: isBoss ? 5.4 : (isBrute ? 6.0 : 8.0), attackTimer: 0, alive: true
     };
@@ -2100,6 +2121,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   };
 
   function populateWorld(era = 1, resetNature = false) {
+    combatView?.reset();
     currentCivEra = era;
     rebuildTerrainVertices();
     const keepNature = !resetNature && trees.length > 0;
@@ -2402,13 +2424,13 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     for (const m of monsters) {
       if (!m.alive) continue;
       const d = Math.hypot(m.x - tx, m.z - tz);
-      if (d <= 15.5) { m.hp -= 240 * (1 - d / 18); if (m.hp <= 0) { m.alive = false; worldObjectsGroup.remove(m.mesh); kills++; state.faith = Math.min(state.maxFaith, state.faith + 8); } }
+      if (d <= 15.5 && applyCombatDamage(m,240*(1-d/18),{x:tx,z:tz},'meteor',8)) kills++;
     }
     let friendlyHit = 0;
     for (const ag of agents) {
       if (!ag.alive || !ag.mesh.visible) continue;
       const d = Math.hypot(ag.x - tx, ag.z - tz);
-      if (d <= 9.5) { ag.hp -= 45 * (1 - d / 10); friendlyHit++; if (ag.hp <= 0) { ag.alive = false; worldObjectsGroup.remove(ag.mesh); } }
+      if (d <= 9.5) { applyCombatDamage(ag,45*(1-d/10),{x:tx,z:tz},'meteor'); friendlyHit++; }
     }
     for (let i = buildings.length - 1; i >= 0; i--) {
       const b = buildings[i]; if (b.type === 'temple') continue;
@@ -2444,11 +2466,10 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     for (const m of monsters) {
       if (!m.alive) continue;
       if (Math.hypot(m.x - tx, m.z - tz) <= 11.5) {
-        m.hp -= 155; hitCount++;
-        if (m.hp <= 0) { m.alive = false; worldObjectsGroup.remove(m.mesh); state.faith = Math.min(state.maxFaith, state.faith + 7); }
+        applyCombatDamage(m,155,{x:tx,z:tz},'bolt',7); hitCount++;
       }
     }
-    for (const ag of agents) if (ag.alive && ag.mesh.visible && Math.hypot(ag.x - tx, ag.z - tz) <= 3.8) ag.hp = Math.max(10, ag.hp - 25);
+    for (const ag of agents) if (ag.alive && ag.mesh.visible && Math.hypot(ag.x - tx, ag.z - tz) <= 3.8) applyCombatDamage(ag,Math.max(0,Math.min(25,ag.hp-10)),{x:tx,z:tz},'bolt');
     addLog(`⚡ สายฟ้าสวรรค์ฟาดลงพื้น! ผ่าร่างมอนสเตอร์ ${hitCount} ตัว`, 'bless');
   }
 
@@ -2575,7 +2596,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   canvas.addEventListener('pointercancel', () => { camCtrl.isDragging = camCtrl.isPanning = isTerraformDragging = false; });
   window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
 
-  function moveTowards(entity, tx, tz, speed, dt) {
+  function moveTowards(entity, tx, tz, speed, dt, stopDistance = 0) {
     const finalDist = Math.hypot(tx - entity.x, tz - entity.z);
     let goalX = tx, goalZ = tz;
     const bridgeZ = (currentCivEra >= 3 && Math.abs(entity.z + 16.0) < Math.abs(entity.z - 14.0)) ? -16.0 : 14.0;
@@ -2615,7 +2636,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
         if (od < 1.15 && od > 0.001) { const push = (1.15 - od) / 1.15; dirX += (ox / od) * push * 1.1; dirZ += (oz / od) * push * 1.1; }
       }
       const dirLen = Math.hypot(dirX, dirZ) || 1; dirX /= dirLen; dirZ /= dirLen;
-      const step = Math.min(dist, speed * dt), nextX = entity.x + dirX * step, nextZ = entity.z + dirZ * step, nextH = getTerrainHeightAt(nextX, nextZ);
+      const step = Math.min(dist, speed * dt, Math.max(0,finalDist-stopDistance)), nextX = entity.x + dirX * step, nextZ = entity.z + dirZ * step, nextH = getTerrainHeightAt(nextX, nextZ);
       const onBridge = Math.abs(nextZ - bridgeZ) <= 2.2 && Math.abs(nextX - bridgeX) <= halfSpan + 1.0;
       if (nextH < 9.5 && (onBridge || !isPointInRiver(nextX, nextZ))) {
         entity.x = nextX; entity.z = nextZ;
@@ -2653,6 +2674,34 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     agent.carryBundle.visible = amount > 0;
   }
 
+  function defeatCombatant(entity) {
+    if(entity.alive===false)return;
+    entity.alive=false;clearMelee(entity);
+    if(combatView)combatView.retire(entity);else worldObjectsGroup.remove(entity.mesh);
+    if(state.selectedEntity===entity){state.selectedEntity=null;camCtrl.followEntity=null;document.getElementById('inspector-card').classList.remove('visible');}
+  }
+
+  function applyCombatDamage(target,amount,source,kind='melee',reward=0) {
+    if(target.alive===false||target.hp<=0||amount<=0)return false;
+    const actual=Math.min(amount,target.hp);target.hp-=amount;
+    combatView?.hit(target,source,actual,kind);
+    if(target.hp<=0){
+      if(target.type==='agent'||target.type==='monster')defeatCombatant(target);
+      if(reward)state.faith=Math.min(state.maxFaith,state.faith+reward);
+      return true;
+    }
+    return false;
+  }
+
+  function approachAndStrike(entity,target,speed,dt) {
+    const action=entity.combat,committed=action&&action.target===target&&action.phase!=='idle';
+    const reach=meleeReach(entity,target),distance=Math.hypot(target.x-entity.x,target.z-entity.z);
+    if(!committed&&distance>reach-0.08)moveTowards(entity,target.x,target.z,speed,dt,reach-0.08);
+    const result=advanceMelee(entity,target,dt);
+    if(result.swing)audio.playCombatSound('swing',entity.isBoss||entity.isBrute);
+    return result;
+  }
+
   function updateAutonomousAgents(dt, elapsedTime) {
     let cForage = 0, cGather = 0, cBuild = 0, cShelter = 0, cPatrol = 0;
     state.autoBuildCooldown -= dt;
@@ -2684,27 +2733,23 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
 
       if (ag.role === 'soldier') {
         soldierIdx++; ag.mesh.visible = true;
-        let nearestMonster = null, minMDist = 999;
-        for (const m of monsters) { if (!m.alive) continue; const d = Math.hypot(m.x - ag.x, m.z - ag.z); if (d < minMDist) { minMDist = d; nearestMonster = m; } }
+        const nearestMonster=chooseCombatTarget(ag,monsters);
+        const minMDist=nearestMonster?Math.hypot(nearestMonster.x-ag.x,nearestMonster.z-ag.z):Infinity;
         if (ag.hunger > 78 && !nearestMonster) {
+          clearMelee(ag);ag.rightArm.rotation.z=0;
           ag.state = 'FORAGE'; ag.stateLabel = 'หิว ➔ กินเสบียง'; ag.stateGem.material.color.setHex(0xfb7185); cForage++;
           if (moveTowards(ag, 0, 0, 5.8, dt) < 3.5) { ag.hunger = 0; ag.hp = ag.maxHp; if (state.food > 0) state.food--; }
         } else if (nearestMonster && (minMDist < 32 || state.isNight)) {
           ag.state = 'COMBAT'; ag.stateLabel = '⚔️ ปะทะมอนสเตอร์'; ag.stateGem.material.color.setHex(0xef4444); cPatrol++;
-          const d = moveTowards(ag, nearestMonster.x, nearestMonster.z, 6.6, dt);
-          ag.rightArm.rotation.x = Math.sin(elapsedTime * 18) * 1.1;
-          if (d < 2.4) {
-            ag.workTimer += dt;
-            if (ag.workTimer >= 0.45) {
-              ag.workTimer = 0; nearestMonster.hp -= 24; audio.playWorkTick(true);
-              if (nearestMonster.hp <= 0) { nearestMonster.alive = false; worldObjectsGroup.remove(nearestMonster.mesh); state.faith = Math.min(state.maxFaith, state.faith + 6); }
-            }
-          }
+          const strike=approachAndStrike(ag,nearestMonster,6.6,dt);
+          if(strike.hit)applyCombatDamage(nearestMonster,24,ag,'melee',6);
         } else if (state.isNight) {
+          clearMelee(ag);ag.rightArm.rotation.z=0;
           ag.state = 'NIGHT_DEFENSE'; ag.stateLabel = '🔥 ถือคบเพลิงตั้งแถวป้องกัน'; ag.stateGem.material.color.setHex(0x38bdf8); cPatrol++;
           const spread = (soldierIdx - (soldiers.length + 1) / 2) * 3.2;
           if (moveTowards(ag, 38.0 + spread * 0.85, -30.0 + spread * 0.85, 6.2, dt) < 0.9 && portalObj) ag.mesh.lookAt(portalObj.x, ag.mesh.position.y, portalObj.z);
         } else {
+          clearMelee(ag);ag.rightArm.rotation.z=0;
           ag.state = 'PATROL'; ag.stateLabel = '🛡️ ลาดตระเวนรอบเกาะ'; ag.stateGem.material.color.setHex(0x38bdf8); cPatrol++;
           const patrolAng = elapsedTime * 0.22 + soldierIdx * 1.5;
           moveTowards(ag, Math.cos(patrolAng) * 14, Math.sin(patrolAng) * 14, 4.2, dt);
@@ -2859,26 +2904,18 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     }
     for (let i = monsters.length - 1; i >= 0; i--) {
       const m = monsters[i]; if (!m.alive) { monsters.splice(i, 1); continue; }
-      let target = null, minDist = 999;
-      for (const ag of agents) if (ag.alive && ag.mesh.visible) { const d = Math.hypot(ag.x - m.x, ag.z - m.z); if (d < minDist) { minDist = d; target = ag; } }
-      for (const b of buildings) { const d = Math.hypot(b.x - m.x, b.z - m.z); if (d < minDist) { minDist = d; target = b; } }
+      const target=chooseCombatTarget(m,[...agents,...buildings]);
       if (target) {
-        const d = moveTowards(m, target.x, target.z, m.speed, dt);
-        m.mesh.position.y += Math.abs(Math.sin(elapsedTime * 9 + i)) * 0.35;
-        if (d < 2.3) {
-          m.attackTimer += dt;
-          if (m.attackTimer >= 0.85) {
-            m.attackTimer = 0; target.hp -= m.dmg;
-            if (target.hp <= 0) {
+        const strike=approachAndStrike(m,target,m.speed,dt);
+        if (strike.hit) {
+            const killed=applyCombatDamage(target,m.dmg,m);
+            if (killed) {
               if (target.type === 'agent') {
-                target.alive = false; worldObjectsGroup.remove(target.mesh);
-                if (state.selectedEntity === target) { state.selectedEntity = null; document.getElementById('inspector-card').classList.remove('visible'); }
                 addLog(`⚠️ ${target.name} พ่ายแพ้ในการปกป้องหมู่บ้าน!`, 'warn');
               } else if (target.type === 'temple') {
                 target.hp = Math.round(target.maxHp * 0.65);
                 spawnShockwaveRing(0, getTerrainHeightAt(0, 0), 0, 0xfbbf24, 18, 0.8);
-                m.hp -= 85;
-                if (m.hp <= 0) { m.alive = false; worldObjectsGroup.remove(m.mesh); }
+                applyCombatDamage(m,85,target,'bolt');
                 addLog(`🛡️ เกราะศักดิ์สิทธิ์แห่งมหาวิหารทำงาน! สะท้อนพลังโจมตีใส่อสูรและฟื้นฟูวิหาร`, 'bless');
               } else {
                 worldObjectsGroup.remove(target.mesh);
@@ -2888,9 +2925,8 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
                 addLog(`🏚️ ${target.name} ถูกฝูงมอนสเตอร์ทำลายพังทลายลง!`, 'warn');
               }
             }
-          }
         }
-      }
+      } else clearMelee(m);
     }
   }
 
@@ -2918,7 +2954,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       for (const m of monsters) {
         if (!m.alive) continue;
         m.hp -= dt * (m.isBoss ? 7 : 14);
-        if (m.hp <= 0) { m.alive = false; worldObjectsGroup.remove(m.mesh); }
+        if (m.hp <= 0) defeatCombatant(m);
       }
     }
     if (!wasNight && state.isNight && !state.siegeTriggeredTonight) {
@@ -3728,9 +3764,9 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
             let hit = 0;
             for (const m of monsters) {
               if (!m.alive) continue;
-              m.hp -= 160; hit++;
+              applyCombatDamage(m,160,null,'bolt'); hit++;
               spawnShockwaveRing(m.x, getTerrainHeightAt(m.x, m.z), m.z, 0x38bdf8, 8, 0.5);
-              if (m.hp <= 0) { m.alive = false; worldObjectsGroup.remove(m.mesh); }
+              if (m.hp <= 0 && m.alive) defeatCombatant(m);
             }
             for (const a of agents) { if (a.alive && a.role === 'soldier') a.hp = a.maxHp; }
             triggerScreenFlash();
@@ -4779,13 +4815,14 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
         if (!p.target || !p.target.alive) { scene.remove(p.mesh); projectiles.splice(i, 1); continue; }
         const ty = getTerrainHeightAt(p.target.x, p.target.z) + 1.0, dx = p.target.x - p.x, dy = ty - p.y, dz = p.target.z - p.z, dist = Math.hypot(dx, dy, dz), step = p.speed * dt;
         if (dist <= step + 0.6) {
-          p.target.hp -= 28;
-          if (p.target.hp <= 0) { p.target.alive = false; worldObjectsGroup.remove(p.target.mesh); state.faith = Math.min(state.maxFaith, state.faith + 5); }
+          applyCombatDamage(p.target,28,{x:p.x,z:p.z},'bolt',5);
           scene.remove(p.mesh); projectiles.splice(i, 1);
         } else { p.x += (dx / dist) * step; p.y += (dy / dist) * step; p.z += (dz / dist) * step; p.mesh.position.set(p.x, p.y, p.z); }
       }
     }
 
+    combatView?.step(dt);
+    separateCombatants([...agents.filter(a=>a.role==='soldier'),...monsters],dt,(entity,x,z)=>Math.hypot(x,z)<ISLAND_RADIUS-4&&getTerrainHeightAt(x,z)<9.5&&(!isPointInRiver(x,z)||isOnBridgeDeck(x,z))&&!isNearBuildingFoundation(x,z,0.35));
     updateAutonomousAgents(dt, simulationTime);
     updateMonstersAndTowers(dt, simulationTime);
   }
@@ -4871,6 +4908,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     economy?.render();
     updateWorkerSelection();
     renderMinimap();
+    combatView?.render([...agents,...monsters],state.selectedEntity,allHudHidden);
 
     state.sampleTimer += rawDt;
     if (state.sampleTimer >= 0.8) {
@@ -5089,7 +5127,12 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     time: () => simulationClock.time, project: projectWorldToScreen, height: getTerrainHeightAt
   });
 
+  combatView=createCombatView({THREE,scene,world:worldObjectsGroup,document,window,
+    height:e=>Math.max(getTerrainHeightAt(e.x,e.z),isOnBridgeDeck(e.x,e.z)?4.22:-Infinity),
+    project:projectWorldToScreen,sound:(kind,heavy,armor)=>audio.playCombatSound(kind,heavy,armor)});
+
   window.AETHERIA_API = {
+    get combatFeedback(){return combatView.snapshot();},
     get simulationTime() { return simulationClock.time; },
     // Copied camera pose for read-only diagnostics, including between render frames.
     get cameraView() { return { position: { ...camera.position }, target: { ...camera._lookTarget }, fov: camera.fov }; },

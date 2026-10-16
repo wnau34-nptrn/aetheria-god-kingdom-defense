@@ -3,6 +3,8 @@ import { RESOURCE_INFO, availableNode, nearestResourceNode, workerResource, depo
 import { createEconomyControls } from '../../src/ui/economy-controls.js';
 import { recruitmentIssue, constructionRequirement } from '../../src/systems/command-rules.js';
 import { createDecisionControls } from '../../src/ui/decision-controls.js';
+import { advanceMelee, chooseCombatTarget, clearMelee, meleeReach, separateCombatants } from '../../src/systems/combat.js';
+import { createCombatView } from '../../src/render/combat-view.js';
 import { JSDOM } from 'jsdom';
 import { createFixedStepper } from '../../src/systems/fixed-step.js';
 import { chooseFoodTree } from '../../src/systems/food-target.js';
@@ -39,7 +41,7 @@ export function createGameHarness({ seed = 1234, source } = {}) {
     render() {}
   };
   w.THREE.Clock = class { getDelta() { return frameDelta; } };
-  Object.assign(w, { RESOURCE_INFO, availableNode, nearestResourceNode, workerResource, depositCargo, createEconomyControls, recruitmentIssue, constructionRequirement, createDecisionControls, parseProgress, PROGRESS_KEY, createFixedStepper, chooseFoodTree });
+  Object.assign(w, { RESOURCE_INFO, availableNode, nearestResourceNode, workerResource, depositCargo, createEconomyControls, recruitmentIssue, constructionRequirement, createDecisionControls, parseProgress, PROGRESS_KEY, createFixedStepper, chooseFoodTree, advanceMelee, chooseCombatTarget, clearMelee, meleeReach, separateCombatants, createCombatView });
   w.eval((source ?? readFileSync(new URL('../../src/legacy/game.js', import.meta.url), 'utf8')).replace(/^import .+;\n/gm, ''));
   const api = w.AETHERIA_API;
   // Avoid unnecessary thought-bubble DOM churn; this does not change simulation.

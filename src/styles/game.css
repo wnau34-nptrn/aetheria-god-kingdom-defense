@@ -22,6 +22,7 @@ button:focus-visible, summary:focus-visible, input:focus-visible { outline: 2px 
 #game-canvas { position: fixed; inset: 0; display: block; width: 100%; height: 100%; z-index: 1; cursor: grab; touch-action: none; }
 #game-canvas.power-active { cursor: crosshair; }
 #game-canvas:active { cursor: grabbing; }
+#combat-feedback { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
 #screen-flash { position: fixed; inset: 0; pointer-events: none; z-index: 5; background: radial-gradient(circle,#ffffffd9,#bae6fd59 60%,transparent); opacity: 0; transition: opacity .08s; }
 #top-bar, #hud-master-control, #god-dock, #kingdom-readout, #sub-power-bar, #placement-feedback { background: var(--bg-glass-strong); border: 1px solid var(--border-glass); box-shadow: var(--shadow); }
 #top-bar { position: fixed; left: 18px; top: max(18px,env(safe-area-inset-top)); z-index: 44; display: flex; align-items: center; gap: 16px; padding: 10px 14px; border-radius: var(--radius); white-space: nowrap; }
