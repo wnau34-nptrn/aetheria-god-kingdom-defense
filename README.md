@@ -8,7 +8,9 @@
 
 ## เวอร์ชันออนไลน์
 
-เตรียมเผยแพร่ผ่าน GitHub Pages จาก `main` หลังการตรวจผ่าน เจ้าของ repo ต้องเปิด Source เป็น GitHub Actions ครั้งแรกตาม [คู่มือ Pages](docs/PAGES.th.md) เมื่อ deployment สำเร็จ URL จะเป็น https://wnau34-nptrn.github.io/aetheria-god-kingdom-defense/
+[เปิดเล่น AETHERIA บน GitHub Pages](https://wnau34-nptrn.github.io/aetheria-god-kingdom-defense/)
+
+เผยแพร่จาก `main` หลังการตรวจผ่าน อ่าน [คู่มือ Pages](docs/PAGES.th.md) สำหรับขั้นตอนและการตรวจเวอร์ชันออนไลน์
 
 อ่าน [แนวทางทดลองผ่านคืนแรกที่ 1x/5x](docs/PLAYTEST_GUIDE.th.md) เพื่อส่งผลเรื่องความเข้าใจและความยาก
 

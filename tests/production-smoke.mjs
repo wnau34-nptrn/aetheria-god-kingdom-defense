@@ -79,10 +79,23 @@ try {
         const version = await context.request.get(url.href); assert.equal(version.status(),200);
         assert.equal((await version.json()).commit, process.env.EXPECTED_GAME_COMMIT);
       }
-      await page.screenshot({path:`${evidence}/${mobile?'mobile':'desktop'}.png`});
       assert.ok(assets.some(v=>v.url.includes('/assets/')&&v.url.includes('.js')), 'bundled modules loaded');
       assert.deepEqual(failures,[]); assert.deepEqual(errors,[]);
-      runs.push({mobile,viewport,speeds,final,assets,errors,failures});
+      const run = {mobile,viewport,speeds,final,assets,errors,failures,capture:{status:'pending',startedAt:new Date().toISOString()}};
+      runs.push(run);
+      const report = () => writeFile(`${evidence}/summary.json`, JSON.stringify({target,mode:process.env.GAME_SMOKE_URL?'deployed':'local-production-subpath',expectedCommit:process.env.EXPECTED_GAME_COMMIT||null,runs},null,2));
+      await report();
+      try {
+        await page.bringToFront();
+        await page.screenshot({path:`${evidence}/${mobile?'mobile':'desktop'}.png`,animations:'disabled',timeout:90000});
+        run.capture.status = 'passed';
+        run.capture.finishedAt = new Date().toISOString();
+      } catch (error) {
+        run.capture.status = 'failed'; run.capture.error = error.message;
+        await report(); throw error;
+      }
+      assert.deepEqual(failures,[]); assert.deepEqual(errors,[]);
+      await report();
     } finally { await context.close(); }
   }
   await writeFile(`${evidence}/summary.json`, JSON.stringify({target,mode:process.env.GAME_SMOKE_URL?'deployed':'local-production-subpath',expectedCommit:process.env.EXPECTED_GAME_COMMIT||null,runs},null,2));
