@@ -35,3 +35,14 @@ for(const viewport of [{width:400,height:300},{width:390,height:844}]){
   }finally{await context.close();}
  });
 }
+
+test('empty-city guidance leads to the existing recovery action',async({page})=>{
+ await page.setViewportSize({width:390,height:844});await page.goto(process.env.PLAYTEST_URL||'/');await page.waitForFunction(()=>window.AETHERIA_API);await page.click('[data-speed="0"]');
+ // Controlled empty-city fixture. Natural overnight losses are recorded by the
+ // separate day/night driver; no resources or clock are granted here.
+ await page.evaluate(()=>{for(const a of AETHERIA_API.agents){a.alive=false;a.mesh.visible=false;}AETHERIA_API.updateHUD();});
+ await expect(page.locator('#night-guidance')).toContainText('เพิ่มชาวบ้าน');
+ await page.screenshot({path:'test-results/empty-city-recovery.png',animations:'disabled',timeout:90000});
+ const faith=await page.evaluate(()=>AETHERIA_API.state.faith);await page.click('#btn-toggle-left-hud');await page.click('#btn-spawn-villager');
+ await expect(page.locator('#quick-pop')).toHaveText('1');expect(await page.evaluate(()=>AETHERIA_API.state.faith)).toBeCloseTo(faith-20,5);await expect(page.locator('#night-guidance')).not.toContainText('ฟื้นเมือง');
+});

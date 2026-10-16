@@ -2976,7 +2976,8 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     const firstWarning = state.day === 1 && state.timeOfDay >= 18 && state.timeOfDay < 20;
     document.getElementById('kingdom-readout').dataset.threat = enemies ? 'combat' : firstWarning ? 'warning' : 'calm';
     setReadoutText('night-countdown', night ? 'กลางคืน' : `บุก 20:00 · อีก ${clock} ชม.ในเกม`);
-    setReadoutText('night-guidance', firstWarning ? 'ก่อนคืนแรก: เตรียมทหารและศรัทธา' : enemies ? 'ยังมีอสูรมีชีวิตบนเกาะ' : night ? (state.secondWaveTonight ? 'แสงอาทิตย์เริ่มเผาอสูร 05:30' : 'เฝ้าระวังทัพหนุน 00:30') : 'สายฟ้า 20 · หอคอย 25 ศรัทธา');
+    const recovery = people.length === 0 ? (night ? 'เมืองฟื้นได้: รอรุ่งเช้า แล้วเพิ่มคนในอาณาจักร' : enemies ? 'เมืองฟื้นได้: จัดการอสูร แล้วเพิ่มคนในอาณาจักร' : 'ฟื้นเมือง: อาณาจักร → เพิ่มชาวบ้าน (20 ศรัทธา)') : null;
+    setReadoutText('night-guidance', recovery || (firstWarning ? 'ก่อนคืนแรก: เตรียมทหารและศรัทธา' : enemies ? 'ยังมีอสูรมีชีวิตบนเกาะ' : night ? (state.secondWaveTonight ? 'แสงอาทิตย์เริ่มเผาอสูร 05:30' : 'เฝ้าระวังทัพหนุน 00:30') : 'สายฟ้า 20 · หอคอย 25 ศรัทธา'));
   }
 
   function updateHUD() {

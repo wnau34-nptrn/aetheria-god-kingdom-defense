@@ -13,3 +13,12 @@ for (const [name,invoke,cost] of [
  assert.match(d.querySelector('.log-entry').textContent,/ศรัทธาไม่พอ/);
  }finally{h.close();}
 });
+
+test('an empty kingdom explains recovery without ending the sandbox',()=>{
+ const h=createGameHarness(),a=h.api,d=h.window.document;
+ try{h.click('[data-speed="0"]');for(const agent of a.agents)agent.alive=false;
+ a.state.timeOfDay=22;a.updateHUD();assert.match(d.getElementById('night-guidance').textContent,/รอรุ่งเช้า/);
+ a.state.timeOfDay=9;a.updateHUD();assert.match(d.getElementById('night-guidance').textContent,/เพิ่มชาวบ้าน.*20/);
+ const before=a.state.faith;h.click('#btn-spawn-villager');a.updateHUD();assert.equal(a.agents.filter(x=>x.alive).length,1);assert.equal(a.state.faith,before-20);assert.doesNotMatch(d.getElementById('night-guidance').textContent,/ฟื้นเมือง/);
+ }finally{h.close();}
+});
