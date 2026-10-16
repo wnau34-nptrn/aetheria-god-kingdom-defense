@@ -670,3 +670,32 @@
   #top-bar { left: 14px; transform: none; max-width: calc(100vw - 420px); }
   body.hud-hidden #top-bar { transform: translateY(-80px); }
 }
+
+/* Essential information stays beside the powers when side panels are tucked. */
+#kingdom-readout, #placement-feedback {
+  width: 100%; background: var(--bg-glass-strong);
+  border: 1px solid var(--border-glass); border-radius: 10px;
+  padding: 6px 12px; font-size: 11px;
+}
+#kingdom-readout { pointer-events: none; }
+.quick-resources { display: flex; justify-content: space-between; gap: 12px; white-space: nowrap; }
+.quick-resources strong { color: #f8fafc; font-variant-numeric: tabular-nums; }
+.threat-line { display: flex; justify-content: space-between; gap: 10px; margin-top: 3px; color: #cbd5e1; font-size: 10px; }
+#kingdom-readout[data-threat="warning"] { border-color: #fbbf24; }
+#kingdom-readout[data-threat="warning"] #night-guidance { color: #fde047; }
+#kingdom-readout[data-threat="combat"] #quick-enemies { color: #fda4af; }
+#placement-feedback { color: #a7f3d0; border-color: #34d399; text-align: center; }
+#placement-feedback[data-state="blocked"] { color: #fecdd3; border-color: #fb7185; }
+#placement-feedback[hidden] { display: none; }
+@media (max-width: 960px), (max-height: 540px) {
+  #mobile-cam-controls { bottom: calc(var(--power-dock-height, 150px) + 18px) !important; }
+}
+@media (max-width: 600px) {
+  #kingdom-readout, #placement-feedback { padding: 5px 8px; }
+  .quick-resources { gap: 5px; font-size: 10px; }
+  .threat-line { flex-wrap: wrap; gap: 0 8px; }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  #god-dock-wrapper { gap: 4px; width: calc(100vw - 16px); max-width: 680px; transform: translateX(-50%); }
+  #mobile-cam-controls { flex-direction: row; }
+}

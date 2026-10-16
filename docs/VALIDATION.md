@@ -54,3 +54,7 @@ At commit `0dec70f`, `npm test`, a detailed run of all **71 unit/integration cas
 The ten paired-seed food trials use jsdom with actual geometry/game logic and stubbed pixels/audio; they are separate from the UI-driven browser playthroughs. [BALANCE_REVIEW.th.md](BALANCE_REVIEW.th.md) records methods, source revisions, raw evidence and remaining limits. These checks do not establish human fun, final difficulty balance or hardware performance.
 
 The final NPC access revision `80e4cdf` passed **75 unit/integration cases**, **10 real-WebGL browser scenarios**, and the production build locally. Added cases verify accessible shelter/temple fallback at 1x/5x, actual fishing yield of eight food in 13 game seconds at 1x/2.5x/5x across two seeds, and fishing production in Chromium. Detailed unit command: `node --test --test-isolation=none tests/*.test.js` on Node.js 24; CI uses the project `npm test` command.
+
+## Placement feedback and first-night HUD
+
+The readability work adds five integration cases and five browser scenarios, bringing the suite to **80 unit/integration cases** and **15 Chromium/SwiftShader scenarios**. A complete local run passed, followed by eight affected layout/input scenarios after the final landscape and button-label refinement, and the touch scenario again after adding HUD-release/cancel coverage. The production build passed. See [READABILITY_REVIEW.th.md](READABILITY_REVIEW.th.md) for the 26,244-point compatibility check, screenshots, methods and remaining human-playtest requirements.

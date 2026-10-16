@@ -471,11 +471,19 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     if (portalObj && Math.hypot(x - portalObj.x, z - portalObj.z) < 8.5 + extraMargin) return true;
     return false;
   }
-  function canPlaceBuildingAt(x, z) {
-    if (getIslandMask(x, z) < 0.42 || isPointInRiver(x, z) || isPointOnRoad(x, z)) return false;
+  function getBuildingPlacementIssue(x, z) {
+    if (!Number.isFinite(x) || !Number.isFinite(z) || getIslandMask(x, z) < 0.42) return 'อยู่นอกพื้นที่เกาะที่สร้างได้';
+    if (isPointInRiver(x, z)) return 'อยู่ในแม่น้ำ';
+    if (isPointOnRoad(x, z)) return 'กีดขวางถนน';
     const h = getTerrainHeightAt(x, z), waterY = getWaterLevelAt(z);
-    if (h < waterY + 0.75 || h > 5.6 || getTerrainSlopeAt(x, z) > 0.22) return false;
-    return !isNearBuildingFoundation(x, z, 0.5);
+    if (h < waterY + 0.75) return 'พื้นดินต่ำใกล้ระดับน้ำเกินไป';
+    if (h > 5.6) return 'พื้นที่สูงเกินระดับที่สร้างได้';
+    if (getTerrainSlopeAt(x, z) > 0.22) return 'พื้นดินลาดชันเกินไป';
+    if (isNearBuildingFoundation(x, z, 0.5)) return 'ใกล้อาคาร แปลงนา หรือสิ่งปลูกสร้างเกินไป';
+    return null;
+  }
+  function canPlaceBuildingAt(x, z) {
+    return getBuildingPlacementIssue(x, z) === null;
   }
   function clearFootprintResources(x, z, radius = 3.2) {
     for (let i = trees.length - 1; i >= 0; i--) if (Math.hypot(trees[i].x - x, trees[i].z - z) < radius) { worldObjectsGroup.remove(trees[i].mesh); trees.splice(i, 1); }
@@ -2432,8 +2440,12 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   }
 
   function castMiracleBeam(tx, tz) {
-    if (state.faith < 25) { addLog('พลังศรัทธาไม่พอสำหรับลำแสงประทานพร (ต้องการ 25 ✨)', 'warn'); return; }
-    if (!canPlaceBuildingAt(tx, tz)) { addLog('🚫 ไม่สามารถสร้างป้อมปราการทับสิ่งปลูกสร้างเดิม แม่น้ำ หรือพื้นที่ลาดชันเกินไปได้!', 'warn'); return; }
+    miracleTarget = { x: tx, z: tz };
+    const issue = getBuildingPlacementIssue(tx, tz);
+    if (issue || state.faith < 25) {
+      const message = issue ? `วางหอคอยไม่ได้: ${issue}` : 'ศรัทธาไม่พอ ต้องการ 25';
+      addLog(`🚫 ${message}`, 'warn'); updateMiraclePreview(); return;
+    }
     state.faith -= 25; audio.playBlessChime();
     const ty = getTerrainHeightAt(tx, tz);
     const beam = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.4, 55, 16, 1, true), new THREE.MeshBasicMaterial({ color: 0xfde047, transparent: true, opacity: 0.55, side: THREE.DoubleSide }));
@@ -2442,11 +2454,34 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     spawnShockwaveRing(tx, ty, tz, 0xfbbf24, 12, 0.8);
     createWatchtower(tx, tz, 1.0);
     for (const ag of agents) { ag.hp = ag.maxHp; ag.hunger = 0; }
+    updateHUD(); updateMiraclePreview();
     addLog('🌟 ลำแสงประทานพรสถิตลงสู่พื้นเกาะ! สร้างป้อมปราการเวทมนตร์และฟื้นฟูชาวบ้านทั้งหมด', 'bless');
   }
 
   const raycaster = new THREE.Raycaster(), pointerNDC = new THREE.Vector2();
   let isTerraformDragging = false;
+  let miracleTarget = null;
+  const placementFeedback = document.getElementById('placement-feedback');
+  function setReadoutText(id, text) {
+    const el = document.getElementById(id);
+    if (el.textContent !== text) el.textContent = text;
+  }
+  function updateMiraclePreview() {
+    placementFeedback.hidden = state.activePower !== 'miracle';
+    if (placementFeedback.hidden) return;
+    const issue = miracleTarget && getBuildingPlacementIssue(miracleTarget.x, miracleTarget.z);
+    const blocked = !!issue || state.faith < 25;
+    placementFeedback.dataset.state = blocked ? 'blocked' : 'ready';
+    const touchHint = navigator.maxTouchPoints > 0 ? 'แตะลากเล็ง ปล่อยเพื่อสร้าง' : 'เล็งพื้นเกาะเพื่อวางหอคอย';
+    setReadoutText('placement-feedback', issue ? `⛔ ${issue} · ใช้ 25 ศรัทธา` : state.faith < 25 ? `⛔ ศรัทธาไม่พอ · ต้องการ 25 (มี ${Math.floor(state.faith)})` : miracleTarget ? '✓ วางหอคอยได้ · ใช้ 25 ศรัทธา' : `${touchHint} · ใช้ 25 ศรัทธา`);
+    if (miracleTarget) {
+      reticleGroup.visible = true;
+      reticleGroup.position.set(miracleTarget.x, getTerrainHeightAt(miracleTarget.x, miracleTarget.z) + 0.35, miracleTarget.z);
+      reticleGroup.scale.setScalar(4.5);
+      reticleRing.material.color.setHex(blocked ? 0xef4444 : 0x34d399);
+      reticleFill.material.color.setHex(blocked ? 0xf87171 : 0x6ee7b7);
+    }
+  }
   function updatePointerRay(e) {
     const rect = canvas.getBoundingClientRect();
     pointerNDC.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -2484,6 +2519,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   });
 
   window.addEventListener('pointermove', (e) => {
+    if (e.pointerType === 'touch') return;
     if (camCtrl.isDragging) {
       const dx = e.clientX - camCtrl.lastX, dy = e.clientY - camCtrl.lastY;
       camCtrl.lastX = e.clientX; camCtrl.lastY = e.clientY;
@@ -2496,7 +2532,8 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       return;
     }
     if (state.activePower !== 'observe') {
-      const pt = getTerrainIntersection(e);
+      const pt = e.target === canvas ? getTerrainIntersection(e) : null;
+      miracleTarget = state.activePower === 'miracle' && pt ? { x: pt.x, z: pt.z } : null;
       if (pt) {
         reticleGroup.visible = true; reticleGroup.position.set(pt.x, pt.y + 0.35, pt.z);
         reticleGroup.scale.setScalar(state.activePower === 'terraform' ? state.terraRadius : (state.activePower === 'meteor' ? 10 : (state.activePower === 'rain' ? 11 : 4.5)));
@@ -2504,8 +2541,10 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
         reticleRing.material.color.setHex(isBlocked ? 0xef4444 : 0xfbbf24); reticleFill.material.color.setHex(isBlocked ? 0xf87171 : 0xfde047);
         if (isTerraformDragging && state.activePower === 'terraform') applyTerraforming(pt.x, pt.z, (e.shiftKey || e.buttons === 2 || state.terraMode === 'lower') ? -1 : 1, 0.04);
       } else reticleGroup.visible = false;
+      updateMiraclePreview();
     } else reticleGroup.visible = false;
   });
+  canvas.addEventListener('pointerleave', () => { miracleTarget = null; reticleGroup.visible = false; updateMiraclePreview(); });
 
   window.addEventListener('pointerup', () => { camCtrl.isDragging = camCtrl.isPanning = isTerraformDragging = false; });
   canvas.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -2825,6 +2864,9 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     if (state.timeOfDay >= 24.0) { state.timeOfDay -= 24.0; state.day++; state.siegeTriggeredTonight = false; state.secondWaveTonight = false; }
     const t = state.timeOfDay, wasNight = state.isNight;
     state.isNight = (t >= 20.0 || t < 5.5);
+    if (state.day === 1 && prevTime < 18 && t >= 18 && t < 20) {
+      addLog('🌇 อีก 2 ชั่วโมงในเกม อสูรจะบุกเวลา 20:00 เตรียมทหารและเก็บศรัทธาสำหรับสายฟ้า (20) หรือหอคอย (25)', 'warn');
+    }
 
     if (prevTime < 6.0 && t >= 6.0) {
       audio.playVillageBell(false);
@@ -2890,8 +2932,9 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     document.getElementById('clock-display').textContent = `${String(Math.floor(t)).padStart(2,'0')}:${String(Math.floor((t%1)*60)).padStart(2,'0')}`;
     document.getElementById('phase-badge').textContent = phaseText;
     const statusBadge = document.getElementById('kingdom-Status-badge');
-    statusBadge.textContent = monsters.length > 0 ? `⚔️ กำลังรบ (${monsters.length} ตัว)` : (state.isNight ? '🌙 เฝ้าระวังยามวิกาล' : '🌿 สงบสุข');
-    statusBadge.style.color = monsters.length > 0 ? '#fb7185' : '#34d399';
+    const enemyCount = monsters.filter(m => m.alive).length;
+    statusBadge.textContent = enemyCount > 0 ? `⚔️ กำลังรบ (${enemyCount} ตัว)` : (state.isNight ? '🌙 เฝ้าระวังยามวิกาล' : '🌿 สงบสุข');
+    statusBadge.style.color = enemyCount > 0 ? '#fb7185' : '#34d399';
   }
 
   const chartCanvas = document.getElementById('analytics-canvas'), chartCtx = chartCanvas.getContext('2d');
@@ -2912,7 +2955,23 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     drawSeries(state.historyRes, '#38bdf8', 350); drawSeries(state.historyFaith, '#fbbf24', 200); drawSeries(state.historyPop, '#34d399', 28);
   }
 
+  function updateKingdomReadout() {
+    const people = agents.filter(a => a.alive), enemies = monsters.filter(m => m.alive).length;
+    setReadoutText('quick-faith', `${Math.floor(state.faith)}`);
+    setReadoutText('quick-food', `${Math.floor(state.food)}`);
+    setReadoutText('quick-pop', `${people.length}`);
+    setReadoutText('quick-enemies', `${enemies}`);
+    const night = state.timeOfDay >= 20 || state.timeOfDay < 5.5;
+    const remaining = Math.max(0, Math.ceil((20 - state.timeOfDay) * 60 - 1e-8));
+    const clock = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(remaining % 60).padStart(2, '0')}`;
+    const firstWarning = state.day === 1 && state.timeOfDay >= 18 && state.timeOfDay < 20;
+    document.getElementById('kingdom-readout').dataset.threat = enemies ? 'combat' : firstWarning ? 'warning' : 'calm';
+    setReadoutText('night-countdown', night ? 'กลางคืน' : `บุก 20:00 · อีก ${clock} ชม.ในเกม`);
+    setReadoutText('night-guidance', firstWarning ? 'ก่อนคืนแรก: เตรียมทหารและศรัทธา' : enemies ? 'ยังมีอสูรมีชีวิตบนเกาะ' : night ? (state.secondWaveTonight ? 'แสงอาทิตย์เริ่มเผาอสูร 05:30' : 'เฝ้าระวังทัพหนุน 00:30') : 'สายฟ้า 20 · หอคอย 25 ศรัทธา');
+  }
+
   function updateHUD() {
+    updateKingdomReadout();
     const aliveAgents = agents.filter(a => a.alive), soldiers = aliveAgents.filter(a => a.role === 'soldier');
     const houses = buildings.filter(b => b.type === 'house'), towers = buildings.filter(b => b.type === 'tower'), maxPop = 6 + houses.length * 4;
     document.getElementById('stat-pop').textContent = `${aliveAgents.length} / ${maxPop}`;
@@ -4412,6 +4471,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
 
   function setGodPower(powerName) {
     state.activePower = powerName;
+    miracleTarget = null; reticleGroup.visible = false; updateMiraclePreview();
     document.querySelectorAll('.power-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.power === powerName));
     canvas.classList.toggle('power-active', powerName !== 'observe');
     document.getElementById('sub-power-bar').classList.toggle('visible', powerName === 'terraform');
@@ -4581,6 +4641,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       return !dilemmaActive && state.timeScale > 0;
     });
     renderDayNightCycle();
+    updateKingdomReadout(); updateMiraclePreview();
     audio.modulateAmbience(elapsedTime, camera.position.y);
 
     if (godFxPointLight.intensity > 0) godFxPointLight.intensity = Math.max(0, godFxPointLight.intensity - rawDt * 4.5);
@@ -4734,6 +4795,13 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   const btnZoomIn = document.getElementById('btn-zoom-in');
   const btnZoomOut = document.getElementById('btn-zoom-out');
   const btnMobReset = document.getElementById('btn-mob-reset-cam');
+  // Keep touch camera buttons above the variable-height resource/power dock.
+  if (typeof ResizeObserver !== 'undefined') {
+    const dock = document.getElementById('god-dock-wrapper');
+    new ResizeObserver(() => {
+      document.documentElement.style.setProperty('--power-dock-height', `${Math.ceil(dock.getBoundingClientRect().height)}px`);
+    }).observe(dock);
+  }
   if (btnZoomIn) btnZoomIn.addEventListener('click', () => { camCtrl.targetRadius = Math.max(18, camCtrl.targetRadius - 16); });
   if (btnZoomOut) btnZoomOut.addEventListener('click', () => { camCtrl.targetRadius = Math.min(280, camCtrl.targetRadius + 16); });
   if (btnMobReset) btnMobReset.addEventListener('click', () => {
@@ -4783,10 +4851,11 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
         else if (state.activePower === 'terraform') applyTerraforming(pt.x, pt.z, state.terraMode === 'lower' ? -1 : 1, 0.12);
         else if (state.activePower === 'meteor') castMeteorStrike(pt.x, pt.z);
         else if (state.activePower === 'lightning') castLightningStrike(pt.x, pt.z);
-        else if (state.activePower === 'miracle') castMiracleBeam(pt.x, pt.z);
+        else if (state.activePower === 'miracle') { miracleTarget = { x: pt.x, z: pt.z }; updateMiraclePreview(); }
       }
     } else if (e.touches.length >= 2) {
       touchMode = 'pinch';
+      miracleTarget = null; reticleGroup.visible = false; updateMiraclePreview();
       const t0 = e.touches[0], t1 = e.touches[1];
       lastPinchDist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
       lastMidX = (t0.clientX + t1.clientX) * 0.5;
@@ -4805,6 +4874,11 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       if (state.activePower === 'observe') {
         camCtrl.targetTheta -= dx * 0.0075;
         camCtrl.targetPhi = THREE.MathUtils.clamp(camCtrl.targetPhi - dy * 0.0065, 0.28, 1.40);
+      } else if (state.activePower === 'miracle') {
+        const pt = document.elementFromPoint(t.clientX, t.clientY) === canvas ? getTerrainIntersection(t) : null;
+        miracleTarget = pt ? { x: pt.x, z: pt.z } : null;
+        if (!pt) reticleGroup.visible = false;
+        updateMiraclePreview();
       } else if (state.activePower === 'terraform') {
         const pt = getTerrainIntersection(t);
         if (pt) {
@@ -4835,6 +4909,12 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   }, { passive: false });
 
   canvas.addEventListener('touchend', (e) => {
+    // Aim while touching; release once to build. Pinch gestures cancel placement.
+    if (touchMode === 'single' && e.touches.length === 0 && state.activePower === 'miracle') {
+      const touch = e.changedTouches[0];
+      const pt = touch && document.elementFromPoint(touch.clientX, touch.clientY) === canvas ? getTerrainIntersection(touch) : null;
+      if (pt) castMiracleBeam(pt.x, pt.z);
+    }
     if (touchMode === 'single' && touchMovedDist < 14 && state.activePower === 'observe') {
       updatePointerRay({ clientX: lastTouchX, clientY: lastTouchY });
       const hits = raycaster.intersectObjects(worldObjectsGroup.children, true);
@@ -4859,11 +4939,12 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       touchMode = null;
     }
   });
+  canvas.addEventListener('touchcancel', () => { touchMode = null; miracleTarget = null; reticleGroup.visible = false; updateMiraclePreview(); });
 
   window.AETHERIA_API = {
     get simulationTime() { return simulationClock.time; },
     setAllHudHidden, evolveToEra, openInteractiveDilemma,
-    isNearBuildingFoundation, canPlaceBuildingAt, state, camCtrl, agents, monsters, projectiles, buildings, trees, ores, wagons, livestock, windmills, cropFields,
+    isNearBuildingFoundation, getBuildingPlacementIssue, canPlaceBuildingAt, state, camCtrl, agents, monsters, projectiles, buildings, trees, ores, wagons, livestock, windmills, cropFields,
     setGodPower, castRainPower, applyTerraforming, castMeteorStrike, detonateMeteor, castLightningStrike, castMiracleBeam,
     spawnMonster, updateInspectorUI, drawAnalyticsChart, updateHUD, saveGameState, loadSavedGameState
   };
