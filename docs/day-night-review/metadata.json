@@ -1,0 +1,11 @@
+{
+  "startedAt": "2026-10-16T06:25:34.245Z",
+  "commit": "d3cc470d91ada94997f6dbe8afe11f624b76520b",
+  "hashes": {
+    "src/legacy/game.js": "976991d67ff671961ea15ec510cd0622054d76183af799e2a6a4a4db2f20c6d8",
+    "src/ui/interface.js": "2c9e5359c4cb8fde1326a0f470a04ebcae2c8fed7abfea2bf6fd17c068cf20e8",
+    "src/styles/game.css": "222a794d47fbf92b7b711b21298ebc31209afc8b9ecf8a2c71534b72da03c9b4",
+    "index.html": "6c8b5e81711ddc8b67be6d4392a0785e01facea315462fe4bc94d59b01498e68"
+  },
+  "method": "Fresh context per device. Real WebGL. Desktop400x300 during progression,1024x640 for paused power inputs and visual checkpoints; mobile390x844 throughout. Normal zoom-out buttons to maximum between checkpoints for software-renderer throughput; reset camera for native-size screenshots. Do not infer physical-device FPS. UI-only speed5x with1x warning/siege crossings and pauses for input/screenshots. No API writes, clock/RNG override, forced events, era or day jumps. Read-only world coordinates assist pointer/touch aiming. Recruit one soldier, attempt one tower, rain when food/hunger calls for it, lightning on enemies if affordable; natural affordable event choices. Continue to next day08:12, including a population-zero sandbox. Unpaired random runs, not human fun/balance/FPS evidence."
+}

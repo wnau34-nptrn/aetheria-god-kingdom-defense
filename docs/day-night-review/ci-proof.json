@@ -1,0 +1,21 @@
+{
+  "runtimeCommit": "2a14278018c1ade82f9717ea3b7b7756f919d440",
+  "workflowRun": 38862435454,
+  "workflowURL": "https://github.com/wnau34-nptrn/aetheria-god-kingdom-defense/actions/runs/38862435454",
+  "conclusion": "success",
+  "jobs": {
+    "validate": 116847561715,
+    "pages-configuration": 116847562069,
+    "deploy-pages": 116849315762,
+    "verify-pages": 116849386490
+  },
+  "checks": {
+    "unitIntegrationCases": 86,
+    "browserScenarios": 20,
+    "productionSubpathScenarios": 2,
+    "actualHostedDesktopMobileScenarios": 2,
+    "hostedPageErrors": 0
+  },
+  "target": "https://wnau34-nptrn.github.io/aetheria-god-kingdom-defense/",
+  "versionCheck": "The hosted version.json commit was asserted against runtimeCommit in the verify-pages job."
+}

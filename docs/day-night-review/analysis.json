@@ -1,0 +1,52 @@
+{
+  "desktop": {
+    "snapshots": 976,
+    "monotonic": true,
+    "gameSeconds": 219.4,
+    "gameHours": 24.134,
+    "wallSeconds": 644.803,
+    "maximumClockErrorHours": 3.552713678800501e-15,
+    "firstObservedZero": {
+      "day": 2,
+      "time": 2.5645,
+      "simulationTime": 166.95
+    },
+    "final": {
+      "day": 2,
+      "time": 8.3395,
+      "people": 0,
+      "enemies": 0,
+      "faith": 179.94,
+      "food": 80,
+      "towers": 1
+    },
+    "events": 1,
+    "errors": [],
+    "failedRequests": []
+  },
+  "mobile": {
+    "snapshots": 1385,
+    "monotonic": true,
+    "gameSeconds": 219.55,
+    "gameHours": 24.1505,
+    "wallSeconds": 1079.395,
+    "maximumClockErrorHours": 3.552713678800501e-15,
+    "firstObservedZero": {
+      "day": 2,
+      "time": 5.771,
+      "simulationTime": 196.1
+    },
+    "final": {
+      "day": 2,
+      "time": 8.356,
+      "people": 0,
+      "enemies": 1,
+      "faith": 154.36,
+      "food": 82,
+      "towers": 0
+    },
+    "events": 1,
+    "errors": [],
+    "failedRequests": []
+  }
+}
