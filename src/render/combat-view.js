@@ -68,11 +68,11 @@ export function createCombatView({ THREE, scene, world, document, window, height
     ctx.clearRect(0,0,width,heightPx);
     for(const entity of units){
       if(!entity.alive||!entity.mesh.visible)continue;
-      const a=entity.combat,r=reactions.get(entity),fighting=a&&validCombatTarget(a.target);
+      const a=entity.combat,r=reactions.get(entity),fighting=a&&(a.phase!=='idle'||validCombatTarget(a.target));
       if(!fighting&&posed.delete(entity)){
         entity.mesh.rotation.x=entity.mesh.rotation.z=0;
         entity.mesh.position.set(entity.x,height(entity),entity.z);
-        if(entity.rightArm)entity.rightArm.rotation.z=0;
+        if(entity.rightArm){entity.rightArm.rotation.x=0;entity.rightArm.rotation.z=0;}
       }
       if(fighting||r){
         const mesh=entity.mesh;mesh.position.set(entity.x,height(entity),entity.z);mesh.rotation.x=mesh.rotation.z=0;

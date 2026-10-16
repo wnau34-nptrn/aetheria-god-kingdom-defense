@@ -21,6 +21,9 @@ export function validCombatTarget(target) {
 
 export function chooseCombatTarget(attacker, candidates) {
   const current = attacker.combat?.target;
+  // Finish the committed motion even when its target dies or enters shelter.
+  // Switching immediately erases the killing stroke before it is rendered.
+  if(current&&attacker.combat.phase!=='idle')return current;
   if (candidates.includes(current) && validCombatTarget(current)) return current;
   let closest = null, distance = Infinity;
   for (const target of candidates) {
@@ -40,7 +43,7 @@ export function advanceMelee(attacker, target, dt) {
   let action = attacker.combat;
   if (!action || action.target !== target) action = attacker.combat = { target, phase:'idle', time:0, hit:false, facing:0 };
   const result = { started:false, swing:false, hit:false };
-  if (!validCombatTarget(target) || attacker.alive === false) { clearMelee(attacker); return result; }
+  if (attacker.alive === false || (!validCombatTarget(target)&&action.phase==='idle')) { clearMelee(attacker); return result; }
   const distance = Math.hypot(target.x-attacker.x,target.z-attacker.z);
   if (action.phase === 'idle') {
     if (distance > reach) return result;
@@ -57,7 +60,7 @@ export function advanceMelee(attacker, target, dt) {
     // A moving target may evade a committed swing; no remote damage.
     const dx=target.x-attacker.x,dz=target.z-attacker.z;
     const facingDot=distance<1e-6?1:(Math.sin(action.facing)*dx+Math.cos(action.facing)*dz)/distance;
-    result.hit=distance <= reach+0.3 && facingDot>=0.25;
+    result.hit=validCombatTarget(target) && distance <= reach+0.3 && facingDot>=0.25;
   }
   action.phase=action.time < profile.windup-1e-9 ? 'windup' : action.time < profile.windup+profile.strike-1e-9 ? 'strike' : 'recover';
   if (action.time + 1e-9 >= profile.windup+profile.strike+profile.recovery) {

@@ -1,23 +1,29 @@
 import { test, expect } from '@playwright/test';
-import { installCombatFixture } from './helpers/combat-fixture.js';
+import { installCombatFixture, armCombatPause } from './helpers/combat-fixture.js';
 
 test('a rendered duel connects windup, contact, recoil and a paused falling body',async({page})=>{
   test.setTimeout(240000);
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('/');await page.waitForFunction(()=>window.AETHERIA_API);await page.click('[data-speed="0"]');
   const before=await page.evaluate(installCombatFixture);
+  await page.evaluate(armCombatPause,{kind:'windup'});
   await page.click('[data-speed="1"]');
-  await page.waitForFunction(()=>{const a=AETHERIA_API;if(a.agents[0].combat?.phase==='windup'){a.state.timeScale=0;return true;}},null,{timeout:60000});
+  await page.waitForFunction(()=>window.__combatReached,null,{timeout:60000});
   expect(await page.evaluate(()=>AETHERIA_API.monsters[0].hp)).toBe(500);
   await page.screenshot({path:'test-results/combat-duel-windup.png',animations:'disabled',timeout:90000});
-  await page.click('[data-speed="1"]');
-  await page.waitForFunction(contacts=>{const a=AETHERIA_API;if(a.combatFeedback.contacts>contacts){a.state.timeScale=0;return true;}},before.contacts,{timeout:60000});
+  await page.evaluate(armCombatPause,{kind:'contacts',value:before.contacts+1});await page.click('[data-speed="1"]');
+  await page.waitForFunction(()=>window.__combatReached,null,{timeout:60000});
   const contact=await page.evaluate(()=>{const a=AETHERIA_API;return {hp:a.monsters[0].hp,phase:a.agents[0].combat.phase,distance:Math.hypot(a.agents[0].x-a.monsters[0].x,a.agents[0].z-a.monsters[0].z),feedback:a.combatFeedback};});
   expect(contact.hp).toBe(476);expect(contact.phase).toBe('strike');expect(contact.distance).toBeGreaterThan(1.4);expect(contact.feedback.impacts).toBeGreaterThan(0);
   await page.screenshot({path:'test-results/combat-duel-contact.png',animations:'disabled',timeout:90000});
   await page.evaluate(()=>{window.__fallen=AETHERIA_API.monsters[0];window.__fallen.hp=24;});
-  await page.click('[data-speed="1"]');
-  await page.waitForFunction(falls=>{const a=AETHERIA_API;if(a.combatFeedback.falls>falls&&!window.__fallAt)window.__fallAt=a.simulationTime;if(window.__fallAt&&a.simulationTime>=window.__fallAt+.3){a.state.timeScale=0;return true;}},before.falls,{timeout:60000});
+  await page.evaluate(armCombatPause,{kind:'falls',value:before.falls+1});await page.click('[data-speed="1"]');
+  await page.waitForFunction(()=>window.__combatReached,null,{timeout:60000});
+  const killing=await page.evaluate(()=>({time:AETHERIA_API.simulationTime,phase:AETHERIA_API.agents[0].combat.phase,arm:AETHERIA_API.agents[0].rightArm.rotation.x}));
+  expect(killing.phase).toBe('strike');expect(killing.arm).toBeGreaterThan(-1);
+  await page.screenshot({path:'test-results/combat-duel-killing-contact.png',animations:'disabled',timeout:90000});
+  await page.evaluate(armCombatPause,{kind:'time',value:killing.time+.3});await page.click('[data-speed="1"]');
+  await page.waitForFunction(()=>window.__combatReached,null,{timeout:60000});
   const fall=await page.evaluate(()=>({alive:__fallen.alive,parent:!!__fallen.mesh.parent,tilt:__fallen.mesh.rotation.z,feedback:AETHERIA_API.combatFeedback}));
   expect(fall.alive).toBe(false);expect(fall.parent).toBe(true);expect(Math.abs(fall.tilt)).toBeGreaterThan(.2);
   await page.waitForTimeout(350);expect(await page.evaluate(()=>__fallen.mesh.rotation.z)).toBe(fall.tilt);
@@ -33,8 +39,9 @@ test('a touch-sized group battle shows bounded feedback and leaves commands clic
     const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto('http://127.0.0.1:5173');await page.waitForFunction(()=>window.AETHERIA_API);await page.locator('[data-speed="0"]').tap();
     const before=await page.evaluate(installCombatFixture,{group:true});
+    await page.evaluate(armCombatPause,{kind:'contacts',value:before.contacts+5});
     await page.locator('[data-speed="1"]').tap();
-    await page.waitForFunction(contacts=>{const a=AETHERIA_API;if(a.combatFeedback.contacts>=contacts+5){a.state.timeScale=0;return true;}},before.contacts,{timeout:60000});
+    await page.waitForFunction(()=>window.__combatReached,null,{timeout:60000});
     const snapshot=await page.evaluate(()=>({time:AETHERIA_API.simulationTime,feedback:AETHERIA_API.combatFeedback,hp:AETHERIA_API.agents.map(e=>e.hp)}));
     expect(snapshot.feedback.labels).toBeLessThanOrEqual(16);expect(snapshot.feedback.impacts).toBeLessThanOrEqual(12);
     expect(snapshot.hp.some(hp=>hp<160)).toBe(true);

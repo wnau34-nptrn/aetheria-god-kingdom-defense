@@ -26,3 +26,19 @@ export function installCombatFixture({group=false}={}) {
   a.updateHUD();
   return {contacts:a.combatFeedback.contacts,falls:a.combatFeedback.falls,time:a.simulationTime};
 }
+
+// Arm before clicking Play: slow software WebGL/IPC must not miss the first hit.
+export function armCombatPause(condition) {
+  window.__combatReached=false;
+  const generation=window.__combatWatch=(window.__combatWatch||0)+1;
+  function watch(){
+    if(window.__combatWatch!==generation)return;
+    const a=window.AETHERIA_API;
+    const ready=condition.kind==='windup'?a.agents[0]?.combat?.phase==='windup':
+      condition.kind==='contacts'?a.combatFeedback.contacts>=condition.value:
+      condition.kind==='falls'?a.combatFeedback.falls>=condition.value:a.simulationTime>=condition.value;
+    if(ready){a.state.timeScale=0;window.__combatReached=true;return;}
+    requestAnimationFrame(watch);
+  }
+  requestAnimationFrame(watch);
+}

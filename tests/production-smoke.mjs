@@ -3,7 +3,7 @@ import { createServer } from 'node:http';
 import { readFile, mkdir, writeFile, stat } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
 import assert from 'node:assert/strict';
-import { installCombatFixture } from './helpers/combat-fixture.js';
+import { installCombatFixture, armCombatPause } from './helpers/combat-fixture.js';
 
 const evidence = process.env.GAME_SMOKE_EVIDENCE || `/tmp/aetheria-production-${Date.now()}`;
 await mkdir(evidence, { recursive: true });
@@ -134,10 +134,9 @@ try {
       // Explicit duel fixture also runs against the built/public game, using
       // its actual animation loop rather than invoking damage functions.
       const combatBefore=await page.evaluate(installCombatFixture);
+      await page.evaluate(armCombatPause,{kind:'contacts',value:combatBefore.contacts+1});
       await page.click('[data-speed="1"]');
-      await page.waitForFunction(contacts=>{
-        const a=AETHERIA_API;if(a.combatFeedback.contacts>contacts){a.state.timeScale=0;return true;}
-      },combatBefore.contacts,{timeout:60000});
+      await page.waitForFunction(()=>window.__combatReached,null,{timeout:60000});
       run.combat=await page.evaluate(()=>({enemyHP:AETHERIA_API.monsters[0].hp,phase:AETHERIA_API.agents[0].combat.phase,feedback:AETHERIA_API.combatFeedback}));
       assert.equal(run.combat.enemyHP,476);assert.equal(run.combat.phase,'strike');assert.ok(run.combat.feedback.impacts>0);
       await page.screenshot({path:`${evidence}/combat-${mobile?'mobile':'desktop'}.png`,animations:'disabled',timeout:90000});

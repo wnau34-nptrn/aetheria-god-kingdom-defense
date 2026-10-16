@@ -24,9 +24,11 @@ test('a target moving behind a committed swing is not hit',()=>{
   const a=unit(),b=unit(1.8);advanceMelee(a,b,0.05);b.x=-1.8;
   assert.equal(advanceMelee(a,b,0.15).hit,false);
 });
-test('target remains locked when a closer unit appears, but releases dead and sheltered targets',()=>{
+test('target stays locked through recovery, then releases dead and sheltered targets',()=>{
   const a=unit(),b=unit(1.8),c=unit(0.8);advanceMelee(a,b,0.05);
   assert.equal(chooseCombatTarget(a,[b,c]),b);b.mesh.visible=false;
+  assert.equal(chooseCombatTarget(a,[b,c]),b);
+  for(let i=0;i<8;i++)assert.equal(advanceMelee(a,b,0.05).hit,false);
   assert.equal(chooseCombatTarget(a,[b,c]),c);b.mesh.visible=true;b.alive=false;
   assert.equal(chooseCombatTarget(a,[b,c]),c);
 });
@@ -54,10 +56,12 @@ test('actual runtime stops feet, applies damage at contact and freezes poses/fee
   }finally{h.close();}
 });
 test('a lethal melee hit retires once, falls visibly, stays frozen on pause and is cleaned up',()=>{
-  const {h,a,m}=duel();
+  const {h,a,m,s}=duel();
   try{
     m.hp=24;for(let i=0;i<4;i++)h.frame();
     assert.equal(m.alive,false);assert.ok(m.mesh.parent);assert.equal(a.combatFeedback.falls,1);
+    assert.equal(s.combat.phase,'strike');assert.ok(s.rightArm.rotation.x>-1);
+    const planted={x:s.x,z:s.z};h.frame();h.frame();assert.equal(s.combat.phase,'recover');assert.deepEqual({x:s.x,z:s.z},planted);
     h.advance(0.3,1);assert.ok(Math.abs(m.mesh.rotation.z)>0.1);
     h.click('[data-speed="0"]');const z=m.mesh.rotation.z;for(let i=0;i<8;i++)h.frame();assert.equal(m.mesh.rotation.z,z);
     h.advance(1.1,1);assert.equal(m.mesh.parent,null);assert.equal(a.combatFeedback.corpses,0);assert.equal(a.combatFeedback.falls,1);
