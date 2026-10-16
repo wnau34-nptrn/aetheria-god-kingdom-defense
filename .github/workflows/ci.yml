@@ -25,3 +25,5 @@ jobs:
           path: |
             test-results/
             docs/screenshots/current-*.png
+            docs/speed-review/screenshots/*.png
+            docs/readability-review/*.png

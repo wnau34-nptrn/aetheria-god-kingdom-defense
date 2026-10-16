@@ -1,0 +1,7 @@
+{
+  "baseline": "2790b180a9c91bc3d24b456c06420e8366ca18b3",
+  "sourceSHA256": "87b4e95ad689199d459465a700691f146cf96f00abc11ede61f92199ba4628ce",
+  "method": "Actual geometry and simulation, jsdom, seed1234, eras1-4, 2-unit grid -80..80, no render pixels",
+  "checked": 26244,
+  "differences": []
+}

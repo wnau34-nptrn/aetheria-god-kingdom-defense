@@ -1,0 +1,44 @@
+[
+  {
+    "scenario": "all-trades-unaffordable",
+    "before": {
+      "wood": 0,
+      "food": 0,
+      "faith": 0,
+      "pop": 7,
+      "houses": 3,
+      "wagons": 0
+    },
+    "after": {
+      "wood": 0,
+      "food": 30,
+      "faith": 0,
+      "pop": 7,
+      "houses": 3,
+      "wagons": 1
+    },
+    "modalOpen": false,
+    "toast": "🐎 ได้รับเกวียนเทียมม้าขบวนใหม่ 1 คัน และ +30 อาหาร!"
+  },
+  {
+    "scenario": "council-no-plot",
+    "before": {
+      "wood": 20,
+      "food": 35,
+      "faith": 60,
+      "pop": 7,
+      "houses": 172,
+      "wagons": 0
+    },
+    "after": {
+      "wood": 5,
+      "food": 35,
+      "faith": 60,
+      "pop": 9,
+      "houses": 172,
+      "wagons": 0
+    },
+    "modalOpen": false,
+    "toast": "🏠 สร้างบ้านใหม่ 1 หลัง พร้อมต้อนรับชาวบ้านใหม่ 2 คน!"
+  }
+]

@@ -44,6 +44,8 @@ src/main.js                     เริ่มแอปและแจ้งข
 src/legacy/webgl-engine.js       ตัวเรนเดอร์เดิม (ไม่ใช่ Three.js)
 src/legacy/game.js               เกมเดิมที่แยกไฟล์และแก้บั๊กสำคัญ
 src/systems/progress-save.js     ตรวจสอบ checkpoint ก่อนโหลด
+src/systems/fixed-step.js        นาฬิกา simulation สำหรับทุกความเร็ว
+src/systems/food-target.js       เลือกแหล่งอาหารใกล้ตัวสำหรับ NPC
 src/styles/game.css             หน้าตาเดิม
 original/                       HTML ที่อัปโหลด เก็บเหมือนเดิมทุกไบต์
 docs/                           ผลวิเคราะห์ สถาปัตยกรรม แผนพัฒนา และหลักฐานภาพ
@@ -51,6 +53,12 @@ tests/                          unit tests และ browser smoke tests
 ```
 
 ## ผลตรวจและแนวทางพัฒนาต่อ
+
+[ข้อมูลสถานการณ์และการวางหอคอย](docs/READABILITY_REVIEW.th.md): แถบศรัทธา/อาหาร/คน/อสูร คำเตือนก่อนคืนแรก และเหตุผลเมื่อวางป้อมไม่ได้ พร้อมการเล็งด้วยสัมผัส
+
+[ผลเล่นซ้ำและแก้การอยู่รอดของ NPC](docs/BALANCE_REVIEW.th.md): แก้จุดเกิดริมแม่น้ำ ทางออกสะพาน การหาอาหาร ที่พัก และจุดยืนตกปลา พร้อมหลักฐานแยกการเล่นผ่าน UI ออกจากการทดลองแบบควบคุม
+
+[ผลตรวจและแก้ 1x/5x](docs/SPEED_REVIEW.th.md): เพิ่ม simulation tick คงที่ แก้คาราวานซื้อฟรีและกรณีสภาหาที่สร้างไม่ได้ พร้อมผลก่อน/หลังและชุดทดสอบ
 
 อ่าน [บันทึกการเล่นต่อเนื่อง 25 นาที](docs/PLAYTHROUGH.th.md) และ [บัญชีระบบเดิม](docs/SYSTEMS.th.md) ก่อนเลือกงานเพิ่มระบบ จากนั้นอ่าน [ผลวิเคราะห์ภาษาไทย](docs/AUDIT.th.md), [แผนพัฒนา](docs/ROADMAP.th.md), [สถาปัตยกรรมและแผนย้าย Three.js](docs/ARCHITECTURE.md) และ [ผลทดสอบ](docs/VALIDATION.md)
 

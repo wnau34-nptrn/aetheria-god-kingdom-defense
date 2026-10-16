@@ -1,0 +1,11 @@
+{
+  "started": "2026-10-16T00:35:46.190Z",
+  "sourceSHA256": "87b4e95ad689199d459465a700691f146cf96f00abc11ede61f92199ba4628ce",
+  "cssSHA256": "e5418bb428637789affd6a875e6b3e9d6c13dbfad5c12dce9980fbff3b5b230e",
+  "htmlSHA256": "d735afb004df793a43bbbbfa35869ce0039d24e8e373afcf97af85df36d1e7c0",
+  "viewport": {
+    "width": 400,
+    "height": 300
+  },
+  "method": "One continuous UI-only mixed-speed observe run. 5x approach, 1x across18:00 and20:00, 5x between/after. Read-only snapshots; normal wheel zoom2200; close natural events; pause for screenshots. No RNG, world or clock overrides. Software WebGL. Not two full runs or a balance comparison."
+}

@@ -1,0 +1,32 @@
+{
+  "startedAt": "2026-10-15T17:29:54.270Z",
+  "commit": "21b50a6c966c8368234ab0143da4f37d3a549eb4",
+  "gameSourceSha256": "4b4056452f57ba0f07b756fc5f858e4564d4c3fd63d88e21e7723f5d5eccbcbc",
+  "viewport": {
+    "width": 400,
+    "height": 300
+  },
+  "screenshotViewport": {
+    "width": 800,
+    "height": 600
+  },
+  "renderer": "Chromium ANGLE/SwiftShader",
+  "strategies": [
+    "observe",
+    "economy",
+    "defense"
+  ],
+  "repeats": 2,
+  "targetGameSeconds": 240,
+  "method": "Fresh browser context per run; default terrain seed 42026 and naturally randomized props/units/enemies; 5x UI speed; zoom out via mouse wheel to the normal maximum; actual WebGL; no API writes, forced events, era/day jumps, clock/RNG overrides or render stubs.",
+  "policy": {
+    "observe": "No powers/recruitment; close naturally occurring events.",
+    "economy": "Recruit two workers before night; rain near workers at most once per 45 game seconds while faith >= 30 and food < 65 or mean hunger > 45; choose affordable economic options in natural events.",
+    "defense": "Train two soldiers; attempt one extra tower on visibly accessible free ground before night; use lightning on a visible enemy cluster at most once per 12 game seconds while faith >= 25; choose affordable defensive options in natural events.",
+    "common": "Stop at 240 game seconds; record automatic era transition if reached; do not force progression. Input may pause via the visible pause button for aiming/screenshots. Policies are simple scripted play styles, not expert human players."
+  },
+  "phase": "before-food-fix",
+  "completedRuns": 3,
+  "completedRepeatsPerPolicy": 1,
+  "stopReason": "Stopped after one complete run per policy to test the confirmed food-selection fix in the next phase; the original driver was configured for two repetitions."
+}

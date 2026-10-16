@@ -1,0 +1,372 @@
+{
+  "checkpoints": [
+    {
+      "label": "warning-1x",
+      "entry": {
+        "simulationTime": 89.19999999999708,
+        "day": 1,
+        "time": 18.011999999999965,
+        "speed": 1,
+        "people": 7,
+        "enemies": 0,
+        "faith": 106.13999999999012,
+        "food": 33,
+        "countdown": "บุก 20:00 · อีก 02:00 ชม.ในเกม",
+        "guidance": "ก่อนคืนแรก: เตรียมทหารและศรัทธา",
+        "quickEnemies": 0,
+        "quickPeople": 7,
+        "event": false
+      },
+      "paused": {
+        "simulationTime": 89.39999999999706,
+        "day": 1,
+        "time": 18.03399999999997,
+        "speed": 0,
+        "people": 7,
+        "enemies": 0,
+        "faith": 106.2299999999901,
+        "food": 33,
+        "countdown": "บุก 20:00 · อีก 01:58 ชม.ในเกม",
+        "guidance": "ก่อนคืนแรก: เตรียมทหารและศรัทธา",
+        "quickEnemies": 0,
+        "quickPeople": 7,
+        "event": false
+      }
+    },
+    {
+      "label": "warning-5x",
+      "entry": {
+        "simulationTime": 91.84999999999692,
+        "day": 1,
+        "time": 18.30350000000004,
+        "speed": 5,
+        "people": 7,
+        "enemies": 0,
+        "faith": 107.33249999998979,
+        "food": 33,
+        "countdown": "บุก 20:00 · อีก 01:42 ชม.ในเกม",
+        "guidance": "ก่อนคืนแรก: เตรียมทหารและศรัทธา",
+        "quickEnemies": 0,
+        "quickPeople": 7,
+        "event": false
+      },
+      "paused": {
+        "simulationTime": 92.09999999999691,
+        "day": 1,
+        "time": 18.331000000000046,
+        "speed": 0,
+        "people": 7,
+        "enemies": 0,
+        "faith": 107.44499999998976,
+        "food": 33,
+        "countdown": "บุก 20:00 · อีก 01:41 ชม.ในเกม",
+        "guidance": "ก่อนคืนแรก: เตรียมทหารและศรัทธา",
+        "quickEnemies": 0,
+        "quickPeople": 7,
+        "event": false
+      }
+    },
+    {
+      "label": "night-1x",
+      "entry": {
+        "simulationTime": 107.39999999999604,
+        "day": 1,
+        "time": 20.014000000000472,
+        "speed": 1,
+        "people": 7,
+        "enemies": 7,
+        "faith": 114.32999999998785,
+        "food": 31,
+        "countdown": "กลางคืน",
+        "guidance": "ยังมีอสูรมีชีวิตบนเกาะ",
+        "quickEnemies": 7,
+        "quickPeople": 7,
+        "event": false
+      },
+      "paused": {
+        "simulationTime": 107.54999999999603,
+        "day": 1,
+        "time": 20.030500000000476,
+        "speed": 0,
+        "people": 7,
+        "enemies": 7,
+        "faith": 114.39749999998783,
+        "food": 31,
+        "countdown": "กลางคืน",
+        "guidance": "ยังมีอสูรมีชีวิตบนเกาะ",
+        "quickEnemies": 7,
+        "quickPeople": 7,
+        "event": false
+      }
+    },
+    {
+      "label": "night-5x",
+      "entry": {
+        "simulationTime": 109.9999999999959,
+        "day": 1,
+        "time": 20.300000000000544,
+        "speed": 5,
+        "people": 7,
+        "enemies": 7,
+        "faith": 115.5899999999875,
+        "food": 31,
+        "countdown": "กลางคืน",
+        "guidance": "ยังมีอสูรมีชีวิตบนเกาะ",
+        "quickEnemies": 7,
+        "quickPeople": 7,
+        "event": false
+      },
+      "paused": {
+        "simulationTime": 110.49999999999586,
+        "day": 1,
+        "time": 20.355000000000558,
+        "speed": 0,
+        "people": 7,
+        "enemies": 7,
+        "faith": 116.03999999998737,
+        "food": 31,
+        "countdown": "กลางคืน",
+        "guidance": "ยังมีอสูรมีชีวิตบนเกาะ",
+        "quickEnemies": 7,
+        "quickPeople": 7,
+        "event": false
+      }
+    }
+  ],
+  "speedChanges": [
+    {
+      "speed": 0,
+      "at": {
+        "simulationTime": 0.15000000000000002,
+        "day": 1,
+        "time": 8.216499999999998,
+        "speed": 0,
+        "people": 7,
+        "enemies": 0,
+        "faith": 60.0675,
+        "food": 35,
+        "countdown": "บุก 20:00 · อีก 11:48 ชม.ในเกม",
+        "guidance": "สายฟ้า 20 · หอคอย 25 ศรัทธา",
+        "quickEnemies": 0,
+        "quickPeople": 7,
+        "event": false
+      }
+    },
+    {
+      "speed": 5,
+      "at": {
+        "simulationTime": 0.15000000000000002,
+        "day": 1,
+        "time": 8.216499999999998,
+        "speed": 5,
+        "people": 7,
+        "enemies": 0,
+        "faith": 60.0675,
+        "food": 35,
+        "countdown": "บุก 20:00 · อีก 11:48 ชม.ในเกม",
+        "guidance": "สายฟ้า 20 · หอคอย 25 ศรัทธา",
+        "quickEnemies": 0,
+        "quickPeople": 7,
+        "event": false
+      }
+    },
+    {
+      "speed": 1,
+      "at": {
+        "simulationTime": 88.14999999999714,
+        "day": 1,
+        "time": 17.896499999999936,
+        "speed": 1,
+        "people": 7,
+        "enemies": 0,
+        "faith": 105.66749999999026,
+        "food": 33,
+        "countdown": "บุก 20:00 · อีก 02:07 ชม.ในเกม",
+        "guidance": "สายฟ้า 20 · หอคอย 25 ศรัทธา",
+        "quickEnemies": 0,
+        "quickPeople": 7,
+        "event": false
+      }
+    },
+    {
+      "speed": 0,
+      "at": {
+        "simulationTime": 89.39999999999706,
+        "day": 1,
+        "time": 18.03399999999997,
+        "speed": 0,
+        "people": 7,
+        "enemies": 0,
+        "faith": 106.2299999999901,
+        "food": 33,
+        "countdown": "บุก 20:00 · อีก 01:58 ชม.ในเกม",
+        "guidance": "ก่อนคืนแรก: เตรียมทหารและศรัทธา",
+        "quickEnemies": 0,
+        "quickPeople": 7,
+        "event": false
+      }
+    },
+    {
+      "speed": 5,
+      "at": {
+        "simulationTime": 89.39999999999706,
+        "day": 1,
+        "time": 18.03399999999997,
+        "speed": 5,
+        "people": 7,
+        "enemies": 0,
+        "faith": 106.2299999999901,
+        "food": 33,
+        "countdown": "บุก 20:00 · อีก 01:58 ชม.ในเกม",
+        "guidance": "ก่อนคืนแรก: เตรียมทหารและศรัทธา",
+        "quickEnemies": 0,
+        "quickPeople": 7,
+        "event": false
+      }
+    },
+    {
+      "speed": 0,
+      "at": {
+        "simulationTime": 92.09999999999691,
+        "day": 1,
+        "time": 18.331000000000046,
+        "speed": 0,
+        "people": 7,
+        "enemies": 0,
+        "faith": 107.44499999998976,
+        "food": 33,
+        "countdown": "บุก 20:00 · อีก 01:41 ชม.ในเกม",
+        "guidance": "ก่อนคืนแรก: เตรียมทหารและศรัทธา",
+        "quickEnemies": 0,
+        "quickPeople": 7,
+        "event": false
+      }
+    },
+    {
+      "speed": 5,
+      "at": {
+        "simulationTime": 92.09999999999691,
+        "day": 1,
+        "time": 18.331000000000046,
+        "speed": 5,
+        "people": 7,
+        "enemies": 0,
+        "faith": 107.44499999998976,
+        "food": 33,
+        "countdown": "บุก 20:00 · อีก 01:41 ชม.ในเกม",
+        "guidance": "ก่อนคืนแรก: เตรียมทหารและศรัทธา",
+        "quickEnemies": 0,
+        "quickPeople": 7,
+        "event": false
+      }
+    },
+    {
+      "speed": 1,
+      "at": {
+        "simulationTime": 105.99999999999612,
+        "day": 1,
+        "time": 19.860000000000433,
+        "speed": 1,
+        "people": 7,
+        "enemies": 0,
+        "faith": 113.69999999998802,
+        "food": 31,
+        "countdown": "บุก 20:00 · อีก 00:09 ชม.ในเกม",
+        "guidance": "ก่อนคืนแรก: เตรียมทหารและศรัทธา",
+        "quickEnemies": 0,
+        "quickPeople": 7,
+        "event": false
+      }
+    },
+    {
+      "speed": 0,
+      "at": {
+        "simulationTime": 107.54999999999603,
+        "day": 1,
+        "time": 20.030500000000476,
+        "speed": 0,
+        "people": 7,
+        "enemies": 7,
+        "faith": 114.39749999998783,
+        "food": 31,
+        "countdown": "กลางคืน",
+        "guidance": "ยังมีอสูรมีชีวิตบนเกาะ",
+        "quickEnemies": 7,
+        "quickPeople": 7,
+        "event": false
+      }
+    },
+    {
+      "speed": 5,
+      "at": {
+        "simulationTime": 107.54999999999603,
+        "day": 1,
+        "time": 20.030500000000476,
+        "speed": 5,
+        "people": 7,
+        "enemies": 7,
+        "faith": 114.39749999998783,
+        "food": 31,
+        "countdown": "กลางคืน",
+        "guidance": "ยังมีอสูรมีชีวิตบนเกาะ",
+        "quickEnemies": 7,
+        "quickPeople": 7,
+        "event": false
+      }
+    },
+    {
+      "speed": 0,
+      "at": {
+        "simulationTime": 110.49999999999586,
+        "day": 1,
+        "time": 20.355000000000558,
+        "speed": 0,
+        "people": 7,
+        "enemies": 7,
+        "faith": 116.03999999998737,
+        "food": 31,
+        "countdown": "กลางคืน",
+        "guidance": "ยังมีอสูรมีชีวิตบนเกาะ",
+        "quickEnemies": 7,
+        "quickPeople": 7,
+        "event": false
+      }
+    },
+    {
+      "speed": 5,
+      "at": {
+        "simulationTime": 110.49999999999586,
+        "day": 1,
+        "time": 20.355000000000558,
+        "speed": 5,
+        "people": 7,
+        "enemies": 7,
+        "faith": 116.03999999998737,
+        "food": 31,
+        "countdown": "กลางคืน",
+        "guidance": "ยังมีอสูรมีชีวิตบนเกาะ",
+        "quickEnemies": 7,
+        "quickPeople": 7,
+        "event": false
+      }
+    }
+  ],
+  "final": {
+    "simulationTime": 110.49999999999586,
+    "day": 1,
+    "time": 20.355000000000558,
+    "speed": 5,
+    "people": 7,
+    "enemies": 7,
+    "faith": 116.03999999998737,
+    "food": 31,
+    "countdown": "กลางคืน",
+    "guidance": "ยังมีอสูรมีชีวิตบนเกาะ",
+    "quickEnemies": 7,
+    "quickPeople": 7,
+    "event": false
+  },
+  "eventCount": 1,
+  "errors": [],
+  "wallSeconds": 285.633
+}

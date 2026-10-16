@@ -1,0 +1,95 @@
+{
+  "baseline": "0dec70f",
+  "sourceSha256": {
+    "before": "2c42a97dc9a58da50dce67e573ec58d5596ec8109ce92b4e2afed1d49932f72b",
+    "after": "80afb0bf28048fe70ad0dbea5c6ce994b5eb6ac0f128a12d383f5bcb5778ece8"
+  },
+  "method": "Controlled jsdom logic/geometry; stubbed pixels/audio; not a natural browser playthrough.",
+  "gameSeconds": 13,
+  "results": [
+    {
+      "seed": 1234,
+      "speed": 1,
+      "before": {
+        "food": 2,
+        "x": -3.761224727695947,
+        "z": 2.8443615693966593
+      },
+      "after": {
+        "food": 8,
+        "x": -3.5341275226774593,
+        "z": 2
+      }
+    },
+    {
+      "seed": 1234,
+      "speed": 2.5,
+      "before": {
+        "food": 2,
+        "x": -3.761224727695947,
+        "z": 2.8443615693966593
+      },
+      "after": {
+        "food": 8,
+        "x": -3.5341275226774593,
+        "z": 2
+      }
+    },
+    {
+      "seed": 1234,
+      "speed": 5,
+      "before": {
+        "food": 2,
+        "x": -3.761224727695947,
+        "z": 2.8443615693966593
+      },
+      "after": {
+        "food": 8,
+        "x": -3.5341275226774593,
+        "z": 2
+      }
+    },
+    {
+      "seed": 5678,
+      "speed": 1,
+      "before": {
+        "food": 2,
+        "x": -3.761224727695947,
+        "z": 2.8443615693966593
+      },
+      "after": {
+        "food": 8,
+        "x": -3.5341275226774593,
+        "z": 2
+      }
+    },
+    {
+      "seed": 5678,
+      "speed": 2.5,
+      "before": {
+        "food": 2,
+        "x": -3.761224727695947,
+        "z": 2.8443615693966593
+      },
+      "after": {
+        "food": 8,
+        "x": -3.5341275226774593,
+        "z": 2
+      }
+    },
+    {
+      "seed": 5678,
+      "speed": 5,
+      "before": {
+        "food": 2,
+        "x": -3.761224727695947,
+        "z": 2.8443615693966593
+      },
+      "after": {
+        "food": 8,
+        "x": -3.5341275226774593,
+        "z": 2
+      }
+    }
+  ]
+}

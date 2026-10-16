@@ -37,8 +37,26 @@ Screenshots are representative states, not a controlled before/after art compari
 
 ## Limits
 
-No hardware GPU FPS benchmark, SpectorJS capture, real iOS/Android or Safari test, 30-minute soak, full economy balance pass, or comprehensive GPU memory measurement was performed. Full world save is not implemented. CI is configured for future pushes; local results do not claim that GitHub Actions has already passed.
+The initial checks did not include a hardware GPU FPS benchmark, SpectorJS capture, real iOS/Android or Safari test, a 30-minute soak, a full economy balance pass, or comprehensive GPU memory measurement. Full world save is not implemented. CI conclusions must be tied to the tested commit rather than inferred from local checks.
 
 ## Extended gameplay review
 
 A later UI-driven session played the preserved original for 1,503 seconds, recording 606 snapshots. It followed the first day/night cycle and actual progression into era 2, then separately surveyed event branches and eras 3–4 with UI controls. See [PLAYTHROUGH.th.md](PLAYTHROUGH.th.md) for player actions, evidence and limits. This does not claim full progression to era 4 or complete coverage of all 15 event choices.
+
+## Simulation speed and event fixes
+
+See [SPEED_REVIEW.th.md](SPEED_REVIEW.th.md) for 56 passing unit/integration tests, five real-WebGL browser scenarios, controlled before/after measurements, and explicit limitations. jsdom is a development-only harness dependency pinned to 26.1.0 to retain the project Node.js 22.12 minimum.
+
+## NPC navigation, food selection and landscape controls
+
+At commit `0dec70f`, `npm test`, a detailed run of all **71 unit/integration cases**, all **9 Chromium/SwiftShader browser scenarios**, and `npm run build` passed locally. The browser suite includes natural movement out of the river-bank spawn, a controlled meal from nearby stored food, and reachable speed/HUD controls at 400×300, 640×480 and 844×390. Earlier pause/save/touch/event checks remain covered.
+
+The ten paired-seed food trials use jsdom with actual geometry/game logic and stubbed pixels/audio; they are separate from the UI-driven browser playthroughs. [BALANCE_REVIEW.th.md](BALANCE_REVIEW.th.md) records methods, source revisions, raw evidence and remaining limits. These checks do not establish human fun, final difficulty balance or hardware performance.
+
+The final NPC access revision `80e4cdf` passed **75 unit/integration cases**, **10 real-WebGL browser scenarios**, and the production build locally. Added cases verify accessible shelter/temple fallback at 1x/5x, actual fishing yield of eight food in 13 game seconds at 1x/2.5x/5x across two seeds, and fishing production in Chromium. Detailed unit command: `node --test --test-isolation=none tests/*.test.js` on Node.js 24; CI uses the project `npm test` command.
+
+## Placement feedback and first-night HUD
+
+The readability work adds five integration cases and five browser scenarios, bringing the suite to **80 unit/integration cases** and **15 Chromium/SwiftShader scenarios**. A complete local run passed, followed by eight affected layout/input scenarios after the final landscape and button-label refinement, and the touch scenario again after adding HUD-release/cancel coverage. The production build passed. See [READABILITY_REVIEW.th.md](READABILITY_REVIEW.th.md) for the 26,244-point compatibility check, screenshots, methods and remaining human-playtest requirements.
+
+The continuous UI follow-up used one mixed-speed run through the first siege (5x approach, 1x across 18:00/20:00, then 5x checks), with 204 snapshots and no page errors. It is not two full-speed playthroughs or a balance comparison. The initial GitHub Actions run at `f943b09` passed unit/build and 13/15 browser cases; two H-toggle checks exceeded the decorative fade deadline. Those checks now assert hidden state and pointer interception directly and passed all three affected viewport cases locally.

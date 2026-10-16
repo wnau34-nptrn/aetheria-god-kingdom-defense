@@ -1,3 +1,5 @@
+import { createFixedStepper } from '../systems/fixed-step.js';
+import { chooseFoodTree } from '../systems/food-target.js';
 import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
 
 (() => {
@@ -308,6 +310,10 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     if (z < -62 || z > 100) return false;
     return Math.abs(x - getRiverCenterX(z)) < getRiverWidth(z) * 1.25;
   }
+  function isOnBridgeDeck(x, z) {
+    const levels = currentCivEra >= 3 ? [14, -16] : [14];
+    return levels.some(bz => Math.abs(z - bz) <= 2.2 && Math.abs(x - getRiverCenterX(bz)) <= getRiverWidth(bz) * 1.45 + 4.4);
+  }
   function getTerrainSlopeAt(x, z) {
     const eps = 1.2;
     return Math.hypot((getTerrainHeightAt(x + eps, z) - getTerrainHeightAt(x - eps, z)) / (2 * eps), (getTerrainHeightAt(x, z + eps) - getTerrainHeightAt(x, z - eps)) / (2 * eps));
@@ -465,11 +471,19 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     if (portalObj && Math.hypot(x - portalObj.x, z - portalObj.z) < 8.5 + extraMargin) return true;
     return false;
   }
-  function canPlaceBuildingAt(x, z) {
-    if (getIslandMask(x, z) < 0.42 || isPointInRiver(x, z) || isPointOnRoad(x, z)) return false;
+  function getBuildingPlacementIssue(x, z) {
+    if (!Number.isFinite(x) || !Number.isFinite(z) || getIslandMask(x, z) < 0.42) return 'อยู่นอกพื้นที่เกาะที่สร้างได้';
+    if (isPointInRiver(x, z)) return 'อยู่ในแม่น้ำ';
+    if (isPointOnRoad(x, z)) return 'กีดขวางถนน';
     const h = getTerrainHeightAt(x, z), waterY = getWaterLevelAt(z);
-    if (h < waterY + 0.75 || h > 5.6 || getTerrainSlopeAt(x, z) > 0.22) return false;
-    return !isNearBuildingFoundation(x, z, 0.5);
+    if (h < waterY + 0.75) return 'พื้นดินต่ำใกล้ระดับน้ำเกินไป';
+    if (h > 5.6) return 'พื้นที่สูงเกินระดับที่สร้างได้';
+    if (getTerrainSlopeAt(x, z) > 0.22) return 'พื้นดินลาดชันเกินไป';
+    if (isNearBuildingFoundation(x, z, 0.5)) return 'ใกล้อาคาร แปลงนา หรือสิ่งปลูกสร้างเกินไป';
+    return null;
+  }
+  function canPlaceBuildingAt(x, z) {
+    return getBuildingPlacementIssue(x, z) === null;
   }
   function clearFootprintResources(x, z, radius = 3.2) {
     for (let i = trees.length - 1; i >= 0; i--) if (Math.hypot(trees[i].x - x, trees[i].z - z) < radius) { worldObjectsGroup.remove(trees[i].mesh); trees.splice(i, 1); }
@@ -1864,6 +1878,12 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
 
   // Detailed Articulated Human Character (Villager & Royal Knight Soldier)
   function createAgent(x, z, role = 'villager') {
+    // Fixed city spawn coordinates can overlap the river's walking exclusion band.
+    // Place people on the nearest bank, while preserving legitimate bridge spawns.
+    if (isPointInRiver(x, z) && !isOnBridgeDeck(x, z)) {
+      const center = getRiverCenterX(z), side = x >= center ? 1 : -1;
+      x = center + side * (getRiverWidth(z) * 1.25 + 0.6);
+    }
     const y = getTerrainHeightAt(x, z), g = new THREE.Group();
     g.castShadow = true; g.position.set(x, y, z);
 
@@ -2420,8 +2440,12 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   }
 
   function castMiracleBeam(tx, tz) {
-    if (state.faith < 25) { addLog('พลังศรัทธาไม่พอสำหรับลำแสงประทานพร (ต้องการ 25 ✨)', 'warn'); return; }
-    if (!canPlaceBuildingAt(tx, tz)) { addLog('🚫 ไม่สามารถสร้างป้อมปราการทับสิ่งปลูกสร้างเดิม แม่น้ำ หรือพื้นที่ลาดชันเกินไปได้!', 'warn'); return; }
+    miracleTarget = { x: tx, z: tz };
+    const issue = getBuildingPlacementIssue(tx, tz);
+    if (issue || state.faith < 25) {
+      const message = issue ? `วางหอคอยไม่ได้: ${issue}` : 'ศรัทธาไม่พอ ต้องการ 25';
+      addLog(`🚫 ${message}`, 'warn'); updateMiraclePreview(); return;
+    }
     state.faith -= 25; audio.playBlessChime();
     const ty = getTerrainHeightAt(tx, tz);
     const beam = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.4, 55, 16, 1, true), new THREE.MeshBasicMaterial({ color: 0xfde047, transparent: true, opacity: 0.55, side: THREE.DoubleSide }));
@@ -2430,11 +2454,34 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     spawnShockwaveRing(tx, ty, tz, 0xfbbf24, 12, 0.8);
     createWatchtower(tx, tz, 1.0);
     for (const ag of agents) { ag.hp = ag.maxHp; ag.hunger = 0; }
+    updateHUD(); updateMiraclePreview();
     addLog('🌟 ลำแสงประทานพรสถิตลงสู่พื้นเกาะ! สร้างป้อมปราการเวทมนตร์และฟื้นฟูชาวบ้านทั้งหมด', 'bless');
   }
 
   const raycaster = new THREE.Raycaster(), pointerNDC = new THREE.Vector2();
   let isTerraformDragging = false;
+  let miracleTarget = null;
+  const placementFeedback = document.getElementById('placement-feedback');
+  function setReadoutText(id, text) {
+    const el = document.getElementById(id);
+    if (el.textContent !== text) el.textContent = text;
+  }
+  function updateMiraclePreview() {
+    placementFeedback.hidden = state.activePower !== 'miracle';
+    if (placementFeedback.hidden) return;
+    const issue = miracleTarget && getBuildingPlacementIssue(miracleTarget.x, miracleTarget.z);
+    const blocked = !!issue || state.faith < 25;
+    placementFeedback.dataset.state = blocked ? 'blocked' : 'ready';
+    const touchHint = navigator.maxTouchPoints > 0 ? 'แตะลากเล็ง ปล่อยเพื่อสร้าง' : 'เล็งพื้นเกาะเพื่อวางหอคอย';
+    setReadoutText('placement-feedback', issue ? `⛔ ${issue} · ใช้ 25 ศรัทธา` : state.faith < 25 ? `⛔ ศรัทธาไม่พอ · ต้องการ 25 (มี ${Math.floor(state.faith)})` : miracleTarget ? '✓ วางหอคอยได้ · ใช้ 25 ศรัทธา' : `${touchHint} · ใช้ 25 ศรัทธา`);
+    if (miracleTarget) {
+      reticleGroup.visible = true;
+      reticleGroup.position.set(miracleTarget.x, getTerrainHeightAt(miracleTarget.x, miracleTarget.z) + 0.35, miracleTarget.z);
+      reticleGroup.scale.setScalar(4.5);
+      reticleRing.material.color.setHex(blocked ? 0xef4444 : 0x34d399);
+      reticleFill.material.color.setHex(blocked ? 0xf87171 : 0x6ee7b7);
+    }
+  }
   function updatePointerRay(e) {
     const rect = canvas.getBoundingClientRect();
     pointerNDC.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -2472,6 +2519,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   });
 
   window.addEventListener('pointermove', (e) => {
+    if (e.pointerType === 'touch') return;
     if (camCtrl.isDragging) {
       const dx = e.clientX - camCtrl.lastX, dy = e.clientY - camCtrl.lastY;
       camCtrl.lastX = e.clientX; camCtrl.lastY = e.clientY;
@@ -2484,7 +2532,8 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       return;
     }
     if (state.activePower !== 'observe') {
-      const pt = getTerrainIntersection(e);
+      const pt = e.target === canvas ? getTerrainIntersection(e) : null;
+      miracleTarget = state.activePower === 'miracle' && pt ? { x: pt.x, z: pt.z } : null;
       if (pt) {
         reticleGroup.visible = true; reticleGroup.position.set(pt.x, pt.y + 0.35, pt.z);
         reticleGroup.scale.setScalar(state.activePower === 'terraform' ? state.terraRadius : (state.activePower === 'meteor' ? 10 : (state.activePower === 'rain' ? 11 : 4.5)));
@@ -2492,8 +2541,10 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
         reticleRing.material.color.setHex(isBlocked ? 0xef4444 : 0xfbbf24); reticleFill.material.color.setHex(isBlocked ? 0xf87171 : 0xfde047);
         if (isTerraformDragging && state.activePower === 'terraform') applyTerraforming(pt.x, pt.z, (e.shiftKey || e.buttons === 2 || state.terraMode === 'lower') ? -1 : 1, 0.04);
       } else reticleGroup.visible = false;
+      updateMiraclePreview();
     } else reticleGroup.visible = false;
   });
+  canvas.addEventListener('pointerleave', () => { miracleTarget = null; reticleGroup.visible = false; updateMiraclePreview(); });
 
   window.addEventListener('pointerup', () => { camCtrl.isDragging = camCtrl.isPanning = isTerraformDragging = false; });
   canvas.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -2517,7 +2568,9 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     const myOffset = entity.x - getRiverCenterX(entity.z), targetOffset = tx - getRiverCenterX(tz);
     const inBridgeLane = Math.abs(entity.z - bridgeZ) <= 2.4 && Math.abs(entity.x - bridgeX) <= halfSpan + 1.8;
 
-    if ((myOffset * targetOffset < 0) || inBridgeLane) {
+    // Once on the destination bank, allow the direct route away from the bridge.
+    // Routing every nearby person back to its exit creates a permanent oscillation.
+    if ((myOffset * targetOffset < 0) || isPointInRiver(entity.x, entity.z)) {
       const destSide = targetOffset >= 0 ? 1 : -1;
       const exitX = bridgeX + destSide * (halfSpan + 1.4);
       if (inBridgeLane || Math.abs(entity.z - bridgeZ) <= 2.2) {
@@ -2678,7 +2731,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
         }
         if (ag.role === 'fisherman') {
           ag.state = 'FISH'; ag.stateLabel = '🎣 ตกปลาริมสะพานท่าเทียบเรือ'; ag.stateGem.material.color.setHex(0x38bdf8); cForage++;
-          const fx = getRiverCenterX(2.0) + getRiverWidth(2.0) + 0.6, fz = 2.0 + (ag.id % 2) * 1.2;
+          const fz = 2.0 + (ag.id % 2) * 1.2, fx = getRiverCenterX(fz) + getRiverWidth(fz) * 1.25 + 0.6;
           if (moveTowards(ag, fx, fz, 4.0, dt) < 1.2) {
             ag.mesh.rotation.y = -Math.PI / 2;
             ag.rightArm.rotation.x = -0.6 + Math.sin(elapsedTime * 3 + ag.id) * 0.15;
@@ -2693,14 +2746,14 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
 
       if (ag.hunger >= 65) {
         ag.state = 'FORAGE'; ag.stateLabel = '🍎 หิว ➔ เก็บผลไม้/กินเสบียง'; ag.stateGem.material.color.setHex(0xfb7185); ag.mesh.visible = true; cForage++;
-        const ripeTree = trees.find(t => t.hasFruit && t.growth >= 0.75);
+        const ripeTree = chooseFoodTree(ag, state.food, trees);
         if (moveTowards(ag, ripeTree ? ripeTree.x : 0, ripeTree ? ripeTree.z : 0, 5.2, dt) < 2.3) {
           if (ripeTree) { ripeTree.hasFruit = false; ripeTree.fruitMeshes.forEach(fm => { fm.visible = false; }); ag.hunger = 0; ag.hp = Math.min(ag.maxHp, ag.hp + 20); state.food += 2; }
           else if (state.food >= 2) { state.food = Math.max(0, state.food - 2); ag.hunger = 0; ag.hp = Math.min(ag.maxHp, ag.hp + 15); }
         }
       } else if (state.isNight) {
         ag.state = 'SHELTER'; ag.stateLabel = '🏮 จุดไฟเดินกลับเข้าบ้านพัก'; ag.stateGem.material.color.setHex(0xfde047); cShelter++;
-        const myHouses = buildings.filter(b => b.type === 'house' && b.progress >= 1.0), targetHouse = myHouses.length > 0 ? myHouses[ag.id % myHouses.length] : templeObj;
+        const myHouses = buildings.filter(b => b.type === 'house' && b.progress >= 1.0 && (!isPointInRiver(b.x, b.z) || isOnBridgeDeck(b.x, b.z))), targetHouse = myHouses.length > 0 ? myHouses[ag.id % myHouses.length] : templeObj;
         if (moveTowards(ag, targetHouse ? targetHouse.x : 0, targetHouse ? targetHouse.z : 0, 4.8, dt) < 2.2) {
           if (targetHouse && targetHouse.type === 'house') ag.mesh.visible = false;
           state.faith = Math.min(state.maxFaith, state.faith + dt * 0.45);
@@ -2811,6 +2864,9 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     if (state.timeOfDay >= 24.0) { state.timeOfDay -= 24.0; state.day++; state.siegeTriggeredTonight = false; state.secondWaveTonight = false; }
     const t = state.timeOfDay, wasNight = state.isNight;
     state.isNight = (t >= 20.0 || t < 5.5);
+    if (state.day === 1 && prevTime < 18 && t >= 18 && t < 20) {
+      addLog('🌇 อีก 2 ชั่วโมงในเกม อสูรจะบุกเวลา 20:00 เตรียมทหารและเก็บศรัทธาสำหรับสายฟ้า (20) หรือหอคอย (25)', 'warn');
+    }
 
     if (prevTime < 6.0 && t >= 6.0) {
       audio.playVillageBell(false);
@@ -2840,6 +2896,10 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       addLog(`🔥 ศึกหนักยามเที่ยงคืน! ประตูมิติอเวจีส่งทัพหนุนและจอมอสูรบุกซ้ำอีก ${wave2Count} ตัว!`, 'warn');
     }
 
+  }
+
+  function renderDayNightCycle() {
+    const t = state.timeOfDay;
     const sunAngle = ((t - 6.0) / 24.0) * Math.PI * 2, orbitR = 165;
     const sx = Math.cos(sunAngle) * orbitR, sy = Math.sin(sunAngle) * orbitR, sz = 38 * Math.sin(sunAngle * 0.5);
     sunOrb.position.set(sx, sy, sz); sunLight.position.set(sx * 0.55, Math.max(18, Math.abs(sy) * 0.55), sz * 0.55);
@@ -2872,8 +2932,9 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     document.getElementById('clock-display').textContent = `${String(Math.floor(t)).padStart(2,'0')}:${String(Math.floor((t%1)*60)).padStart(2,'0')}`;
     document.getElementById('phase-badge').textContent = phaseText;
     const statusBadge = document.getElementById('kingdom-Status-badge');
-    statusBadge.textContent = monsters.length > 0 ? `⚔️ กำลังรบ (${monsters.length} ตัว)` : (state.isNight ? '🌙 เฝ้าระวังยามวิกาล' : '🌿 สงบสุข');
-    statusBadge.style.color = monsters.length > 0 ? '#fb7185' : '#34d399';
+    const enemyCount = monsters.filter(m => m.alive).length;
+    statusBadge.textContent = enemyCount > 0 ? `⚔️ กำลังรบ (${enemyCount} ตัว)` : (state.isNight ? '🌙 เฝ้าระวังยามวิกาล' : '🌿 สงบสุข');
+    statusBadge.style.color = enemyCount > 0 ? '#fb7185' : '#34d399';
   }
 
   const chartCanvas = document.getElementById('analytics-canvas'), chartCtx = chartCanvas.getContext('2d');
@@ -2894,7 +2955,23 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     drawSeries(state.historyRes, '#38bdf8', 350); drawSeries(state.historyFaith, '#fbbf24', 200); drawSeries(state.historyPop, '#34d399', 28);
   }
 
+  function updateKingdomReadout() {
+    const people = agents.filter(a => a.alive), enemies = monsters.filter(m => m.alive).length;
+    setReadoutText('quick-faith', `${Math.floor(state.faith)}`);
+    setReadoutText('quick-food', `${Math.floor(state.food)}`);
+    setReadoutText('quick-pop', `${people.length}`);
+    setReadoutText('quick-enemies', `${enemies}`);
+    const night = state.timeOfDay >= 20 || state.timeOfDay < 5.5;
+    const remaining = Math.max(0, Math.ceil((20 - state.timeOfDay) * 60 - 1e-8));
+    const clock = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(remaining % 60).padStart(2, '0')}`;
+    const firstWarning = state.day === 1 && state.timeOfDay >= 18 && state.timeOfDay < 20;
+    document.getElementById('kingdom-readout').dataset.threat = enemies ? 'combat' : firstWarning ? 'warning' : 'calm';
+    setReadoutText('night-countdown', night ? 'กลางคืน' : `บุก 20:00 · อีก ${clock} ชม.ในเกม`);
+    setReadoutText('night-guidance', firstWarning ? 'ก่อนคืนแรก: เตรียมทหารและศรัทธา' : enemies ? 'ยังมีอสูรมีชีวิตบนเกาะ' : night ? (state.secondWaveTonight ? 'แสงอาทิตย์เริ่มเผาอสูร 05:30' : 'เฝ้าระวังทัพหนุน 00:30') : 'สายฟ้า 20 · หอคอย 25 ศรัทธา');
+  }
+
   function updateHUD() {
+    updateKingdomReadout();
     const aliveAgents = agents.filter(a => a.alive), soldiers = aliveAgents.filter(a => a.role === 'soldier');
     const houses = buildings.filter(b => b.type === 'house'), towers = buildings.filter(b => b.type === 'tower'), maxPop = 6 + houses.length * 4;
     document.getElementById('stat-pop').textContent = `${aliveAgents.length} / ${maxPop}`;
@@ -3378,12 +3455,15 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
           cost: 'ใช้ 15 🪵 ไม้ซุง',
           effect: '➔ สร้างบ้านพักใหม่ 1 หลังทันที + เสกชาวบ้านใหม่ 2 คนเข้าร่วมเมือง',
           action: () => {
-            state.wood = Math.max(0, state.wood - 15);
+            let plot = null;
             for (let i = 0; i < 25; i++) {
               const a = Math.random() * Math.PI * 2, r = 10 + Math.random() * 16;
               const hx = Math.cos(a) * r, hz = Math.sin(a) * r;
-              if (canPlaceBuildingAt(hx, hz)) { createHouse(hx, hz, 1.0, state.civEra); break; }
+              if (canPlaceBuildingAt(hx, hz)) { plot = { x: hx, z: hz }; break; }
             }
+            if (!plot) return { resolved: false, message: '🚫 ไม่พบพื้นที่เหมาะสมสำหรับบ้าน ยังไม่ใช้ไม้ซุง กรุณาเลือกทางอื่นหรือปิดหน้าต่าง' };
+            state.wood -= 15;
+            createHouse(plot.x, plot.z, 1.0, state.civEra);
             createAgent(-3, 5, 'villager');
             createAgent(4, 6, 'farmer');
             audio.playBlessChime();
@@ -3396,11 +3476,14 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
           cost: 'ใช้ 15 ⛏️ แร่ศิลา',
           effect: '➔ สร้างป้อมปราการแนวหน้า 1 ป้อมทันที + เสกอัศวินองครักษ์ 2 นาย',
           action: () => {
-            state.ore = Math.max(0, state.ore - 15);
+            let plot = null;
             for (let i = 0; i < 25; i++) {
               const bx = 26 + (Math.random() - 0.5) * 18, bz = -18 + (Math.random() - 0.5) * 18;
-              if (canPlaceBuildingAt(bx, bz)) { createWatchtower(bx, bz, 1.0, state.civEra); break; }
+              if (canPlaceBuildingAt(bx, bz)) { plot = { x: bx, z: bz }; break; }
             }
+            if (!plot) return { resolved: false, message: '🚫 ไม่พบพื้นที่เหมาะสมสำหรับป้อม ยังไม่ใช้แร่ศิลา กรุณาเลือกทางอื่นหรือปิดหน้าต่าง' };
+            state.ore -= 15;
+            createWatchtower(plot.x, plot.z, 1.0, state.civEra);
             createAgent(28, -20, 'soldier');
             createAgent(32, -24, 'soldier');
             audio.playVillageBell(true);
@@ -4189,6 +4272,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     if (!switching) preDilemmaSpeed = state.timeScale;
     dilemmaActive = true;
     state.timeScale = 0; // Pause simulation while player makes their decision!
+    document.querySelectorAll('[data-speed]').forEach(b => b.classList.toggle('active', Number(b.dataset.speed) === 0));
 
     let idx = forceIdx !== null ? forceIdx : Math.floor(Math.random() * DILEMMA_EVENTS.length);
     if (forceIdx === null && idx === lastDilemmaIdx) idx = (idx + 1) % DILEMMA_EVENTS.length;
@@ -4222,6 +4306,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       const btn = document.createElement('button');
       btn.className = 'dl-choice-btn' + (afford.ok ? '' : ' disabled');
       btn.id = `dl-choice-${cIdx}`;
+      btn.setAttribute('aria-disabled', String(!afford.ok));
       const badgeColor = afford.ok ? 'rgba(251,191,36,0.4)' : 'rgba(248,113,113,0.7)';
       const badgeText = afford.ok ? ch.cost : `❌ ${afford.reason}`;
       btn.innerHTML = `
@@ -4233,13 +4318,18 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       `;
       btn.addEventListener('click', () => {
         audio.init();
-        const anyAffordable = ev.choices.some(c => checkChoiceAffordability(c.cost).ok);
         const nowAfford = checkChoiceAffordability(ch.cost);
-        if (!nowAfford.ok && anyAffordable) {
+        if (!nowAfford.ok) {
           showDilemmaToast(`⚠️ ไม่สามารถเลือกได้: ${nowAfford.reason}`);
           return;
         }
-        const resultMsg = ch.action();
+        const result = ch.action();
+        if (typeof result === 'object' && result.resolved === false) {
+          showDilemmaToast(result.message);
+          addLog(result.message, 'warn');
+          return;
+        }
+        const resultMsg = typeof result === 'string' ? result : result.message;
         closeInteractiveDilemma(resultMsg);
         addLog(`⚖️ [ผลการตัดสินใจ] ${resultMsg}`, 'bless');
       });
@@ -4381,6 +4471,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
 
   function setGodPower(powerName) {
     state.activePower = powerName;
+    miracleTarget = null; reticleGroup.visible = false; updateMiraclePreview();
     document.querySelectorAll('.power-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.power === powerName));
     canvas.classList.toggle('power-active', powerName !== 'observe');
     document.getElementById('sub-power-bar').classList.toggle('visible', powerName === 'terraform');
@@ -4429,18 +4520,11 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   document.getElementById('btn-close-insp').addEventListener('click', () => { state.selectedEntity = null; camCtrl.followEntity = null; document.getElementById('inspector-card').classList.remove('visible'); });
 
   const clock = new THREE.Clock();
+  const simulationClock = createFixedStepper();
   let elapsedTime = 0;
 
-  function animate() {
-    const rawDt = Math.min(clock.getDelta(), 0.05);
-    const effectiveScale = dilemmaActive ? 0 : state.timeScale;
-    const dt = rawDt * effectiveScale;
-    elapsedTime += rawDt;
-
-    camCtrl.update(rawDt);
+  function updateSimulation(dt, simulationTime) {
     updateDayNightCycle(dt);
-    audio.modulateAmbience(elapsedTime, camera.position.y);
-
     state.faith = Math.min(state.maxFaith, state.faith + dt * 0.45);
     if (state.civEra < 4 && dt > 0) {
       const eraSpeedDiv = state.civEra === 1 ? 1.0 : (state.civEra === 2 ? 1.45 : 1.95);
@@ -4459,39 +4543,11 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
         }
       }
     }
-    if (godFxPointLight.intensity > 0) godFxPointLight.intensity = Math.max(0, godFxPointLight.intensity - rawDt * 4.5);
-
     for (const t of trees) {
       if (t.growth < 1.0) {
         t.growth = Math.min(1.0, t.growth + dt * 0.012); t.mesh.scale.setScalar(t.growth);
         if (t.species === 'fruit' && t.growth >= 0.78 && !t.hasFruit) { t.hasFruit = true; t.fruitMeshes.forEach(fm => { fm.visible = true; }); }
       }
-    }
-    if (templeObj && templeObj.flameMesh) { templeObj.flameMesh.rotation.y += rawDt * 3.2; templeObj.flameMesh.scale.setScalar(0.9 + Math.sin(elapsedTime * 8) * 0.15); }
-    if (portalRingMesh) portalRingMesh.rotation.z += rawDt * (state.isNight ? 3.5 : 0.8);
-
-    // Animate Rotating Windmills, Bobbing Rowboats, Horse-Drawn Wagons & Grazing Livestock
-    for (const wm of windmills) if (wm.rotor) wm.rotor.rotation.z -= rawDt * 1.35;
-    for (const b of boats) b.mesh.position.y = b.baseY + Math.sin(elapsedTime * 2.4) * 0.12;
-    for (const sa of skyAirships) {
-      const spd = sa.orbitSpeed || 0.14;
-      const cx = sa.centerX !== undefined ? sa.centerX : -8;
-      const cz = sa.centerZ !== undefined ? sa.centerZ : 14;
-      const rx = sa.radX || 18, rz = sa.radZ || 12;
-      sa.orbitAngle += rawDt * spd;
-      sa.x = cx + Math.cos(sa.orbitAngle) * rx;
-      sa.z = cz + Math.sin(sa.orbitAngle) * rz;
-      sa.mesh.position.set(sa.x, sa.baseY + Math.sin(elapsedTime * 1.8 + sa.orbitAngle) * 0.85, sa.z);
-      const dirSign = spd >= 0 ? 1 : -1;
-      sa.mesh.rotation.y = Math.atan2(-Math.sin(sa.orbitAngle) * rx * dirSign, Math.cos(sa.orbitAngle) * rz * dirSign);
-      if (sa.propeller) sa.propeller.rotation.z += rawDt * 18.0;
-      if (sa.burnerFlame) sa.burnerFlame.scale.setScalar(0.88 + Math.sin(elapsedTime * 14.0 + sa.orbitAngle) * 0.18);
-    }
-    if (ancientRelicObj) {
-      ancientRelicObj.crystal.position.y = 3.2 + Math.sin(elapsedTime * 2.5) * 0.32;
-      ancientRelicObj.crystal.rotation.y += rawDt * 0.9;
-      ancientRelicObj.ring.rotation.z -= rawDt * 1.6;
-      ancientRelicObj.gem.rotation.y -= rawDt * 2.4;
     }
     if (dt > 0) {
       for (const wg of wagons) {
@@ -4552,6 +4608,70 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       }
     }
 
+    for (let i = projectiles.length - 1; i >= 0; i--) {
+      const p = projectiles[i];
+      if (p.type === 'meteor') {
+        const dx = p.tx - p.x, dy = p.ty - p.y, dz = p.tz - p.z, dist = Math.hypot(dx, dy, dz), step = p.speed * dt;
+        p.mesh.rotation.x += dt * 6; p.mesh.rotation.y += dt * 5;
+        if (dist <= step + 1.2) { scene.remove(p.mesh); projectiles.splice(i, 1); detonateMeteor(p.tx, p.ty, p.tz); }
+        else { p.x += (dx / dist) * step; p.y += (dy / dist) * step; p.z += (dz / dist) * step; p.mesh.position.set(p.x, p.y, p.z); }
+      } else if (p.type === 'arcane_bolt') {
+        if (!p.target || !p.target.alive) { scene.remove(p.mesh); projectiles.splice(i, 1); continue; }
+        const ty = getTerrainHeightAt(p.target.x, p.target.z) + 1.0, dx = p.target.x - p.x, dy = ty - p.y, dz = p.target.z - p.z, dist = Math.hypot(dx, dy, dz), step = p.speed * dt;
+        if (dist <= step + 0.6) {
+          p.target.hp -= 28;
+          if (p.target.hp <= 0) { p.target.alive = false; worldObjectsGroup.remove(p.target.mesh); state.faith = Math.min(state.maxFaith, state.faith + 5); }
+          scene.remove(p.mesh); projectiles.splice(i, 1);
+        } else { p.x += (dx / dist) * step; p.y += (dy / dist) * step; p.z += (dz / dist) * step; p.mesh.position.set(p.x, p.y, p.z); }
+      }
+    }
+
+    updateAutonomousAgents(dt, simulationTime);
+    updateMonstersAndTowers(dt, simulationTime);
+  }
+
+  function animate() {
+    const rawDt = Math.min(clock.getDelta(), 0.05);
+    const effectiveScale = dilemmaActive ? 0 : state.timeScale;
+    elapsedTime += rawDt;
+
+    camCtrl.update(rawDt);
+    simulationClock.advance(rawDt, effectiveScale, (dt, simulationTime) => {
+      updateSimulation(dt, simulationTime);
+      return !dilemmaActive && state.timeScale > 0;
+    });
+    renderDayNightCycle();
+    updateKingdomReadout(); updateMiraclePreview();
+    audio.modulateAmbience(elapsedTime, camera.position.y);
+
+    if (godFxPointLight.intensity > 0) godFxPointLight.intensity = Math.max(0, godFxPointLight.intensity - rawDt * 4.5);
+
+    if (templeObj && templeObj.flameMesh) { templeObj.flameMesh.rotation.y += rawDt * 3.2; templeObj.flameMesh.scale.setScalar(0.9 + Math.sin(elapsedTime * 8) * 0.15); }
+    if (portalRingMesh) portalRingMesh.rotation.z += rawDt * (state.isNight ? 3.5 : 0.8);
+
+    // Animate Rotating Windmills, Bobbing Rowboats, Horse-Drawn Wagons & Grazing Livestock
+    for (const wm of windmills) if (wm.rotor) wm.rotor.rotation.z -= rawDt * 1.35;
+    for (const b of boats) b.mesh.position.y = b.baseY + Math.sin(elapsedTime * 2.4) * 0.12;
+    for (const sa of skyAirships) {
+      const spd = sa.orbitSpeed || 0.14;
+      const cx = sa.centerX !== undefined ? sa.centerX : -8;
+      const cz = sa.centerZ !== undefined ? sa.centerZ : 14;
+      const rx = sa.radX || 18, rz = sa.radZ || 12;
+      sa.orbitAngle += rawDt * spd;
+      sa.x = cx + Math.cos(sa.orbitAngle) * rx;
+      sa.z = cz + Math.sin(sa.orbitAngle) * rz;
+      sa.mesh.position.set(sa.x, sa.baseY + Math.sin(elapsedTime * 1.8 + sa.orbitAngle) * 0.85, sa.z);
+      const dirSign = spd >= 0 ? 1 : -1;
+      sa.mesh.rotation.y = Math.atan2(-Math.sin(sa.orbitAngle) * rx * dirSign, Math.cos(sa.orbitAngle) * rz * dirSign);
+      if (sa.propeller) sa.propeller.rotation.z += rawDt * 18.0;
+      if (sa.burnerFlame) sa.burnerFlame.scale.setScalar(0.88 + Math.sin(elapsedTime * 14.0 + sa.orbitAngle) * 0.18);
+    }
+    if (ancientRelicObj) {
+      ancientRelicObj.crystal.position.y = 3.2 + Math.sin(elapsedTime * 2.5) * 0.32;
+      ancientRelicObj.crystal.rotation.y += rawDt * 0.9;
+      ancientRelicObj.ring.rotation.z -= rawDt * 1.6;
+      ancientRelicObj.gem.rotation.y -= rawDt * 2.4;
+    }
     for (const sr of floatingRocks) {
       sr.ang += rawDt * sr.speed; sr.mesh.position.x = Math.cos(sr.ang) * sr.dist; sr.mesh.position.z = Math.sin(sr.ang) * sr.dist;
       sr.mesh.position.y = sr.yBase + Math.sin(elapsedTime * 1.4 + sr.phase) * 1.6; sr.mesh.rotation.y += rawDt * 0.25;
@@ -4570,25 +4690,6 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     }
     wfAttr.needsUpdate = true;
 
-    for (let i = projectiles.length - 1; i >= 0; i--) {
-      if (dt <= 0) continue; // A paused simulation cannot resolve projectile damage.
-      const p = projectiles[i];
-      if (p.type === 'meteor') {
-        const dx = p.tx - p.x, dy = p.ty - p.y, dz = p.tz - p.z, dist = Math.hypot(dx, dy, dz), step = p.speed * dt;
-        p.mesh.rotation.x += dt * 6; p.mesh.rotation.y += dt * 5;
-        if (dist <= step + 1.2) { scene.remove(p.mesh); projectiles.splice(i, 1); detonateMeteor(p.tx, p.ty, p.tz); }
-        else { p.x += (dx / dist) * step; p.y += (dy / dist) * step; p.z += (dz / dist) * step; p.mesh.position.set(p.x, p.y, p.z); }
-      } else if (p.type === 'arcane_bolt') {
-        if (!p.target || !p.target.alive) { scene.remove(p.mesh); projectiles.splice(i, 1); continue; }
-        const ty = getTerrainHeightAt(p.target.x, p.target.z) + 1.0, dx = p.target.x - p.x, dy = ty - p.y, dz = p.target.z - p.z, dist = Math.hypot(dx, dy, dz), step = p.speed * dt;
-        if (dist <= step + 0.6) {
-          p.target.hp -= 28;
-          if (p.target.hp <= 0) { p.target.alive = false; worldObjectsGroup.remove(p.target.mesh); state.faith = Math.min(state.maxFaith, state.faith + 5); }
-          scene.remove(p.mesh); projectiles.splice(i, 1);
-        } else { p.x += (dx / dist) * step; p.y += (dy / dist) * step; p.z += (dz / dist) * step; p.mesh.position.set(p.x, p.y, p.z); }
-      }
-    }
-
     for (let i = fxParticles.length - 1; i >= 0; i--) {
       const fx = fxParticles[i]; fx.life -= rawDt;
       if (fx.life <= 0) { scene.remove(fx.mesh); fxParticles.splice(i, 1); continue; }
@@ -4598,19 +4699,11 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     }
 
     if (customReactionTimer > 0) customReactionTimer = Math.max(0, customReactionTimer - rawDt);
-    if (!dilemmaActive && dt > 0) {
+    if (!dilemmaActive && state.timeScale > 0) {
       dilemmaTimer -= rawDt;
       if (dilemmaTimer <= 0) {
         dilemmaTimer = 42.0;
         openInteractiveDilemma();
-      }
-    }
-    if (dt > 0) {
-      const subSteps = effectiveScale > 2.6 ? 2 : 1;
-      const subDt = dt / subSteps;
-      for (let s = 0; s < subSteps; s++) {
-        updateAutonomousAgents(subDt, elapsedTime);
-        updateMonstersAndTowers(subDt, elapsedTime);
       }
     }
     if (dilemmaActive) renderDilemmaSceneCanvas(elapsedTime);
@@ -4702,6 +4795,13 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   const btnZoomIn = document.getElementById('btn-zoom-in');
   const btnZoomOut = document.getElementById('btn-zoom-out');
   const btnMobReset = document.getElementById('btn-mob-reset-cam');
+  // Keep touch camera buttons above the variable-height resource/power dock.
+  if (typeof ResizeObserver !== 'undefined') {
+    const dock = document.getElementById('god-dock-wrapper');
+    new ResizeObserver(() => {
+      document.documentElement.style.setProperty('--power-dock-height', `${Math.ceil(dock.getBoundingClientRect().height)}px`);
+    }).observe(dock);
+  }
   if (btnZoomIn) btnZoomIn.addEventListener('click', () => { camCtrl.targetRadius = Math.max(18, camCtrl.targetRadius - 16); });
   if (btnZoomOut) btnZoomOut.addEventListener('click', () => { camCtrl.targetRadius = Math.min(280, camCtrl.targetRadius + 16); });
   if (btnMobReset) btnMobReset.addEventListener('click', () => {
@@ -4751,10 +4851,11 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
         else if (state.activePower === 'terraform') applyTerraforming(pt.x, pt.z, state.terraMode === 'lower' ? -1 : 1, 0.12);
         else if (state.activePower === 'meteor') castMeteorStrike(pt.x, pt.z);
         else if (state.activePower === 'lightning') castLightningStrike(pt.x, pt.z);
-        else if (state.activePower === 'miracle') castMiracleBeam(pt.x, pt.z);
+        else if (state.activePower === 'miracle') { miracleTarget = { x: pt.x, z: pt.z }; updateMiraclePreview(); }
       }
     } else if (e.touches.length >= 2) {
       touchMode = 'pinch';
+      miracleTarget = null; reticleGroup.visible = false; updateMiraclePreview();
       const t0 = e.touches[0], t1 = e.touches[1];
       lastPinchDist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
       lastMidX = (t0.clientX + t1.clientX) * 0.5;
@@ -4773,6 +4874,11 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       if (state.activePower === 'observe') {
         camCtrl.targetTheta -= dx * 0.0075;
         camCtrl.targetPhi = THREE.MathUtils.clamp(camCtrl.targetPhi - dy * 0.0065, 0.28, 1.40);
+      } else if (state.activePower === 'miracle') {
+        const pt = document.elementFromPoint(t.clientX, t.clientY) === canvas ? getTerrainIntersection(t) : null;
+        miracleTarget = pt ? { x: pt.x, z: pt.z } : null;
+        if (!pt) reticleGroup.visible = false;
+        updateMiraclePreview();
       } else if (state.activePower === 'terraform') {
         const pt = getTerrainIntersection(t);
         if (pt) {
@@ -4803,6 +4909,12 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   }, { passive: false });
 
   canvas.addEventListener('touchend', (e) => {
+    // Aim while touching; release once to build. Pinch gestures cancel placement.
+    if (touchMode === 'single' && e.touches.length === 0 && state.activePower === 'miracle') {
+      const touch = e.changedTouches[0];
+      const pt = touch && document.elementFromPoint(touch.clientX, touch.clientY) === canvas ? getTerrainIntersection(touch) : null;
+      if (pt) castMiracleBeam(pt.x, pt.z);
+    }
     if (touchMode === 'single' && touchMovedDist < 14 && state.activePower === 'observe') {
       updatePointerRay({ clientX: lastTouchX, clientY: lastTouchY });
       const hits = raycaster.intersectObjects(worldObjectsGroup.children, true);
@@ -4827,10 +4939,12 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       touchMode = null;
     }
   });
+  canvas.addEventListener('touchcancel', () => { touchMode = null; miracleTarget = null; reticleGroup.visible = false; updateMiraclePreview(); });
 
   window.AETHERIA_API = {
+    get simulationTime() { return simulationClock.time; },
     setAllHudHidden, evolveToEra, openInteractiveDilemma,
-    isNearBuildingFoundation, canPlaceBuildingAt, state, camCtrl, agents, monsters, projectiles, buildings, trees, ores, wagons, livestock, windmills, cropFields,
+    isNearBuildingFoundation, getBuildingPlacementIssue, canPlaceBuildingAt, state, camCtrl, agents, monsters, projectiles, buildings, trees, ores, wagons, livestock, windmills, cropFields,
     setGodPower, castRainPower, applyTerraforming, castMeteorStrike, detonateMeteor, castLightningStrike, castMiracleBeam,
     spawnMonster, updateInspectorUI, drawAnalyticsChart, updateHUD, saveGameState, loadSavedGameState
   };

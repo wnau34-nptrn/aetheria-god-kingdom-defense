@@ -4,6 +4,12 @@
 
 `src/main.js` loads CSS and the legacy WebGL namespace, then dynamically imports the game with visible startup failure handling. `window.THREE` is a custom compatibility namespace, **not the Three.js package**. `window.AETHERIA_API` remains a development/test interface; it should not become the persistent data model.
 
+Gameplay now advances in fixed 50ms ticks via `src/systems/fixed-step.js`, with AI goals using simulation time. Day/night presentation is separate from clock/damage updates so it can render while paused. The legacy 50ms frame clamp and real-time cosmetic/event interval behavior remain. See `SPEED_REVIEW.th.md` for controlled-test results and limits.
+
+`src/systems/food-target.js` compares nearby ripe fruit against the central store when it can provide a meal. It is a pure decision helper with no DOM or mesh dependency. River-bank spawn correction and bridge routing remain in the legacy movement code; they are targeted fixes rather than a complete navigation system. See `BALANCE_REVIEW.th.md` for browser evidence and controlled reproductions.
+
+Shelter selection excludes completed houses inside the river walking restriction unless they are on a bridge deck, with the existing temple fallback when none qualify. It does not compute full path reachability. Fishing targets use the same river-bank boundary as walking. Bridge-deck access is shared by spawning and shelter selection.
+
 The extracted game still uses one IIFE, mutable entity arrays and direct DOM access. Splitting files is preparation, not a completed architectural rewrite. Embedded 2D scene images are still in the legacy game and should later move to named assets with provenance.
 
 The original uploaded HTML is preserved under `original/`, with SHA-256 recorded in `source-provenance.json`. It is useful as a behavioral reference and is not part of the Vite production bundle. The browser audit runner can load it from the development server.
@@ -19,7 +25,7 @@ The original uploaded HTML is preserved under `original/`, with SHA-256 recorded
 | ui | HUD, events, accessibility, placement feedback | Independent gameplay timers |
 | persistence | Schema validation, migration, storage and error reporting | Rebuilding unrelated world state implicitly |
 
-Simulation time freezes during pause and dilemmas; camera and purely cosmetic animation may continue. Do not apply timeScale twice. Use a fixed accumulator with a maximum number of catch-up steps and reset the accumulator after background tab suspension.
+Simulation time freezes during pause and dilemmas; camera and purely cosmetic animation may continue. Do not apply timeScale twice. The accumulator bounds frame delta and step count and clears pending debt on pause; background tab suspension cannot trigger a large catch-up burst. Further extraction into serializable world systems is still pending.
 
 ## Three.js migration hazards
 

@@ -1,0 +1,186 @@
+{
+  "simulationTime": 26.4,
+  "day": 1,
+  "time": 11.104,
+  "night": false,
+  "era": 1,
+  "progress": 9.24,
+  "speed": 5,
+  "resources": {
+    "food": 51,
+    "wood": 30,
+    "ore": 19,
+    "faith": 20.48
+  },
+  "population": 9,
+  "roles": {
+    "villager": 6,
+    "child": 1,
+    "soldier": 2
+  },
+  "units": [
+    {
+      "id": 1,
+      "role": "villager",
+      "state": "HAUL",
+      "hp": 90,
+      "hunger": 27.134,
+      "x": -87.072,
+      "z": 11.046,
+      "visible": true,
+      "carryType": "ore",
+      "carryAmount": 4
+    },
+    {
+      "id": 2,
+      "role": "villager",
+      "state": "GATHER",
+      "hp": 90,
+      "hunger": 5.365,
+      "x": -2.249,
+      "z": -18.233,
+      "visible": true,
+      "carryType": null,
+      "carryAmount": 0
+    },
+    {
+      "id": 3,
+      "role": "villager",
+      "state": "HAUL",
+      "hp": 90,
+      "hunger": 9.787,
+      "x": -60.38,
+      "z": -20.489,
+      "visible": true,
+      "carryType": "ore",
+      "carryAmount": 4
+    },
+    {
+      "id": 4,
+      "role": "villager",
+      "state": "HAUL",
+      "hp": 90,
+      "hunger": 57.322,
+      "x": 21.962,
+      "z": 53.706,
+      "visible": true,
+      "carryType": "wood",
+      "carryAmount": 5
+    },
+    {
+      "id": 5,
+      "role": "child",
+      "state": "FORAGE",
+      "hp": 90,
+      "hunger": 73.306,
+      "x": 0.653,
+      "z": 4.618,
+      "visible": true,
+      "carryType": null,
+      "carryAmount": 0
+    },
+    {
+      "id": 6,
+      "role": "soldier",
+      "state": "PATROL",
+      "hp": 160,
+      "hunger": 63.804,
+      "x": 7.27,
+      "z": 11.965,
+      "visible": true,
+      "carryType": null,
+      "carryAmount": 0
+    },
+    {
+      "id": 7,
+      "role": "soldier",
+      "state": "PATROL",
+      "hp": 160,
+      "hunger": 68.463,
+      "x": -9.384,
+      "z": 13.853,
+      "visible": true,
+      "carryType": null,
+      "carryAmount": 0
+    },
+    {
+      "id": 8,
+      "role": "villager",
+      "state": "GATHER",
+      "hp": 90,
+      "hunger": 1.595,
+      "x": 2.04,
+      "z": 6.253,
+      "visible": true,
+      "carryType": null,
+      "carryAmount": 0
+    },
+    {
+      "id": 9,
+      "role": "villager",
+      "state": "GATHER",
+      "hp": 90,
+      "hunger": 64.53,
+      "x": 0.4,
+      "z": 12.031,
+      "visible": true,
+      "carryType": null,
+      "carryAmount": 0
+    }
+  ],
+  "buildings": [
+    {
+      "type": "temple",
+      "name": "🔥 กองไฟศักดิ์สิทธิ์และเสาโทเท็มชนเผ่า (Sacred Tribal Bonfire & Totem)",
+      "x": 0,
+      "z": 0,
+      "hp": 600,
+      "maxHp": 600
+    },
+    {
+      "type": "house",
+      "name": "⛺ กระโจมชนเผ่าดึกดำบรรพ์ (Tribal Hide Lodge)",
+      "x": -6.5,
+      "z": 5.2,
+      "hp": 180,
+      "maxHp": 180,
+      "progress": 1
+    },
+    {
+      "type": "house",
+      "name": "⛺ กระโจมชนเผ่าดึกดำบรรพ์ (Tribal Hide Lodge)",
+      "x": 7.8,
+      "z": 5.5,
+      "hp": 180,
+      "maxHp": 180,
+      "progress": 1
+    },
+    {
+      "type": "house",
+      "name": "⛺ กระโจมชนเผ่าดึกดำบรรพ์ (Tribal Hide Lodge)",
+      "x": 5.2,
+      "z": -6.2,
+      "hp": 180,
+      "maxHp": 180,
+      "progress": 1
+    },
+    {
+      "type": "tower",
+      "name": "🗼 หอคอยไม้สังเกตการณ์ชนเผ่า (Timber Lookout Tower)",
+      "x": 28,
+      "z": -20,
+      "hp": 260,
+      "maxHp": 260,
+      "progress": 1
+    }
+  ],
+  "monsters": [],
+  "event": null,
+  "log": [
+    "[วันที่ 1 10:46]🌧️ เสกฝนทิพย์โปรยปราย! ต้นไม้เติบโตและออกผล 2 ต้น (+18 อาหาร)",
+    "[วันที่ 1 08:20]✨ ประทานพรกำเนิด 🧑‍🔧 ช่างเมือง อัคคี #9 เข้าร่วมหมู่บ้าน!",
+    "[วันที่ 1 08:14]✨ ประทานพรกำเนิด 🧑‍🔧 ช่างเมือง นารา #8 เข้าร่วมหมู่บ้าน!",
+    "[วันที่ 1 08:11]อาณาจักรลอยฟ้า Aetheria กำเนิดขึ้น! ชาวบ้านเริ่มออกเก็บทรัพยากรและสร้างเมือง"
+  ],
+  "hudHidden": false
+}
