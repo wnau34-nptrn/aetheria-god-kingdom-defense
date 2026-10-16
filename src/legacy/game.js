@@ -43,7 +43,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   class ProceduralAudioEngine {
     constructor() { this.ctx = null; this.enabled = false; this.volWind = 0.55; this.volWater = 0.65; this.volSfx = 0.75; }
     init() {
-      if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume().catch(() => {}); this.enabled = true; this.updateVolumes(); return; }
+      if (this.ctx) { this.updateVolumes(); return; }
       try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext; if (!AudioCtx) return;
         this.ctx = new AudioCtx();
@@ -68,7 +68,10 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     }
     toggle() { if (!this.ctx) { this.init(); return this.enabled; } this.enabled = !this.enabled; this.updateVolumes(); return this.enabled; }
     updateVolumes() {
+      const button = document.getElementById('btn-toggle-audio');
+      if (button) { button.textContent = this.enabled ? '🔊 เสียง: เปิด' : '🔇 เสียง: ปิด'; button.classList.toggle('active', this.enabled); button.setAttribute('aria-pressed', String(this.enabled)); }
       if (!this.ctx) return;
+      if (this.enabled && this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
       const now = this.ctx.currentTime;
       if (this.windGain) this.windGain.gain.setTargetAtTime(this.enabled ? 0.12 * this.volWind : 0, now, 0.1);
       if (this.waterGain) this.waterGain.gain.setTargetAtTime(this.enabled ? 0.11 * this.volWater : 0, now, 0.1);
@@ -132,6 +135,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     }
   }
   const audio = new ProceduralAudioEngine();
+  audio.updateVolumes();
 
   const canvas = document.getElementById('game-canvas');
   const scene = new THREE.Scene();
@@ -2230,6 +2234,10 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     logContainer.prepend(div);
     while (logContainer.children.length > 25) logContainer.removeChild(logContainer.lastChild);
   }
+  function reportActionIssue(message) {
+    addLog(message, 'warn');
+    showDilemmaToast(message);
+  }
   addLog('อาณาจักรลอยฟ้า Aetheria กำเนิดขึ้น! ชาวบ้านเริ่มออกเก็บทรัพยากรและสร้างเมือง', 'bless');
 
   const reticleGroup = new THREE.Group();
@@ -2288,7 +2296,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   }
 
   function castRainPower(tx, tz) {
-    if (state.faith < 15) { addLog('พลังศรัทธาไม่พอสำหรับเสกฝนทิพย์ (ต้องการ 15 ✨)', 'warn'); return; }
+    if (state.faith < 15) { reportActionIssue('พลังศรัทธาไม่พอสำหรับเสกฝนทิพย์ (ต้องการ 15 ✨)'); return; }
     state.faith -= 15; audio.playBlessChime();
     const ty = getTerrainHeightAt(tx, tz);
     godFxPointLight.color.setHex(0x38bdf8); godFxPointLight.intensity = 2.5; godFxPointLight.position.set(tx, ty + 10, tz);
@@ -2329,7 +2337,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     if (state.faith < 0.5) return false;
     if (isNearBuildingFoundation(tx, tz, state.terraRadius * 0.6)) {
       const now = performance.now();
-      if (now - lastTerraWarnTime > 1800) { lastTerraWarnTime = now; addLog('🚫 ไม่สามารถปรับความสูงต่ำของพื้นดินในบริเวณที่มีสิ่งปลูกสร้างตั้งอยู่ได้!', 'warn'); }
+      if (now - lastTerraWarnTime > 1800) { lastTerraWarnTime = now; reportActionIssue('🚫 ไม่สามารถปรับความสูงต่ำของพื้นดินในบริเวณที่มีสิ่งปลูกสร้างตั้งอยู่ได้!'); }
       return false;
     }
     const posAttr = terrainGeo.attributes.position, radius = state.terraRadius;
@@ -2358,7 +2366,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   }
 
   function castMeteorStrike(tx, tz) {
-    if (state.faith < 35) { addLog('พลังศรัทธาไม่พอสำหรับเสกอุกกาบาต (ต้องการ 35 ✨)', 'warn'); return; }
+    if (state.faith < 35) { reportActionIssue('พลังศรัทธาไม่พอสำหรับเสกอุกกาบาต (ต้องการ 35 ✨)'); return; }
     state.faith -= 35;
     const ty = getTerrainHeightAt(tx, tz), startX = tx - 28, startY = ty + 68, startZ = tz - 22;
     const meteorGroup = new THREE.Group(); meteorGroup.position.set(startX, startY, startZ);
@@ -2406,7 +2414,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   }
 
   function castLightningStrike(tx, tz) {
-    if (state.faith < 20) { addLog('พลังศรัทธาไม่พอสำหรับเสกสายฟ้าฟาด (ต้องการ 20 ✨)', 'warn'); return; }
+    if (state.faith < 20) { reportActionIssue('พลังศรัทธาไม่พอสำหรับเสกสายฟ้าฟาด (ต้องการ 20 ✨)'); return; }
     state.faith -= 20; audio.playLightningThunder(); camCtrl.triggerShake(1.2, 0.3); triggerScreenFlash();
     const ty = getTerrainHeightAt(tx, tz);
     godFxPointLight.color.setHex(0x7dd3fc); godFxPointLight.intensity = 4.5; godFxPointLight.position.set(tx, ty + 8, tz);
@@ -3378,11 +3386,13 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   const dilemmaToast = document.getElementById('dilemma-toast');
   const btnTriggerDilemma = document.getElementById('btn-trigger-dilemma');
 
+  let dilemmaToastTimeout;
   function showDilemmaToast(msg) {
     if (!dilemmaToast) return;
+    clearTimeout(dilemmaToastTimeout);
     dilemmaToast.textContent = msg;
     dilemmaToast.classList.add('visible');
-    setTimeout(() => dilemmaToast.classList.remove('visible'), 5200);
+    dilemmaToastTimeout = setTimeout(() => dilemmaToast.classList.remove('visible'), 5200);
   }
 
   function setVillagerReaction(thoughtMsg, duration = 18.0) {
@@ -4498,21 +4508,21 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   document.getElementById('btn-spawn-villager').addEventListener('click', () => {
     audio.init();
     const alivePop = agents.filter(a => a.alive).length, maxPop = 6 + buildings.filter(b => b.type === 'house').length * 4;
-    if (alivePop >= maxPop) { addLog(`🏠 บ้านพักเต็มแล้ว (${alivePop}/${maxPop})! ต้องให้ชาวบ้านสร้างบ้านเพิ่มก่อน`, 'warn'); return; }
-    if (state.faith < 20) { addLog('พลังศรัทธาไม่พอสำหรับเสกชาวบ้าน (ต้องการ 20 ✨)', 'warn'); return; }
+    if (alivePop >= maxPop) { reportActionIssue(`🏠 บ้านพักเต็มแล้ว (${alivePop}/${maxPop})! ต้องให้ชาวบ้านสร้างบ้านเพิ่มก่อน`); return; }
+    if (state.faith < 20) { reportActionIssue('พลังศรัทธาไม่พอสำหรับเสกชาวบ้าน (ต้องการ 20 ✨)'); return; }
     state.faith -= 20; audio.playBlessChime();
     const a = Math.random() * Math.PI * 2, ag = createAgent(Math.cos(a) * 4, Math.sin(a) * 4, 'villager');
     addLog(`✨ ประทานพรกำเนิด ${ag.name} เข้าร่วมหมู่บ้าน!`, 'bless');
   });
   document.getElementById('btn-train-soldier').addEventListener('click', () => {
     audio.init();
-    if (state.faith < 25) { addLog('พลังศรัทธาไม่พอสำหรับแต่งตั้งทหาร (ต้องการ 25 ✨)', 'warn'); return; }
+    if (state.faith < 25) { reportActionIssue('พลังศรัทธาไม่พอสำหรับแต่งตั้งทหาร (ต้องการ 25 ✨)'); return; }
     state.faith -= 25; audio.playBlessChime();
     const civilian = agents.find(a => a.alive && a.role === 'villager');
     if (civilian) { const cx = civilian.x, cz = civilian.z; civilian.alive = false; worldObjectsGroup.remove(civilian.mesh); const sol = createAgent(cx, cz, 'soldier'); addLog(`🛡️ แต่งตั้งชาวบ้านขึ้นเป็น ${sol.name}!`, 'bless'); }
     else { const sol = createAgent(26, -18, 'soldier'); addLog(`🛡️ เสก ${sol.name} ลงมาพิทักษ์แนวหน้า!`, 'bless'); }
   });
-  document.getElementById('btn-toggle-audio').addEventListener('click', (e) => { const on = audio.toggle(); e.target.textContent = on ? '🔊 เสียง: เปิด' : '🔇 เสียง: ปิด'; e.target.classList.toggle('active', on); });
+  document.getElementById('btn-toggle-audio').addEventListener('click', () => audio.toggle());
   document.getElementById('vol-wind').addEventListener('input', (e) => { audio.volWind = parseFloat(e.target.value) / 100; audio.updateVolumes(); });
   document.getElementById('vol-water').addEventListener('input', (e) => { audio.volWater = parseFloat(e.target.value) / 100; audio.updateVolumes(); });
   document.getElementById('vol-sfx').addEventListener('input', (e) => { audio.volSfx = parseFloat(e.target.value) / 100; });

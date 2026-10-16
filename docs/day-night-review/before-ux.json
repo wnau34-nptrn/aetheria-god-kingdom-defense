@@ -1,0 +1,28 @@
+{
+  "before": {
+    "faith": 30.0225,
+    "projectiles": 0
+  },
+  "insufficient": {
+    "faith": 30.0225,
+    "projectiles": 0,
+    "warning": "[วันที่ 1 08:12]พลังศรัทธาไม่พอสำหรับเสกอุกกาบาต (ต้องการ 35 ✨)",
+    "toastVisible": false,
+    "mapOpen": "false"
+  },
+  "muted": {
+    "gains": [
+      0,
+      0
+    ],
+    "label": "🔇 เสียง: ปิด"
+  },
+  "afterPower": {
+    "gains": [
+      0.0657341480255127,
+      0.07121199369430542
+    ],
+    "label": "🔇 เสียง: ปิด"
+  },
+  "method": "Real AudioContext nodes observed via createGain wrapper. Real pointer UI; pause and two rain casts spend natural starting faith; no world/clock/RNG writes."
+}

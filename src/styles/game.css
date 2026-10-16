@@ -194,6 +194,7 @@ body.bubbles-hidden #thought-bubbles-layer, body.hud-hidden #thought-bubbles-lay
   #god-dock { padding: 4px; gap: 4px; }.power-btn { min-height: 48px; gap: 2px; padding: 5px 2px; }.power-icon, .power-icon [data-icon] { width: 18px; height: 18px; }.power-name { font-size: 11px; }.power-key { display: none; }
   #mobile-cam-controls { flex-direction: row; right: 10px; bottom: calc(var(--power-dock-height,110px) + 14px); gap: 4px; }.btn-mob-cam { width: 32px; height: 32px; }
   .interface-drawer { top: 112px; bottom: 8px; right: 10px; width: min(368px,calc(100vw - 20px)); padding: 16px; }#left-panel { right: 10px; left: auto; }
+  #dilemma-toast { top: 112px; left: 10px; transform: none; max-width: calc(100vw - 140px); padding: 8px 12px; font-size: 11px; }
   #siege-banner { top: 112px; padding: 6px 10px; }.dl-body-grid { grid-template-columns: 180px 1fr; gap: 16px; }#dl-scene-canvas { height: 160px; }
   #placement-feedback { padding: 4px 8px; font-size: 10px; }#sub-power-bar { padding: 4px; gap: 4px; }#sub-power-bar .btn-mini { min-height: 28px; padding: 3px 6px; }
 }
