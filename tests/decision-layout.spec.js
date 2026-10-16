@@ -24,7 +24,19 @@ test('all five decisions expose every answer with worker selection across five s
   if(viewport.height>540){
    const selectors=['#btn-train-soldier','#btn-spawn-villager','#btn-select-worker','[data-build="house"]','[data-build="tower"]','#btn-advance-era','#btn-zoom-in','#btn-zoom-out','#btn-mob-reset-cam'];
    if(selected)for(const job of ['wood','ore','food','auto'])selectors.push(`[data-worker-resource="${job}"]`);
-   for(const selector of selectors)await expect.poll(()=>page.locator(selector).evaluate(b=>{const r=b.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('button')===b;}),{message:`${selector} remains directly reachable beside the question at ${viewport.width}x${viewport.height}`}).toBe(true);
+   for(const selector of selectors){
+    try{
+     await expect.poll(()=>page.locator(selector).evaluate(b=>{
+      const r=b.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
+      if(hit?.closest('button')===b)return 'ready';
+      const card=document.getElementById('decision-card'),dock=document.getElementById('god-dock-wrapper');
+      return JSON.stringify({button:{id:b.id,build:b.dataset.build,rect:r.toJSON(),pointer:getComputedStyle(b).pointerEvents},hit:hit?.outerHTML.slice(0,260),card:{rect:card.getBoundingClientRect().toJSON(),scroll:card.scrollHeight,client:card.clientHeight,z:getComputedStyle(card).zIndex},dock:dock.getBoundingClientRect().toJSON(),dockVar:getComputedStyle(document.documentElement).getPropertyValue('--power-dock-height'),viewport:[innerWidth,innerHeight],body:document.body.className});
+     }),{message:`${selector} remains directly reachable for event ${event+1}, selected ${selected}, at ${viewport.width}x${viewport.height}`}).toBe('ready');
+    }catch(error){
+     await page.screenshot({path:'test-results/decision-layout-collision.png',animations:'disabled',timeout:60000});
+     throw error;
+    }
+   }
   }
   }
   await page.screenshot({path:`test-results/decision-layout-${viewport.width}x${viewport.height}-${selected?'worker':'normal'}.png`,animations:'disabled',timeout:90000});
