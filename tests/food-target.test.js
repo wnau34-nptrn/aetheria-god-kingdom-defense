@@ -26,7 +26,7 @@ for (const speed of [1, 5]) {
       Object.assign(a.trees[0], { x: 80, z: 30, hasFruit: true, growth: 1 });
       Object.assign(a.trees[1], { x: 9, z: 0, hasFruit: true, growth: 1 });
       h.play(1, speed);
-      assert.equal(a.state.food, 2); assert.ok(worker.hunger < 3);
+      assert.equal(a.state.food, 0, 'surplus fruit must be delivered before entering stock'); assert.equal(worker.carryType, 'food'); assert.equal(worker.carryAmount, 2); assert.ok(worker.hunger < 3);
       assert.equal(a.trees[0].hasFruit, true); assert.equal(a.trees[1].hasFruit, false);
     } finally { h.close(); }
   });

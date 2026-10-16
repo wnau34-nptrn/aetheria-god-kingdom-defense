@@ -15,7 +15,7 @@ for (const seed of [1234, 5678]) for (const scenario of ['soldier', 'tower', 'mo
     for (const speed of [2.5, 5]) equivalent(runSpeedScenario(scenario, { seed, speed }), normal);
     if (scenario === 'tower') assert.equal(normal.damage, 252);
     if (scenario === 'meteor') assert.equal(normal.damage, 240);
-    if (scenario === 'fisherman') assert.equal(normal.food, 8, 'fishing must actually produce four catches in 13 game seconds');
+    if (scenario === 'fisherman') { assert.equal(normal.food, 6, 'three catches must reach the store'); assert.equal(normal.carried, 2, 'the fourth catch is still being carried'); }
     if (scenario === 'hauling') assert.ok(normal.ore > 0, 'the worker must actually deposit ore');
     if (scenario === 'construction') assert.ok(normal.progress > 0.25 && normal.progress < 1);
     if (scenario === 'repair') assert.equal(normal.hp, 76);

@@ -1,9 +1,12 @@
 import { createFixedStepper } from '../systems/fixed-step.js';
 import { chooseFoodTree } from '../systems/food-target.js';
+import { RESOURCE_INFO, availableNode, depositCargo } from '../systems/economy.js';
+import { createEconomyControls } from '../ui/economy-controls.js';
 import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
 
 (() => {
   'use strict';
+  let economy;
 
   class SimplexNoise2D {
     constructor(seed = 1337) { this.reseed(seed); }
@@ -2222,7 +2225,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     food: 35, wood: 20, ore: 15, faith: 60, maxFaith: 200,
     activePower: 'observe', terraMode: 'raise', terraRadius: 8, selectedEntity: null,
     historyPop: [12, 12, 12], historyRes: [160, 160, 160], historyFaith: [120, 120, 120],
-    sampleTimer: 0, autoBuildCooldown: 4.0
+    sampleTimer: 0, autoBuild: false, autoBuildCooldown: 4.0
   };
 
   const logContainer = document.getElementById('event-log');
@@ -2263,6 +2266,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   function triggerScreenFlash() { const fl = document.getElementById('screen-flash'); fl.style.opacity = '0.85'; setTimeout(() => { fl.style.opacity = '0'; }, 90); }
   function evolveToEra(targetEra) {
     targetEra = Math.max(1, Math.min(4, targetEra));
+    economy?.reset();
     state.selectedEntity = null; camCtrl.followEntity = null;
     const inspCard = document.getElementById('inspector-card'); if (inspCard) inspCard.classList.remove('visible');
     state.civEra = targetEra;
@@ -2510,6 +2514,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       camCtrl.isDragging = true; camCtrl.isPanning = e.button === 1; return;
     }
     if (state.activePower === 'observe') {
+      if (economy?.handlePoint(e)) return;
       updatePointerRay(e);
       const hits = raycaster.intersectObjects(worldObjectsGroup.children, true);
       if (hits.length > 0) {
@@ -2552,6 +2557,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       updateMiraclePreview();
     } else reticleGroup.visible = false;
   });
+  canvas.addEventListener('pointermove', e => { if (economy?.active) economy.preview(getTerrainIntersection(e)); });
   canvas.addEventListener('pointerleave', () => { miracleTarget = null; reticleGroup.visible = false; updateMiraclePreview(); });
 
   window.addEventListener('pointerup', () => { camCtrl.isDragging = camCtrl.isPanning = isTerraformDragging = false; });
@@ -2640,12 +2646,18 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     return finalDist;
   }
 
+  function giveCargo(agent, resource, amount) {
+    agent.carryType = resource; agent.carryAmount = amount;
+    agent.carryBundle.material.color.setHex(RESOURCE_INFO[resource].color);
+    agent.carryBundle.visible = amount > 0;
+  }
+
   function updateAutonomousAgents(dt, elapsedTime) {
     let cForage = 0, cGather = 0, cBuild = 0, cShelter = 0, cPatrol = 0;
     state.autoBuildCooldown -= dt;
     const curHouses = buildings.filter(b => b.type === 'house').length, curTowers = buildings.filter(b => b.type === 'tower').length;
     const maxEraHouses = 3 + state.civEra * 3, maxEraTowers = 1 + state.civEra * 2;
-    if (!state.isNight && state.autoBuildCooldown <= 0 && state.wood >= 28 && state.ore >= 20 && (curHouses < maxEraHouses || curTowers < maxEraTowers)) {
+    if (state.autoBuild && !state.isNight && state.autoBuildCooldown <= 0 && state.wood >= 25 && state.ore >= 18 && (curHouses < maxEraHouses || curTowers < maxEraTowers)) {
       state.autoBuildCooldown = 8.5;
       const buildTower = (curTowers < maxEraTowers) && (curTowers < Math.floor(curHouses * 0.6) || monsters.length > 0);
       for (let attempt = 0; attempt < 30; attempt++) {
@@ -2654,8 +2666,8 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
         const bx = Math.cos(ang) * dist, bz = Math.sin(ang) * dist;
         if (!canPlaceBuildingAt(bx, bz)) continue;
         state.wood -= 25; state.ore -= 18;
-        if (buildTower) { createWatchtower(bx, bz, 0.25, state.civEra); addLog('🏗️ ชาวบ้านเริ่มก่อสร้างหอคอย/ป้อมปราการแห่งใหม่!'); }
-        else { createHouse(bx, bz, 0.25, state.civEra); addLog('🏗️ ชาวบ้านเริ่มก่อสร้างที่พักอาศัยหลังใหม่!'); }
+        if (buildTower) { createWatchtower(bx, bz, 0.25, state.civEra); addLog('🏗️ สร้างป้อมอัตโนมัติ · จ่ายไม้ 25 + แร่ 18'); }
+        else { createHouse(bx, bz, 0.25, state.civEra); addLog('🏗️ สร้างบ้านอัตโนมัติ · จ่ายไม้ 25 + แร่ 18'); }
         break;
       }
     }
@@ -2707,104 +2719,121 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       if (!state.isNight) ag.mesh.visible = true;
       ag.carryBundle.visible = (ag.carryAmount > 0);
 
-      // Special daytime real-life routines for Children, Farmers, Merchants & Fishermen (when not starving or sheltering at night)
-      if (!state.isNight && ag.hunger < 72) {
-        if (ag.role === 'child') {
-          ag.state = 'PLAY'; ag.stateLabel = '👧 วิ่งเล่นกับเพื่อนรอบลานน้ำพุและตลาด'; ag.stateGem.material.color.setHex(0x34d399); cBuild++;
-          const playAng = elapsedTime * 1.35 + ag.id * 1.4;
-          const px = 6 + Math.cos(playAng) * 9.5, pz = 11 + Math.sin(playAng * 1.5) * 6.5;
-          moveTowards(ag, px, pz, 6.2, dt);
-          ag.rightArm.rotation.x = Math.sin(elapsedTime * 14 + ag.id) * 0.8;
-          continue;
-        }
-        if (ag.role === 'farmer' && cropFields.length > 0) {
-          ag.state = 'FARM'; ag.stateLabel = '🌾 พรวนดินและเก็บเกี่ยวข้าวสาลีในไร่'; ag.stateGem.material.color.setHex(0xeab308); cForage++;
-          const cf = cropFields[ag.id % cropFields.length];
-          const wx = cf.x + Math.sin(elapsedTime * 0.4 + ag.id) * 2.5, wz = cf.z + Math.cos(elapsedTime * 0.3 + ag.id) * 2.5;
-          if (moveTowards(ag, wx, wz, 3.8, dt) < 1.8) {
-            ag.rightArm.rotation.x = Math.sin(elapsedTime * 12 + ag.id) * 0.85;
-            ag.workTimer += dt;
-            if (ag.workTimer >= 2.2) { ag.workTimer = 0; state.food += 3; }
-          }
-          continue;
-        }
-        if (ag.role === 'merchant') {
-          ag.state = 'MARKET'; ag.stateLabel = '🎪 ค้าขายแลกเปลี่ยนสินค้าที่ตลาดนัด'; ag.stateGem.material.color.setHex(0xfbbf24); cForage++;
-          const stalls = buildings.filter(b => b.type === 'market');
-          const st = stalls.length > 0 ? stalls[ag.id % stalls.length] : null;
-          if (st && moveTowards(ag, st.x, st.z + 1.1, 4.0, dt) < 1.5) {
-            ag.rightArm.rotation.x = Math.sin(elapsedTime * 6 + ag.id) * 0.45;
-            state.faith = Math.min(state.maxFaith, state.faith + dt * 0.35);
-          }
-          continue;
-        }
-        if (ag.role === 'fisherman') {
-          ag.state = 'FISH'; ag.stateLabel = '🎣 ตกปลาริมสะพานท่าเทียบเรือ'; ag.stateGem.material.color.setHex(0x38bdf8); cForage++;
-          const fz = 2.0 + (ag.id % 2) * 1.2, fx = getRiverCenterX(fz) + getRiverWidth(fz) * 1.25 + 0.6;
-          if (moveTowards(ag, fx, fz, 4.0, dt) < 1.2) {
-            ag.mesh.rotation.y = -Math.PI / 2;
-            ag.rightArm.rotation.x = -0.6 + Math.sin(elapsedTime * 3 + ag.id) * 0.15;
-            ag.workTimer += dt;
-            if (ag.workTimer >= 3.0) { ag.workTimer = 0; state.food += 2; }
-          }
-          continue;
-        }
-      }
-
-      const damagedBuilding = buildings.find(b => b.hp < b.maxHp && (b.progress === undefined || b.progress >= 1.0));
-
+      // Survival interrupts a job without discarding its order or cargo.
       if (ag.hunger >= 65) {
         ag.state = 'FORAGE'; ag.stateLabel = '🍎 หิว ➔ เก็บผลไม้/กินเสบียง'; ag.stateGem.material.color.setHex(0xfb7185); ag.mesh.visible = true; cForage++;
-        const ripeTree = chooseFoodTree(ag, state.food, trees);
-        if (moveTowards(ag, ripeTree ? ripeTree.x : 0, ripeTree ? ripeTree.z : 0, 5.2, dt) < 2.3) {
-          if (ripeTree) { ripeTree.hasFruit = false; ripeTree.fruitMeshes.forEach(fm => { fm.visible = false; }); ag.hunger = 0; ag.hp = Math.min(ag.maxHp, ag.hp + 20); state.food += 2; }
-          else if (state.food >= 2) { state.food = Math.max(0, state.food - 2); ag.hunger = 0; ag.hp = Math.min(ag.maxHp, ag.hp + 15); }
+        if (ag.carryType === 'food' && ag.carryAmount >= 2) {
+          ag.carryAmount -= 2; if (!ag.carryAmount) ag.carryType = null;
+          ag.hunger = 0; ag.hp = Math.min(ag.maxHp, ag.hp + 15);
+        } else {
+          const ripeTree = chooseFoodTree(ag, state.food, trees);
+          if (moveTowards(ag, ripeTree ? ripeTree.x : 0, ripeTree ? ripeTree.z : 0, 5.2, dt) < 2.3) {
+            if (ripeTree) {
+              ripeTree.hasFruit = false; ripeTree.fruitMeshes.forEach(fm => { fm.visible = false; }); ag.hunger = 0; ag.hp = Math.min(ag.maxHp, ag.hp + 20);
+              // The original surplus fruit now travels to the store instead of teleporting there.
+              if (!ag.carryAmount) giveCargo(ag, 'food', 2);
+            } else if (state.food >= 2) { state.food -= 2; ag.hunger = 0; ag.hp = Math.min(ag.maxHp, ag.hp + 15); }
+          }
         }
-      } else if (state.isNight) {
-        ag.state = 'SHELTER'; ag.stateLabel = '🏮 จุดไฟเดินกลับเข้าบ้านพัก'; ag.stateGem.material.color.setHex(0xfde047); cShelter++;
+        continue;
+      }
+      if (state.isNight) {
+        ag.state = 'SHELTER'; ag.stateLabel = '🏮 พักงาน ➔ กลับเข้าบ้าน'; ag.stateGem.material.color.setHex(0xfde047); cShelter++;
         const myHouses = buildings.filter(b => b.type === 'house' && b.progress >= 1.0 && (!isPointInRiver(b.x, b.z) || isOnBridgeDeck(b.x, b.z))), targetHouse = myHouses.length > 0 ? myHouses[ag.id % myHouses.length] : templeObj;
         if (moveTowards(ag, targetHouse ? targetHouse.x : 0, targetHouse ? targetHouse.z : 0, 4.8, dt) < 2.2) {
           if (targetHouse && targetHouse.type === 'house') ag.mesh.visible = false;
           state.faith = Math.min(state.maxFaith, state.faith + dt * 0.45);
         } else ag.mesh.visible = true;
-      } else if (incompleteBuilding || (damagedBuilding && state.wood >= 5)) {
-        const targetB = incompleteBuilding || damagedBuilding;
-        ag.state = 'BUILD'; ag.stateLabel = incompleteBuilding ? '🔨 ก่อสร้างบ้าน/ป้อม' : '🔧 ซ่อมแซมอาคาร'; ag.stateGem.material.color.setHex(0x34d399); cBuild++;
+        continue;
+      }
+      // Finish deliveries before taking another production or construction task.
+      if (ag.carryAmount > 0) {
+        ag.state = 'HAUL'; ag.stateLabel = `📦 ขน${RESOURCE_INFO[ag.carryType].name} ${ag.carryAmount} กลับคลัง`; ag.stateGem.material.color.setHex(0x38bdf8); cGather++;
+        if (moveTowards(ag, 0, 0, 4.4, dt) < 3.4) {
+          const delivered = depositCargo(ag, state);
+          ag.carryBundle.visible = false; state.faith = Math.min(state.maxFaith, state.faith + 1.2);
+          economy?.delivery(ag, delivered);
+        }
+        continue;
+      }
+      if (ag.buildTarget && (!buildings.includes(ag.buildTarget) || ag.buildTarget.progress >= 1)) ag.buildTarget = null;
+      if (ag.role === 'child') {
+        ag.state = 'PLAY'; ag.stateLabel = '👧 วิ่งเล่นกับเพื่อน'; ag.stateGem.material.color.setHex(0x34d399);
+        const playAng = elapsedTime * 1.35 + ag.id * 1.4;
+        moveTowards(ag, 6 + Math.cos(playAng) * 9.5, 11 + Math.sin(playAng * 1.5) * 6.5, 6.2, dt);
+        ag.rightArm.rotation.x = Math.sin(elapsedTime * 14 + ag.id) * 0.8;
+        continue;
+      }
+      if (!ag.buildTarget && !ag.workOrder && ag.role === 'farmer' && cropFields.length > 0) {
+        ag.state = 'FARM'; ag.stateLabel = '🌾 เก็บเกี่ยวอาหาร → ส่งคลัง'; ag.stateGem.material.color.setHex(0xeab308); cForage++;
+        const cf = cropFields[ag.id % cropFields.length];
+        const wx = cf.x + Math.sin(elapsedTime * 0.4 + ag.id) * 2.5, wz = cf.z + Math.cos(elapsedTime * 0.3 + ag.id) * 2.5;
+        if (moveTowards(ag, wx, wz, 3.8, dt) < 1.8) {
+          ag.rightArm.rotation.x = Math.sin(elapsedTime * 12 + ag.id) * 0.85;
+          ag.workTimer += dt;
+          if (ag.workTimer >= 2.2) { ag.workTimer = 0; giveCargo(ag, 'food', 3); }
+        }
+        continue;
+      }
+      if (!ag.buildTarget && !ag.workOrder && ag.role === 'merchant') {
+        ag.state = 'MARKET'; ag.stateLabel = '🎪 ค้าขาย → เพิ่มศรัทธา'; ag.stateGem.material.color.setHex(0xfbbf24); cForage++;
+        const stalls = buildings.filter(b => b.type === 'market'), st = stalls.length > 0 ? stalls[ag.id % stalls.length] : null;
+        if (st && moveTowards(ag, st.x, st.z + 1.1, 4.0, dt) < 1.5) {
+          ag.rightArm.rotation.x = Math.sin(elapsedTime * 6 + ag.id) * 0.45;
+          state.faith = Math.min(state.maxFaith, state.faith + dt * 0.35);
+        }
+        continue;
+      }
+      if (!ag.buildTarget && !ag.workOrder && ag.role === 'fisherman') {
+        ag.state = 'FISH'; ag.stateLabel = '🎣 ตกปลา → ส่งคลัง'; ag.stateGem.material.color.setHex(0x38bdf8); cForage++;
+        const fz = 2.0 + (ag.id % 2) * 1.2, fx = getRiverCenterX(fz) + getRiverWidth(fz) * 1.25 + 0.6;
+        if (moveTowards(ag, fx, fz, 4.0, dt) < 1.2) {
+          ag.mesh.rotation.y = -Math.PI / 2; ag.rightArm.rotation.x = -0.6 + Math.sin(elapsedTime * 3 + ag.id) * 0.15;
+          ag.workTimer += dt;
+          if (ag.workTimer >= 3.0) { ag.workTimer = 0; giveCargo(ag, 'food', 2); }
+        }
+        continue;
+      }
+      const damagedBuilding = buildings.find(b => b.hp < b.maxHp && (b.progress === undefined || b.progress >= 1.0));
+      const targetB = ag.buildTarget || (!ag.workOrder && (incompleteBuilding || (state.wood >= 5 && damagedBuilding)));
+      if (targetB) {
+        const incomplete = targetB.progress !== undefined && targetB.progress < 1;
+        ag.state = 'BUILD'; ag.stateLabel = incomplete ? '🔨 ก่อสร้างบ้าน/ป้อม' : '🔧 ซ่อมแซมอาคาร'; ag.stateGem.material.color.setHex(0x34d399); cBuild++;
         if (moveTowards(ag, targetB.x, targetB.z, 5.4, dt) < 2.8) {
           ag.rightArm.rotation.x = Math.sin(elapsedTime * 16) * 0.95;
-          if (incompleteBuilding) {
-            incompleteBuilding.progress = Math.min(1.0, incompleteBuilding.progress + dt * 0.24);
-            incompleteBuilding.mesh.scale.setScalar(0.3 + 0.7 * incompleteBuilding.progress);
-            if (incompleteBuilding.progress >= 1.0) { audio.playVillageBell(false); addLog(`✨ ก่อสร้าง ${incompleteBuilding.name} เสร็จสมบูรณ์!`, 'bless'); }
-          } else if (damagedBuilding) damagedBuilding.hp = Math.min(damagedBuilding.maxHp, damagedBuilding.hp + dt * 28);
-        }
-      } else if (ag.carryAmount > 0) {
-        ag.state = 'HAUL'; ag.stateLabel = ag.carryType === 'wood' ? '📦 แบกซุงไม้กลับคลัง' : '📦 แบกแร่ศิลากลับคลัง'; ag.stateGem.material.color.setHex(0x38bdf8); cGather++;
-        if (moveTowards(ag, 0, 0, 4.4, dt) < 3.4) {
-          if (ag.carryType === 'wood') state.wood += ag.carryAmount; else state.ore += ag.carryAmount;
-          ag.carryAmount = 0; ag.carryType = null; ag.carryBundle.visible = false; state.faith = Math.min(state.maxFaith, state.faith + 1.2);
+          if (incomplete) {
+            targetB.progress = Math.min(1, targetB.progress + dt * 0.24); targetB.mesh.scale.setScalar(0.3 + 0.7 * targetB.progress);
+            if (targetB.progress >= 1) { audio.playVillageBell(false); addLog(`✨ ก่อสร้าง ${targetB.name} เสร็จสมบูรณ์!`, 'bless'); economy?.updatePanel(); }
+          } else targetB.hp = Math.min(targetB.maxHp, targetB.hp + dt * 28);
         }
       } else {
-        const gatherWood = (ag.id % 2 === 0) || ores.length === 0;
-        ag.state = 'GATHER'; ag.stateLabel = gatherWood ? '🪓 ตัดไม้' : '⛏️ ขุดแร่ศิลา'; ag.stateGem.material.color.setHex(0xfbbf24); cGather++;
-        if (!ag.targetObj || (gatherWood && (ag.targetObj.type !== 'tree' || ag.targetObj.growth < 0.45)) || (!gatherWood && (ag.targetObj.type !== 'ore' || ag.targetObj.oreAmount <= 0))) {
-          const pool = gatherWood ? trees.filter(t => t.growth >= 0.55) : ores.filter(o => o.oreAmount > 0);
-          ag.targetObj = pool.length > 0 ? pool[ag.id % pool.length] : null;
+        const resource = ag.workOrder?.resource || (((ag.id % 2 === 0) || ores.length === 0) ? 'wood' : 'ore');
+        const pool = (resource === 'ore' ? ores : trees).filter(n => availableNode(n, resource) && (!ag.workOrder || Math.hypot(n.x-ag.workOrder.x,n.z-ag.workOrder.z) <= 18));
+        if (!pool.includes(ag.targetObj)) {
+          ag.targetObj = ag.workOrder ? pool.sort((a,b) => Math.hypot(a.x-ag.x,a.z-ag.z)-Math.hypot(b.x-ag.x,b.z-ag.z))[0] || null : pool[ag.id % Math.max(1,pool.length)] || null;
+          ag.workTimer = 0;
         }
-        if (ag.targetObj) {
-          if (moveTowards(ag, ag.targetObj.x, ag.targetObj.z, 4.6, dt) < 2.2) {
-            ag.rightArm.rotation.x = Math.sin(elapsedTime * 14 + ag.id) * 0.95; ag.workTimer += dt;
-            if (ag.workTimer >= 1.5) {
-              ag.workTimer = 0;
-              if (gatherWood) {
-                ag.carryType = 'wood'; ag.carryAmount = 5; ag.carryBundle.material.color.setHex(0x92400e); ag.targetObj.woodAmount -= 10;
-                if (ag.targetObj.woodAmount <= 0) { ag.targetObj.growth = 0.20; ag.targetObj.hasFruit = false; ag.targetObj.mesh.scale.setScalar(0.20); ag.targetObj.woodAmount = 25; }
-              } else {
-                ag.carryType = 'ore'; ag.carryAmount = 4; ag.carryBundle.material.color.setHex(0x64748b); ag.targetObj.oreAmount = Math.max(5, ag.targetObj.oreAmount - 8);
-              }
+        if (!ag.targetObj) {
+          ag.state = 'WAIT'; ag.stateLabel = `รอแหล่ง${RESOURCE_INFO[resource].name} · เลือกงานใหม่ได้`; ag.stateGem.material.color.setHex(0x94a3b8);
+          continue;
+        }
+        ag.state = 'GATHER'; ag.stateLabel = resource === 'wood' ? '🪓 ตัดไม้ → แบกกลับคลัง' : resource === 'ore' ? '⛏️ ขุดแร่ → แบกกลับคลัง' : '🍎 เก็บผลไม้ → แบกกลับคลัง'; ag.stateGem.material.color.setHex(0xfbbf24); cGather++;
+        if (moveTowards(ag, ag.targetObj.x, ag.targetObj.z, 4.6, dt) < 2.2) {
+          ag.rightArm.rotation.x = Math.sin(elapsedTime * 14 + ag.id) * 0.95; ag.workTimer += dt;
+          if (ag.workTimer >= 1.5) {
+            ag.workTimer = 0;
+            const target = ag.targetObj;
+            if (resource === 'wood') {
+              const amount = Math.min(5, target.woodAmount); target.woodAmount -= amount; giveCargo(ag, 'wood', amount);
+              if (target.woodAmount <= 0) { target.growth = 0.20; target.hasFruit = false; target.fruitMeshes?.forEach(fm => { fm.visible = false; }); target.mesh.scale.setScalar(0.20); target.woodAmount = 25; }
+            } else if (resource === 'ore') {
+              const amount = Math.min(4, target.oreAmount); target.oreAmount -= amount; giveCargo(ag, 'ore', amount);
+              if (!target.oreAmount) target.mesh.scale.setScalar(0.65);
+            } else {
+              target.hasFruit = false; target.fruitMeshes.forEach(fm => { fm.visible = false; }); giveCargo(ag, 'food', 2);
             }
-          } else ag.rightArm.rotation.x = Math.sin(ag.walkCycle) * 0.45;
-        }
+          }
+        } else ag.rightArm.rotation.x = Math.sin(ag.walkCycle) * 0.45;
       }
     }
     document.getElementById('st-forage').textContent = cForage; document.getElementById('st-gather').textContent = cGather;
@@ -2968,6 +2997,8 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     const people = agents.filter(a => a.alive), enemies = monsters.filter(m => m.alive).length;
     setReadoutText('quick-faith', `${Math.floor(state.faith)}`);
     setReadoutText('quick-food', `${Math.floor(state.food)}`);
+    setReadoutText('quick-wood', `${Math.floor(state.wood)}`);
+    setReadoutText('quick-ore', `${Math.floor(state.ore)}`);
     setReadoutText('quick-pop', `${people.length}`);
     setReadoutText('quick-enemies', `${enemies}`);
     const night = state.timeOfDay >= 20 || state.timeOfDay < 5.5;
@@ -2977,7 +3008,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     document.getElementById('kingdom-readout').dataset.threat = enemies ? 'combat' : firstWarning ? 'warning' : 'calm';
     setReadoutText('night-countdown', night ? 'กลางคืน' : `บุก 20:00 · อีก ${clock} ชม.ในเกม`);
     const recovery = people.length === 0 ? (night ? 'เมืองฟื้นได้: รอรุ่งเช้า แล้วเพิ่มคนในอาณาจักร' : enemies ? 'เมืองฟื้นได้: จัดการอสูร แล้วเพิ่มคนในอาณาจักร' : 'ฟื้นเมือง: อาณาจักร → เพิ่มชาวบ้าน (20 ศรัทธา)') : null;
-    setReadoutText('night-guidance', recovery || (firstWarning ? 'ก่อนคืนแรก: เตรียมทหารและศรัทธา' : enemies ? 'ยังมีอสูรมีชีวิตบนเกาะ' : night ? (state.secondWaveTonight ? 'แสงอาทิตย์เริ่มเผาอสูร 05:30' : 'เฝ้าระวังทัพหนุน 00:30') : 'สายฟ้า 20 · หอคอย 25 ศรัทธา'));
+    setReadoutText('night-guidance', recovery || (firstWarning ? 'ก่อนคืนแรก: เตรียมทหารและศรัทธา' : enemies ? 'ยังมีอสูรมีชีวิตบนเกาะ' : night ? (state.secondWaveTonight ? 'แสงอาทิตย์เริ่มเผาอสูร 05:30' : 'เฝ้าระวังทัพหนุน 00:30') : 'แตะทรัพยากรเพื่อสั่งคนงาน'));
   }
 
   function updateHUD() {
@@ -2999,6 +3030,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       civFillEl.style.width = `${Math.min(100, state.civProgress)}%`;
     }
     if (state.selectedEntity) updateInspectorUI();
+    economy?.updatePanel();
   }
 
 
@@ -3071,6 +3103,8 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
         plan: '📍 เดินไป: บ้านพักของครอบครัว • ⏭️ ต่อไป: สวดภาวนาและพักผ่อนรอเช้าวันใหม่'
       };
     }
+    if (ag.state === 'WAIT') return { thought: '💭 \"บริเวณนี้ยังไม่มีของให้เก็บ\"', plan: 'เลือกคนงานแล้วสั่งเก็บจากแหล่งใหม่ได้' };
+    if (ag.workOrder && ag.state === 'GATHER') return { thought: `💭 \"กำลังเก็บ${RESOURCE_INFO[ag.workOrder.resource].name}ตามคำสั่ง\"`, plan: 'เก็บ → แบกกลับวิหารกลางเมือง → ของเข้าคลัง' };
     if (ag.role === 'child') {
       return {
         thought: (ag.id % 2 === 0) ? '💭 "เย้! วิ่งไล่จับกันเร็ว ตามมาให้ทันนะ!"' : '💭 "วันนี้ที่ลานน้ำพุกับตลาดนัดคึกคักจังเลย!"',
@@ -3102,7 +3136,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       };
     }
     if (ag.state === 'HAUL') {
-      const itemTxt = ag.carryType === 'wood' ? 'ไม้ซุง' : 'แร่ศิลา';
+      const itemTxt = RESOURCE_INFO[ag.carryType]?.name || 'ทรัพยากร';
       return {
         thought: `💭 "ได้${itemTxt}มาเต็มหลังเลย รีบขนกลับไปเก็บที่คลังกลางดีกว่า"`,
         plan: `📍 เดินไป: คลังศูนย์กลางหมู่บ้าน • ⏭️ ต่อไป: นำ${itemTxt}ไปขยายอารยธรรม`
@@ -4425,20 +4459,29 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     const body = document.getElementById('insp-body');
     if (ent.type === 'agent') {
       const mind = describeAgentMind(ent);
-      body.innerHTML = `
+      const markup = `
         <div style="display:flex; gap:10px; align-items:center; margin-bottom:6px;">
           <canvas id="insp-portrait-canvas" width="76" height="76" style="width:68px; height:68px; border-radius:12px; border:1.5px solid #fbbf24; background:#091326; flex-shrink:0;"></canvas>
           <div style="min-width:0;">
             <div style="font-weight:800; color:#fde047; font-size:12.5px;">${ent.name}</div>
-            <div style="font-size:11px; color:#38bdf8; font-weight:700;">${ent.stateLabel}</div>
-            <div style="font-size:10.5px; color:#cbd5e1; margin-top:2px;">❤️ ${Math.ceil(ent.hp)}/${ent.maxHp} • 🍎 หิว ${Math.round(ent.hunger)}%</div>
+            <div data-agent-label style="font-size:11px; color:#38bdf8; font-weight:700;">${ent.stateLabel}</div>
+            <div data-agent-health style="font-size:10.5px; color:#cbd5e1; margin-top:2px;">❤️ ${Math.ceil(ent.hp)}/${ent.maxHp} • 🍎 หิว ${Math.round(ent.hunger)}%</div>
           </div>
         </div>
         <div style="padding:5px 7px;background:rgba(15,23,42,0.75);border-left:3px solid #fbbf24;border-radius:6px;">
-          <div style="color:#fef08a;font-style:italic;font-size:11px;">${mind.thought}</div>
-          <div style="color:#7dd3fc;font-size:10px;margin-top:2px;">${mind.plan}</div>
+          <div data-agent-thought style="color:#fef08a;font-style:italic;font-size:11px;">${mind.thought}</div>
+          <div data-agent-plan style="color:#7dd3fc;font-size:10px;margin-top:2px;">${mind.plan}</div>
         </div>
+        ${ent.role === 'villager' ? `<div class="worker-order" data-agent-order></div><div class="worker-commands"><button class="btn-mini" data-worker-resource="wood">เลือกต้นไม้</button><button class="btn-mini" data-worker-resource="ore">เลือกก้อนแร่</button><button class="btn-mini" data-worker-resource="food">เลือกต้นผลไม้</button><button class="btn-mini" data-worker-resource="auto">งานอัตโนมัติ</button></div>` : ''}
         <div style="margin-top:6px;"><button class="btn-mini" id="btn-follow-agent" style="width:100%;">🎥 กล้องติดตามยูนิตนี้</button></div>`;
+      const key = `agent-${ent.id}-${ent.role}`;
+      if (body.dataset.entityKey !== key) { body.innerHTML = markup; body.dataset.entityKey = key; }
+      body.querySelector('[data-agent-label]').textContent = ent.stateLabel;
+      body.querySelector('[data-agent-health]').textContent = `❤️ ${Math.ceil(ent.hp)}/${ent.maxHp} • 🍎 หิว ${Math.round(ent.hunger)}%${ent.carryAmount ? ` • แบก${RESOURCE_INFO[ent.carryType].name} ${ent.carryAmount}` : ''}`;
+      body.querySelector('[data-agent-thought]').textContent = mind.thought;
+      body.querySelector('[data-agent-plan]').textContent = mind.plan;
+      const order = body.querySelector('[data-agent-order]');
+      if (order) order.textContent = `งาน: ${ent.workOrder ? `เก็บ${RESOURCE_INFO[ent.workOrder.resource].name}ตามคำสั่ง` : 'อัตโนมัติ'}${ent.buildTarget ? ' · รับงานก่อสร้างแล้ว' : ''}`;
       const btn = document.getElementById('btn-follow-agent'); if (btn) btn.onclick = () => { camCtrl.followEntity = ent; };
       const pCan = document.getElementById('insp-portrait-canvas');
       if (pCan) {
@@ -4465,12 +4508,14 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
         }
       }
     } else {
+      body.dataset.entityKey = '';
       body.innerHTML = `
         <div style="font-weight:800; color:#fde047; font-size:12.5px; margin-bottom:4px;">${ent.name}</div>
+        ${ent.progress !== undefined ? `<div class="worker-order">${ent.progress < 1 ? `🔨 กำลังก่อสร้าง ${Math.floor(ent.progress * 100)}% · รอคนงานสร้างให้เสร็จ` : '✓ ก่อสร้างเสร็จแล้ว'}</div>` : ''}
         ${ent.hp ? `<div style="font-size:11px; color:#cbd5e1;">🛡️ <strong>ความทนทาน:</strong> ${Math.ceil(ent.hp)} / ${ent.maxHp}</div>` : ''}
         ${ent.species ? `<div style="font-size:11px; color:#34d399;">🌿 <strong>การเติบโต:</strong> ${Math.round(ent.growth * 100)}% ${ent.hasFruit ? '• 🍎 มีผลไม้สุกพร้อมเก็บ' : ''}</div>` : ''}
         ${ent.woodAmount ? `<div style="font-size:11px; color:#fbbf24;">🪵 <strong>ปริมาณไม้ซุง:</strong> ${ent.woodAmount} หน่วย</div>` : ''}
-        ${ent.oreAmount ? `<div style="font-size:11px; color:#38bdf8;">⛏️ <strong>ปริมาณแร่ศิลา:</strong> ${ent.oreAmount} หน่วย</div>` : ''}
+        ${ent.oreAmount !== undefined ? `<div style="font-size:11px; color:#38bdf8;">⛏️ <strong>ปริมาณแร่ศิลา:</strong> ${ent.oreAmount} หน่วย${ent.oreAmount === 0 ? ' · หมดแล้ว' : ''}</div>` : ''}
         <div style="margin-top:6px;"><button class="btn-mini" id="btn-focus-asset" style="width:100%;">🎥 ซูมดูรายละเอียด 3D ใกล้ๆ</button></div>`;
       const fBtn = document.getElementById('btn-focus-asset');
       if (fBtn) fBtn.onclick = () => {
@@ -4482,6 +4527,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   }
 
   function setGodPower(powerName) {
+    economy?.reset();
     state.activePower = powerName;
     miracleTarget = null; reticleGroup.visible = false; updateMiraclePreview();
     document.querySelectorAll('.power-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.power === powerName));
@@ -4720,6 +4766,8 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     }
     if (dilemmaActive) renderDilemmaSceneCanvas(elapsedTime);
     updateThoughtBubbles(elapsedTime);
+    economy?.render();
+    updateWorkerSelection();
     renderMinimap();
 
     state.sampleTimer += rawDt;
@@ -4780,7 +4828,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
 
   window.addEventListener('keydown', (e) => {
     if (e.code === 'KeyH') setAllHudHidden(!allHudHidden);
-    if (e.code === 'Escape') { if (dilemmaActive) closeInteractiveDilemma('⏸ พับเก็บเหตุการณ์ไว้ตัดสินใจภายหลัง'); else { state.selectedEntity = null; camCtrl.followEntity = null; document.getElementById('inspector-card').classList.remove('visible'); } }
+    if (e.code === 'Escape') { economy?.reset(); if (dilemmaActive) closeInteractiveDilemma('⏸ พับเก็บเหตุการณ์ไว้ตัดสินใจภายหลัง'); else { state.selectedEntity = null; camCtrl.followEntity = null; document.getElementById('inspector-card').classList.remove('visible'); } }
   });
 
 
@@ -4896,6 +4944,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       if (pt) castMiracleBeam(pt.x, pt.z);
     }
     if (touchMode === 'single' && touchMovedDist < 14 && state.activePower === 'observe') {
+      if (economy?.handlePoint({ clientX: lastTouchX, clientY: lastTouchY })) { touchMode = null; return; }
       updatePointerRay({ clientX: lastTouchX, clientY: lastTouchY });
       const hits = raycaster.intersectObjects(worldObjectsGroup.children, true);
       let found = null;
@@ -4921,9 +4970,27 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   });
   canvas.addEventListener('touchcancel', () => { touchMode = null; miracleTarget = null; reticleGroup.visible = false; updateMiraclePreview(); });
 
+  const workerSelection = new THREE.Mesh(new THREE.RingGeometry(1.2, 1.42, 32), new THREE.MeshBasicMaterial({ color: 0x7dd3fc, side: THREE.DoubleSide, transparent: true, opacity: 0.85 }));
+  workerSelection.rotation.x = -Math.PI / 2; workerSelection.visible = false; scene.add(workerSelection);
+  function updateWorkerSelection() {
+    const agent = state.selectedEntity;
+    workerSelection.visible = !allHudHidden && state.activePower === 'observe' && agent?.type === 'agent' && agent.alive && agent.mesh.visible;
+    if (workerSelection.visible) workerSelection.position.set(agent.x, getTerrainHeightAt(agent.x,agent.z)+0.18, agent.z);
+  }
+  economy = createEconomyControls({ window, state, agents, trees, ores, buildings, camCtrl,
+    updateInspector: updateInspectorUI, updateHUD, issue: reportActionIssue, log: addLog, notify: showDilemmaToast,
+    setObserve: () => setGodPower('observe'), placementIssue: getBuildingPlacementIssue,
+    createBuilding: (type,x,z) => type === 'house' ? createHouse(x,z,0.05,state.civEra) : createWatchtower(x,z,0.05,state.civEra),
+    terrainPoint: getTerrainIntersection,
+    pick: (event,nodes) => { updatePointerRay(event); return raycaster.intersectObjects(nodes.map(n=>n.mesh),true)[0]?.object.userData.entity || null; },
+    hideReticle: () => { reticleGroup.visible = false; },
+    showReticle: (p,blocked) => { reticleGroup.visible = true; reticleGroup.position.set(p.x,getTerrainHeightAt(p.x,p.z)+0.35,p.z); reticleGroup.scale.setScalar(4.5); reticleRing.material.color.setHex(blocked ? 0xef4444 : 0x34d399); reticleFill.material.color.setHex(blocked ? 0xf87171 : 0x6ee7b7); },
+    time: () => simulationClock.time, project: projectWorldToScreen, height: getTerrainHeightAt
+  });
+
   window.AETHERIA_API = {
     get simulationTime() { return simulationClock.time; },
-    setAllHudHidden, evolveToEra, openInteractiveDilemma,
+    economy, setAllHudHidden, evolveToEra, openInteractiveDilemma,
     isNearBuildingFoundation, getBuildingPlacementIssue, canPlaceBuildingAt, state, camCtrl, agents, monsters, projectiles, buildings, trees, ores, wagons, livestock, windmills, cropFields,
     setGodPower, castRainPower, applyTerraforming, castMeteorStrike, detonateMeteor, castLightningStrike, castMiracleBeam,
     spawnMonster, updateInspectorUI, drawAnalyticsChart, updateHUD, saveGameState, loadSavedGameState

@@ -16,7 +16,8 @@ test('a fisherman produces food from the walkable river bank in real WebGL', asy
   await page.click('[data-speed="5"]');
   await page.waitForFunction(time => AETHERIA_API.simulationTime >= time + 13, start);
   await page.click('[data-speed="0"]');
-  expect(await page.evaluate(() => AETHERIA_API.state.food)).toBeGreaterThanOrEqual(8);
+  expect(await page.evaluate(() => AETHERIA_API.state.food)).toBeGreaterThanOrEqual(2);
+  // Food now enters stock only after the fisherman returns to the central store.
   expect(errors).toEqual([]);
 });
 

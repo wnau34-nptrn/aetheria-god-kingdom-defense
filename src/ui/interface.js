@@ -23,7 +23,7 @@ export function initializeInterface() {
   document.querySelectorAll('[data-icon]').forEach(node => {
     node.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[node.dataset.icon] || paths.spark}</svg>`;
   });
-  const pairs = [['btn-toggle-left-hud','left-panel','hud-panel-hidden-left'],['btn-toggle-right-hud','right-panel','hud-panel-hidden-right'],['btn-menu','game-menu',null]];
+  const pairs = [['btn-toggle-left-hud','left-panel','hud-panel-hidden-left'],['btn-toggle-right-hud','right-panel','hud-panel-hidden-right'],['btn-menu','game-menu',null],...['faith','food','wood','ore'].map(r=>[`resource-${r}`,'economy-panel',null])];
   const scrim = document.getElementById('drawer-scrim');
   let active = null, returnFocus = null;
   function close(restore = true) {
@@ -55,6 +55,7 @@ export function initializeInterface() {
   }
   document.querySelectorAll('[data-close-drawer]').forEach(b=>b.addEventListener('click',()=>close()));
   scrim.addEventListener('click',()=>close());
+  window.addEventListener('aetheria:close-drawer',()=>close(false));
   document.getElementById('btn-trigger-dilemma').addEventListener('click',()=>close(false));
   document.getElementById('btn-toggle-all-hud').addEventListener('click',()=>close(false));
   document.getElementById('btn-regen-island').addEventListener('click',()=>close());

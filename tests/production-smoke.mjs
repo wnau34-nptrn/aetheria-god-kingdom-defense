@@ -49,7 +49,7 @@ try {
       const read = () => page.evaluate(() => {
         const a = AETHERIA_API;
         return { time:a.simulationTime, speed:a.state.timeScale, faith:a.state.faith,
-          power:a.state.activePower, people:a.agents.filter(v=>v.alive).length,
+          power:a.state.activePower, wood:a.state.wood, ore:a.state.ore, autoBuild:a.state.autoBuild, people:a.agents.filter(v=>v.alive).length,
           hudPeople:Number(document.getElementById('quick-pop').textContent) };
       });
       const speeds = [];
@@ -69,7 +69,18 @@ try {
         assert.equal(before.faith - after.faith, 15, 'one touch must spend one rain cost');
       }
       await page.click('[data-power="observe"]');
+      // Exercise the economy entry point on the built/deployed version too.
+      const beforeOrder = await read(); assert.equal(beforeOrder.autoBuild, false);
+      await page.click('#resource-wood');
+      await page.waitForFunction(() => document.getElementById('economy-stock').textContent === String(Math.floor(AETHERIA_API.state.wood)));
+      assert.equal(await page.locator('#economy-panel').isVisible(), true);
+      assert.match(await page.locator('#economy-source').textContent(), /ส่งคลังกลาง/);
+      await page.click('#btn-economy-worker');
+      await page.click('[data-worker-resource="wood"]');
+      assert.equal(await page.locator('#work-command-bar').isVisible(), true);
+      await page.click('#btn-cancel-work');
       const final = await read(); assert.equal(final.people, final.hudPeople);
+      assert.equal(final.wood,beforeOrder.wood); assert.equal(final.ore,beforeOrder.ore);
       for (const id of ['#top-bar','#god-dock','#kingdom-readout']) {
         const box = await page.locator(id).boundingBox();
         assert.ok(box.x >= 0 && box.x + box.width <= viewport.width + 1, `${id} fits viewport`);

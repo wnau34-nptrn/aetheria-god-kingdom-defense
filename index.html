@@ -129,6 +129,15 @@
   </div>
 
   <div class="glass-card">
+    <div class="card-header">จัดการคนงานและก่อสร้าง</div>
+    <button id="btn-select-worker" class="btn-mini" style="width:100%">เลือกคนงาน · สั่งเก็บทรัพยากร</button>
+    <p class="help-copy">เลือกคนงาน → เลือกงาน → แตะแหล่งทรัพยากร · ของเข้าคลังเมื่อส่งถึงวิหารกลางเมือง</p>
+    <div class="construction-options"><button class="btn-mini" data-build="house">บ้าน · ไม้ 25 + แร่ 18</button><button class="btn-mini" data-build="tower">ป้อม · ไม้ 25 + แร่ 18</button></div>
+    <label class="help-copy auto-build-option"><input type="checkbox" id="auto-build"> สร้างอัตโนมัติ (ใช้ไม้ 25 + แร่ 18 ต่อหลัง)</label>
+    <p class="help-copy">ปิดไว้เริ่มต้น · เลือกพื้นเกาะและยืนยันก่อนจ่าย · คนงานขนของเสร็จแล้วไปสร้าง</p>
+  </div>
+
+  <div class="glass-card">
     <div class="card-header">
       <span>ชีวิตชาวบ้าน</span>
       <span id="ai-active-count" style="color:#94a3b8; font-size:11px;">12 ยูนิต</span>
@@ -187,14 +196,16 @@
 
 <div id="god-dock-wrapper">
   <div id="kingdom-readout" aria-label="สถานการณ์อาณาจักร">
-    <div class="quick-resources">
-      <span><span data-icon="spark"></span><span class="resource-name">ศรัทธา</span><strong id="quick-faith">60</strong></span>
-      <span><span data-icon="apple"></span><span class="resource-name">อาหาร</span><strong id="quick-food">35</strong></span>
-      <span><span data-icon="people"></span><span class="resource-name">คน</span><strong id="quick-pop">7</strong></span>
-      <span><span data-icon="swords"></span><span class="resource-name">อสูร</span><strong id="quick-enemies">0</strong></span>
+    <div class="quick-resources" aria-label="ทรัพยากรในคลัง · แตะดูแหล่งที่มา">
+      <button id="resource-faith" data-resource="faith" aria-label="ศรัทธา · ดูแหล่งที่มา"><span class="resource-name">ศรัทธา</span><strong id="quick-faith">60</strong></button>
+      <button id="resource-food" data-resource="food" aria-label="อาหาร · ดูแหล่งที่มา"><span class="resource-name">อาหาร</span><strong id="quick-food">35</strong></button>
+      <button id="resource-wood" data-resource="wood" aria-label="ไม้ · ดูแหล่งที่มา"><span class="resource-name">ไม้</span><strong id="quick-wood">20</strong></button>
+      <button id="resource-ore" data-resource="ore" aria-label="แร่ศิลา · ดูแหล่งที่มา"><span class="resource-name">แร่ศิลา</span><strong id="quick-ore">15</strong></button>
     </div>
-    <div class="threat-line"><span id="night-countdown"></span><span id="night-guidance" role="status"></span></div>
+    <div class="threat-line"><span>คน <strong id="quick-pop">7</strong> · อสูร <strong id="quick-enemies">0</strong> · <span id="night-countdown"></span></span><span id="night-guidance" role="status"></span></div>
   </div>
+  <div id="work-command-bar" class="glass-card" hidden><span id="work-command-hint" role="status"></span><button id="btn-cancel-work" class="btn-mini">ยกเลิก</button></div>
+  <div id="construction-bar" class="glass-card" hidden><span id="construction-hint" role="status"></span><div><button id="btn-confirm-construction" class="btn-mini">ยืนยันก่อสร้าง</button><button id="btn-cancel-construction" class="btn-mini">ยกเลิก</button></div></div>
   <div id="placement-feedback" hidden="" role="status"></div>
   <div id="sub-power-bar">
     <span id="sub-power-hint" style="color:#fde047; font-weight:600;">โหมดปรับพื้นดิน:</span>
@@ -244,4 +255,15 @@
   <button class="btn-mini" id="btn-regen-island" title="สุ่มสร้างเกาะใหม่และเริ่มยุคที่ 1">🎲 เกาะใหม่</button>
 
 
-</div></details></section><div id="drawer-scrim" hidden=""></div></body></html>
+</div></details></section><div id="economy-panel" class="interface-drawer" hidden role="dialog" aria-labelledby="economy-title">
+  <header class="drawer-heading"><div><span class="drawer-eyebrow">คลังกลางอาณาจักร</span><h2 id="economy-title">ทรัพยากร</h2></div><button class="icon-button" data-close-drawer aria-label="ปิดแผง"><span data-icon="close"></span></button></header>
+  <p id="economy-source" class="help-copy"></p><p id="economy-use" class="help-copy"></p>
+  <div class="economy-totals"><span>ในคลัง <strong id="economy-stock">0</strong></span><span>กำลังขน <strong id="economy-transit">0</strong></span><span>กำลังผลิต <strong id="economy-working">0</strong> คน</span></div>
+  <p id="economy-reason" class="help-copy" role="status"></p>
+  <ul id="economy-workers" class="economy-workers"></ul>
+  <div class="construction-options"><button id="btn-economy-worker" class="btn-mini">เลือกคนงาน</button><button id="btn-economy-source" class="btn-mini">ไปยังแหล่งผลิต</button></div>
+  <p id="economy-last-change" class="help-copy"></p>
+  <p class="help-copy">แตะตัวเลขทรัพยากรเพื่อเปิดดูข้อมูลนี้ได้เสมอ</p>
+</div>
+<div id="economy-feedback-layer" aria-hidden="true"></div>
+<div id="drawer-scrim" hidden=""></div></body></html>

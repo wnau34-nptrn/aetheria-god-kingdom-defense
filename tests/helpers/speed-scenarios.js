@@ -22,7 +22,7 @@ export function runSpeedScenario(scenario, { seed = 1234, speed = 1, delta = 0.0
         a.cropFields.splice(1); agent.id = 0; agent.x = a.cropFields[0].x; agent.z = a.cropFields[0].z;
       }
       a.state.food = 0;
-      measure = () => ({ food: a.state.food, x: agent.x, z: agent.z });
+      measure = () => ({ food: a.state.food, carried: agent.carryAmount, x: agent.x, z: agent.z });
     } else if (scenario === 'hauling') {
       const agent = a.agents.find(x => x.role === 'villager');
       isolate(h, { agents: [agent] });
