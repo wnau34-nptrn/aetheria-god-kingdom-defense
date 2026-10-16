@@ -76,8 +76,11 @@ for (const viewport of [{width:390,height:844},{width:400,height:300},{width:844
     }
     await page.keyboard.press('KeyH');
     // H hides the containing dock, including its resources and placement prompt.
-    await expect(page.locator('#god-dock-wrapper')).toHaveCSS('opacity','0');
-    await page.keyboard.press('KeyH'); await expect(page.locator('#god-dock-wrapper')).toHaveCSS('opacity','1');
+    await expect(page.locator('body')).toHaveClass(/hud-hidden/);
+    await expect(page.locator('#god-dock-wrapper')).toHaveCSS('pointer-events','none');
+    await page.keyboard.press('KeyH');
+    await expect(page.locator('body')).not.toHaveClass(/hud-hidden/);
+    await expect(page.locator('#god-dock-wrapper')).toHaveCSS('pointer-events','auto');
     expect(errors).toEqual([]);
   });
 }
