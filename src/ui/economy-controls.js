@@ -1,10 +1,10 @@
-import { RESOURCE_INFO, CONSTRUCTION_COST, availableNode, resourceSummary } from '../systems/economy.js';
+import { RESOURCE_INFO, CONSTRUCTION_COST, availableNode, nearestResourceNode, resourceSummary } from '../systems/economy.js';
 
 // DOM/input adapter. Simulation keeps ownership of inventory and work progress.
 export function createEconomyControls(env) {
   const { window: w, state, agents, trees, ores, buildings, camCtrl } = env;
   const d = w.document, el = id => d.getElementById(id);
-  let pendingWorker = null, plan = null, resource = 'wood', lastChange = '', nextWorker = 0;
+  let plan = null, resource = 'wood', lastChange = '', nextWorker = 0;
   const deliveries = [];
   const closeDrawer = () => w.dispatchEvent(new w.Event('aetheria:close-drawer'));
   const nodes = r => (r === 'ore' ? ores : trees).filter(n => availableNode(n, r));
@@ -18,8 +18,8 @@ export function createEconomyControls(env) {
     }
   }
   function reset() {
-    pendingWorker = null; plan = null;
-    el('work-command-bar').hidden = el('construction-bar').hidden = true;
+    plan = null;
+    el('construction-bar').hidden = true;
     env.hideReticle();
   }
   function chooseWorker() {
@@ -28,29 +28,13 @@ export function createEconomyControls(env) {
     const worker = pool[nextWorker++ % pool.length];
     reset(); closeDrawer(); env.setObserve(); select(worker, true);
   }
-  function beginOrder(worker, kind) {
-    if (!worker?.alive || worker.role !== 'villager') return;
-    reset(); env.setObserve(); pendingWorker = { worker, resource: kind };
-    el('inspector-card').classList.remove('visible');
-    el('work-command-bar').hidden = false;
-    text('work-command-hint', `${worker.name} · แตะ${kind === 'ore' ? 'ก้อนแร่' : kind === 'food' ? 'ต้นผลไม้ที่มีผลสุก' : 'ต้นไม้'}เพื่อสั่งเก็บ · ส่งคลังก่อนตัวเลขเพิ่ม`);
-    // A narrow touch viewport may contain no resource nodes around the worker.
-    // Show the nearest source, but let the player make the actual assignment.
-    const source = nodes(kind).sort((a,b) => Math.hypot(a.x-worker.x,a.z-worker.z)-Math.hypot(b.x-worker.x,b.z-worker.z))[0];
-    if (source) {
-      camCtrl.followEntity = null;
-      camCtrl.target.copy(source.mesh.position); camCtrl.targetRadius = 48;
-      env.showReticle(source, false);
-    } else {
-      text('work-command-hint', `ยังไม่มีแหล่ง${RESOURCE_INFO[kind].name}ที่เก็บได้ · ยกเลิกแล้วเลือกงานอื่น หรือรอต้นไม้เติบโต`);
-    }
-  }
-  function issueOrder(worker, kind, target) {
-    if (!worker?.alive || worker.role !== 'villager' || !nodes(kind).includes(target)) return false;
-    worker.workOrder = { resource: kind, x: target.x, z: target.z };
+  function issueOrder(worker, kind) {
+    if (!worker?.alive || worker.role !== 'villager' || !['wood', 'ore', 'food'].includes(kind)) return false;
+    const target = nearestResourceNode(worker, kind, kind === 'ore' ? ores : trees);
+    worker.workOrder = { resource: kind };
     worker.targetObj = target; worker.workTimer = 0; worker.buildTarget = null;
-    lastChange = `${worker.name} รับคำสั่งเก็บ${RESOURCE_INFO[kind].name} · ของที่แบกอยู่จะส่งคลังก่อน`;
-    env.log(lastChange); reset(); select(worker);
+    lastChange = `${worker.name} รับคำสั่งเก็บ${RESOURCE_INFO[kind].name} · ${target ? 'AI หาแหล่งและเดินไปเก็บเอง' : 'ยังไม่มีแหล่งพร้อม · AI จะรอและค้นหาให้อัตโนมัติ'}${worker.carryAmount > 0 ? ' · ส่งของที่แบกอยู่เข้าคลังก่อน' : ''}`;
+    reset(); env.setObserve(); select(worker); env.log(lastChange); env.notify(lastChange);
     return true;
   }
   function constructionIssue() {
@@ -100,13 +84,6 @@ export function createEconomyControls(env) {
     plan.point = point; updatePlan(); return true;
   }
   function handlePoint(event) {
-    if (pendingWorker) {
-      const { worker, resource: kind } = pendingWorker;
-      if (!worker.alive || worker.role !== 'villager') { reset(); env.issue('คนงานนี้ไม่พร้อมรับคำสั่งแล้ว'); return true; }
-      const target = env.pick(event, nodes(kind));
-      if (!target || !issueOrder(worker, kind, target)) env.issue(`เลือกแหล่ง${RESOURCE_INFO[kind].name}ที่ยังเก็บได้ · ยกเลิกเพื่อกลับไปสำรวจ`);
-      return true;
-    }
     if (plan) {
       chooseConstructionSite(env.terrainPoint(event)); return true;
     }
@@ -142,7 +119,6 @@ export function createEconomyControls(env) {
     env.updateHUD();
   }
   function render() {
-    if (pendingWorker && (!pendingWorker.worker.alive || pendingWorker.worker.role !== 'villager')) reset();
     updatePlan(); updatePanel();
     for (let i = deliveries.length - 1; i >= 0; i--) {
       const item = deliveries[i];
@@ -161,7 +137,7 @@ export function createEconomyControls(env) {
   });
   d.querySelectorAll('[data-build]').forEach(b => b.addEventListener('click', () => beginConstruction(b.dataset.build)));
   el('auto-build').addEventListener('change', e => { state.autoBuild = e.target.checked; env.log(state.autoBuild ? 'เปิดสร้างอัตโนมัติ · ไม้ 25 + แร่ 18 ต่อหลัง' : 'ปิดสร้างอัตโนมัติ · เลือกตำแหน่งและยืนยันเอง'); });
-  el('btn-cancel-work').addEventListener('click', reset); el('btn-cancel-construction').addEventListener('click', reset);
+  el('btn-cancel-construction').addEventListener('click', reset);
   el('btn-confirm-construction').addEventListener('click', confirmConstruction);
   // Delegate because inspector contents refresh as the unit's status changes.
   el('insp-body').addEventListener('click', e => {
@@ -170,8 +146,8 @@ export function createEconomyControls(env) {
     if (button.dataset.workerResource === 'auto') {
       worker.workOrder = null; worker.targetObj = null; worker.workTimer = 0; worker.buildTarget = null;
       reset(); select(worker); env.log(`${worker.name} กลับไปทำงานอัตโนมัติ`);
-    } else beginOrder(worker, button.dataset.workerResource);
+    } else issueOrder(worker, button.dataset.workerResource);
   });
-  return { reset, select, chooseWorker, beginOrder, issueOrder, handlePoint, preview, beginConstruction, chooseConstructionSite, confirmConstruction, updatePanel, delivery, render,
-    get active() { return !!pendingWorker || !!plan; }, get pendingResource() { return pendingWorker?.resource; } };
+  return { reset, select, chooseWorker, beginOrder: issueOrder, issueOrder, handlePoint, preview, beginConstruction, chooseConstructionSite, confirmConstruction, updatePanel, delivery, render,
+    get active() { return !!plan; } };
 }

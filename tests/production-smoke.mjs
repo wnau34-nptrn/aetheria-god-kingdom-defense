@@ -77,8 +77,9 @@ try {
       assert.match(await page.locator('#economy-source').textContent(), /ส่งคลังกลาง/);
       await page.click('#btn-economy-worker');
       await page.click('[data-worker-resource="wood"]');
-      assert.equal(await page.locator('#work-command-bar').isVisible(), true);
-      await page.click('#btn-cancel-work');
+      assert.equal(await page.evaluate(() => AETHERIA_API.state.selectedEntity.workOrder.resource), 'wood');
+      assert.equal(await page.evaluate(() => AETHERIA_API.economy.active), false);
+      assert.equal(await page.locator('[data-worker-resource="wood"]').getAttribute('aria-pressed'), 'true');
       const final = await read(); assert.equal(final.people, final.hudPeople);
       assert.equal(final.wood,beforeOrder.wood); assert.equal(final.ore,beforeOrder.ore);
       for (const id of ['#top-bar','#god-dock','#kingdom-readout']) {

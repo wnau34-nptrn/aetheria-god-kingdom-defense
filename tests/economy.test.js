@@ -12,14 +12,14 @@ for (const speed of [1, 5]) for (const resource of ['wood','ore','food']) {
       const target=resource==='ore'?a.ores[0]:a.trees.find(t=>t.species==='fruit');
       Object.assign(target,{x:12,z:8,growth:1,hasFruit:true,woodAmount:50,oreAmount:resource==='ore'?3:50});
       a.state[resource]=0;
-      assert.equal(a.economy.issueOrder(worker,resource,target),true);
+      assert.equal(a.economy.issueOrder(worker,resource),true);
       h.play(1.6,speed);
       const expected=resource==='wood'?5:resource==='ore'?3:2;
       assert.equal(a.state[resource],0);assert.equal(worker.carryType,resource);assert.equal(worker.carryAmount,expected);
       assert.equal(resourceSummary(resource,a.agents).inTransit,expected);
       if(resource==='ore')assert.equal(target.oreAmount,0,'ore does not regenerate a free remainder');
       // Stop new harvesting without interrupting the delivery already in progress.
-      worker.workOrder={resource,x:500,z:500};worker.targetObj=null;
+      a.trees.length=0;a.ores.length=0;worker.targetObj=null;
       h.play(12,speed);
       assert.equal(a.state[resource],expected);assert.equal(worker.carryAmount,0);
       assert.match(h.window.document.querySelector('.log-entry').textContent,/เข้าคลังแล้ว/);
@@ -34,20 +34,21 @@ test('a changed order retains existing cargo and hunger/night retain the new ord
   const worker=a.agents.find(x=>x.role==='villager');isolate(h,{agents:[worker]});
   Object.assign(worker,{x:8,z:0,carryType:'wood',carryAmount:5});
   const ore=a.ores[0];Object.assign(ore,{x:15,z:8,oreAmount:50});
-  assert.ok(a.economy.issueOrder(worker,'ore',ore));assert.equal(worker.carryType,'wood');assert.equal(worker.carryAmount,5);
+  assert.ok(a.economy.issueOrder(worker,'ore'));assert.equal(worker.carryType,'wood');assert.equal(worker.carryAmount,5);
   a.state.food=10;worker.hunger=70;h.play(.1,1);assert.equal(worker.state,'FORAGE');assert.equal(worker.workOrder.resource,'ore');
   worker.hunger=0;a.state.timeOfDay=21;h.play(.1,1);assert.equal(worker.state,'SHELTER');assert.equal(worker.carryAmount,5);assert.equal(worker.workOrder.resource,'ore');
   a.state.timeOfDay=9;h.play(15,5);assert.ok(a.state.wood>=25);assert.equal(worker.workOrder.resource,'ore');
  }finally{h.close();}
 });
 
-test('orders reject depleted or wrong resources and never assign soldiers or children',()=>{
+test('orders reject unknown jobs, dead workers, soldiers and children',()=>{
  const h=createGameHarness(),a=h.api;
  try{const worker=a.agents.find(x=>x.role==='villager'),ore=a.ores[0];
-  assert.equal(a.economy.issueOrder(worker,'wood',ore),false);
-  ore.oreAmount=0;assert.equal(a.economy.issueOrder(worker,'ore',ore),false);
+  for(const kind of ['faith','unknown',undefined])assert.equal(a.economy.issueOrder(worker,kind),false);
+  ore.oreAmount=0;assert.equal(availableNode(ore,'ore'),false);
   ore.oreAmount=3;assert.equal(availableNode(ore,'ore'),true);
-  for(const role of ['soldier','child'])assert.equal(a.economy.issueOrder(a.agents.find(x=>x.role===role),'ore',ore),false);
+  for(const role of ['soldier','child'])assert.equal(a.economy.issueOrder(a.agents.find(x=>x.role===role),'ore'),false);
+  worker.alive=false;assert.equal(a.economy.issueOrder(worker,'ore'),false);
  }finally{h.close();}
 });
 
@@ -55,7 +56,7 @@ test('manual gather orders win over opportunistic building and survive pause',()
  const h=createGameHarness(),a=h.api;
  try{const worker=a.agents.find(x=>x.role==='villager'),house=a.buildings.find(x=>x.type==='house');isolate(h,{agents:[worker],buildings:[house]});
   const ore=a.ores[0];Object.assign(ore,{x:12,z:8,oreAmount:50});Object.assign(worker,{x:12,z:8});house.progress=.25;
-  a.economy.issueOrder(worker,'ore',ore);h.play(1,1);assert.equal(worker.state,'GATHER');assert.equal(house.progress,.25);
+  a.economy.issueOrder(worker,'ore');h.play(1,1);assert.equal(worker.state,'GATHER');assert.equal(house.progress,.25);
   const snapshot={x:worker.x,z:worker.z,work:worker.workTimer,ore:a.state.ore};h.click('[data-speed="0"]');for(let i=0;i<20;i++)h.frame();
   assert.deepEqual({x:worker.x,z:worker.z,work:worker.workTimer,ore:a.state.ore},snapshot);
  }finally{h.close();}
@@ -105,18 +106,47 @@ test('construction cancellation, blocked foundations, insufficient stock and cha
  }finally{h.close();}
 });
 
-test('choosing a job reveals its nearest source without assigning work or spending',()=>{
+for(const resource of ['wood','ore','food'])test(`the ${resource} job button immediately assigns the nearest ready source without a map tap or spending`,()=>{
  const h=createGameHarness(),a=h.api;
  try{const worker=a.agents.find(x=>x.role==='villager');
   const stock={wood:a.state.wood,ore:a.state.ore,faith:a.state.faith};
-  a.economy.select(worker);a.economy.beginOrder(worker,'ore');
-  const nearest=a.ores.filter(n=>n.oreAmount>0).sort((x,y)=>Math.hypot(x.x-worker.x,x.z-worker.z)-Math.hypot(y.x-worker.x,y.z-worker.z))[0];
-  assert.equal(a.camCtrl.target.x,nearest.mesh.position.x);assert.equal(a.camCtrl.target.z,nearest.mesh.position.z);
-  assert.equal(worker.workOrder,undefined);assert.equal(a.economy.pendingResource,'ore');
+  const pool=(resource==='ore'?a.ores:a.trees).filter(n=>availableNode(n,resource));
+  const nearest=pool.sort((x,y)=>Math.hypot(x.x-worker.x,x.z-worker.z)-Math.hypot(y.x-worker.x,y.z-worker.z))[0];
+  assert.ok(nearest);a.economy.select(worker);
+  const camera={...a.camCtrl.target};h.click(`[data-worker-resource="${resource}"]`);
+  assert.equal(worker.workOrder.resource,resource);assert.equal(worker.targetObj,nearest);
+  assert.equal(a.state.selectedEntity,worker);assert.equal(a.economy.active,false);
+  assert.equal(a.economy.handlePoint({}),false,'job selection must not capture the next world click');
+  assert.deepEqual({...a.camCtrl.target},camera,'the view stays with the selected worker');
   assert.deepEqual({wood:a.state.wood,ore:a.state.ore,faith:a.state.faith},stock);
-  a.economy.reset();assert.equal(a.economy.active,false);
-  for(const ore of a.ores)ore.oreAmount=0;
-  a.economy.beginOrder(worker,'ore');assert.match(h.window.document.getElementById('work-command-hint').textContent,/ยังไม่มีแหล่ง/);
+  assert.equal(h.window.document.querySelector(`[data-worker-resource="${resource}"]`).getAttribute('aria-pressed'),'true');
+ }finally{h.close();}
+});
+
+for(const speed of [1,5])test(`AI replaces an exhausted source beyond the old local radius and resumes after waiting at ${speed}x`,()=>{
+ const h=createGameHarness(),a=h.api;
+ try{const worker=a.agents.find(x=>x.role==='villager');isolate(h,{agents:[worker]});
+  const [first,next]=a.ores;for(const ore of a.ores)ore.oreAmount=0;
+  Object.assign(worker,{x:12,z:8});Object.assign(first,{x:12,z:8,oreAmount:3});Object.assign(next,{x:12,z:32,oreAmount:4});
+  assert.ok(a.economy.issueOrder(worker,'ore'));assert.equal(worker.targetObj,first);
+  h.play(1.6,speed);assert.equal(first.oreAmount,0);assert.equal(worker.carryAmount,3);
+  h.play(10,speed);assert.equal(a.state.ore,15+3);assert.equal(worker.targetObj,next,'AI searches beyond 18 units after delivering the exhausted source');
+  assert.equal(worker.workOrder.resource,'ore');
+  next.oreAmount=0;h.play(.1,speed);assert.equal(worker.state,'WAIT');assert.equal(worker.targetObj,null);
+  // The same stored order notices a newly available source without another UI command.
+  next.oreAmount=4;h.play(.1,speed);assert.equal(worker.state,'GATHER');assert.equal(worker.targetObj,next);
+ }finally{h.close();}
+});
+
+test('a job accepted with no ready fruit waits and starts when fruit ripens',()=>{
+ const h=createGameHarness(),a=h.api;
+ try{const worker=a.agents.find(x=>x.role==='villager');isolate(h,{agents:[worker]});
+  for(const tree of a.trees){tree.hasFruit=false;tree.growth=.5;}
+  assert.ok(a.economy.issueOrder(worker,'food'));assert.equal(worker.targetObj,null);
+  h.play(.1,1);assert.equal(worker.state,'WAIT');assert.equal(worker.workOrder.resource,'food');
+  assert.match(worker.stateLabel,/AI จะเก็บต่อเมื่อพร้อม/);
+  const tree=a.trees.find(t=>t.species==='fruit');tree.growth=.8;
+  h.play(.1,1);assert.equal(worker.targetObj,tree);assert.equal(worker.state,'GATHER');
  }finally{h.close();}
 });
 

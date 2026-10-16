@@ -21,6 +21,16 @@ export function availableNode(node, resource) {
   return resource === 'food' && node.type === 'tree' && node.species === 'fruit' && node.hasFruit;
 }
 
+export function nearestResourceNode(agent, resource, nodes) {
+  let nearest = null, distance = Infinity;
+  for (const node of nodes) {
+    if (!availableNode(node, resource)) continue;
+    const next = Math.hypot(node.x - agent.x, node.z - agent.z);
+    if (next < distance) { nearest = node; distance = next; }
+  }
+  return nearest;
+}
+
 export function resourceSummary(resource, agents) {
   const living = agents.filter(a => a.alive);
   const assigned = living.filter(a => workerResource(a) === resource);

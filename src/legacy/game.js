@@ -1,6 +1,6 @@
 import { createFixedStepper } from '../systems/fixed-step.js';
 import { chooseFoodTree } from '../systems/food-target.js';
-import { RESOURCE_INFO, availableNode, depositCargo } from '../systems/economy.js';
+import { RESOURCE_INFO, availableNode, nearestResourceNode, depositCargo } from '../systems/economy.js';
 import { createEconomyControls } from '../ui/economy-controls.js';
 import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
 
@@ -2808,13 +2808,13 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
         }
       } else {
         const resource = ag.workOrder?.resource || (((ag.id % 2 === 0) || ores.length === 0) ? 'wood' : 'ore');
-        const pool = (resource === 'ore' ? ores : trees).filter(n => availableNode(n, resource) && (!ag.workOrder || Math.hypot(n.x-ag.workOrder.x,n.z-ag.workOrder.z) <= 18));
+        const pool = (resource === 'ore' ? ores : trees).filter(n => availableNode(n, resource));
         if (!pool.includes(ag.targetObj)) {
-          ag.targetObj = ag.workOrder ? pool.sort((a,b) => Math.hypot(a.x-ag.x,a.z-ag.z)-Math.hypot(b.x-ag.x,b.z-ag.z))[0] || null : pool[ag.id % Math.max(1,pool.length)] || null;
+          ag.targetObj = ag.workOrder ? nearestResourceNode(ag, resource, pool) : pool[ag.id % Math.max(1,pool.length)] || null;
           ag.workTimer = 0;
         }
         if (!ag.targetObj) {
-          ag.state = 'WAIT'; ag.stateLabel = `รอแหล่ง${RESOURCE_INFO[resource].name} · เลือกงานใหม่ได้`; ag.stateGem.material.color.setHex(0x94a3b8);
+          ag.state = 'WAIT'; ag.stateLabel = `รอแหล่ง${RESOURCE_INFO[resource].name} · AI จะเก็บต่อเมื่อพร้อม`; ag.stateGem.material.color.setHex(0x94a3b8);
           continue;
         }
         ag.state = 'GATHER'; ag.stateLabel = resource === 'wood' ? '🪓 ตัดไม้ → แบกกลับคลัง' : resource === 'ore' ? '⛏️ ขุดแร่ → แบกกลับคลัง' : '🍎 เก็บผลไม้ → แบกกลับคลัง'; ag.stateGem.material.color.setHex(0xfbbf24); cGather++;
@@ -3103,7 +3103,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
         plan: '📍 เดินไป: บ้านพักของครอบครัว • ⏭️ ต่อไป: สวดภาวนาและพักผ่อนรอเช้าวันใหม่'
       };
     }
-    if (ag.state === 'WAIT') return { thought: '💭 \"บริเวณนี้ยังไม่มีของให้เก็บ\"', plan: 'เลือกคนงานแล้วสั่งเก็บจากแหล่งใหม่ได้' };
+    if (ag.state === 'WAIT') return { thought: '💭 \"ยังไม่มีแหล่งพร้อมให้เก็บ\"', plan: 'AI ค้นหาแหล่งให้อัตโนมัติ → พร้อมเมื่อไรจะกลับไปเก็บเอง' };
     if (ag.workOrder && ag.state === 'GATHER') return { thought: `💭 \"กำลังเก็บ${RESOURCE_INFO[ag.workOrder.resource].name}ตามคำสั่ง\"`, plan: 'เก็บ → แบกกลับวิหารกลางเมือง → ของเข้าคลัง' };
     if (ag.role === 'child') {
       return {
@@ -4472,7 +4472,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
           <div data-agent-thought style="color:#fef08a;font-style:italic;font-size:11px;">${mind.thought}</div>
           <div data-agent-plan style="color:#7dd3fc;font-size:10px;margin-top:2px;">${mind.plan}</div>
         </div>
-        ${ent.role === 'villager' ? `<div class="worker-order" data-agent-order></div><div class="worker-commands"><button class="btn-mini" data-worker-resource="wood">เลือกต้นไม้</button><button class="btn-mini" data-worker-resource="ore">เลือกก้อนแร่</button><button class="btn-mini" data-worker-resource="food">เลือกต้นผลไม้</button><button class="btn-mini" data-worker-resource="auto">งานอัตโนมัติ</button></div>` : ''}
+        ${ent.role === 'villager' ? `<div class="worker-order" data-agent-order></div><div class="worker-commands" role="group" aria-label="สั่งงาน · AI หาแหล่งให้เอง"><button class="btn-mini" data-worker-resource="wood">ตัดไม้</button><button class="btn-mini" data-worker-resource="ore">ขุดแร่</button><button class="btn-mini" data-worker-resource="food">เก็บผลไม้</button><button class="btn-mini" data-worker-resource="auto">งานอัตโนมัติ</button></div>` : ''}
         <div style="margin-top:6px;"><button class="btn-mini" id="btn-follow-agent" style="width:100%;">🎥 กล้องติดตามยูนิตนี้</button></div>`;
       const key = `agent-${ent.id}-${ent.role}`;
       if (body.dataset.entityKey !== key) { body.innerHTML = markup; body.dataset.entityKey = key; }
@@ -4481,7 +4481,8 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       body.querySelector('[data-agent-thought]').textContent = mind.thought;
       body.querySelector('[data-agent-plan]').textContent = mind.plan;
       const order = body.querySelector('[data-agent-order]');
-      if (order) order.textContent = `งาน: ${ent.workOrder ? `เก็บ${RESOURCE_INFO[ent.workOrder.resource].name}ตามคำสั่ง` : 'อัตโนมัติ'}${ent.buildTarget ? ' · รับงานก่อสร้างแล้ว' : ''}`;
+      if (order) order.textContent = `งาน: ${ent.workOrder ? `เก็บ${RESOURCE_INFO[ent.workOrder.resource].name} · AI หาแหล่งให้เอง` : 'อัตโนมัติ'}${ent.buildTarget ? ' · รับงานก่อสร้างแล้ว' : ''}`;
+      body.querySelectorAll('[data-worker-resource]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.workerResource === (ent.workOrder?.resource || 'auto'))));
       const btn = document.getElementById('btn-follow-agent'); if (btn) btn.onclick = () => { camCtrl.followEntity = ent; };
       const pCan = document.getElementById('insp-portrait-canvas');
       if (pCan) {
@@ -4982,7 +4983,6 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     setObserve: () => setGodPower('observe'), placementIssue: getBuildingPlacementIssue,
     createBuilding: (type,x,z) => type === 'house' ? createHouse(x,z,0.05,state.civEra) : createWatchtower(x,z,0.05,state.civEra),
     terrainPoint: getTerrainIntersection,
-    pick: (event,nodes) => { updatePointerRay(event); return raycaster.intersectObjects(nodes.map(n=>n.mesh),true)[0]?.object.userData.entity || null; },
     hideReticle: () => { reticleGroup.visible = false; },
     showReticle: (p,blocked) => { reticleGroup.visible = true; reticleGroup.position.set(p.x,getTerrainHeightAt(p.x,p.z)+0.35,p.z); reticleGroup.scale.setScalar(4.5); reticleRing.material.color.setHex(blocked ? 0xef4444 : 0x34d399); reticleFill.material.color.setHex(blocked ? 0xf87171 : 0x6ee7b7); },
     time: () => simulationClock.time, project: projectWorldToScreen, height: getTerrainHeightAt

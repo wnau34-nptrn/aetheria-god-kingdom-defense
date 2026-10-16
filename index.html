@@ -131,7 +131,7 @@
   <div class="glass-card">
     <div class="card-header">จัดการคนงานและก่อสร้าง</div>
     <button id="btn-select-worker" class="btn-mini" style="width:100%">เลือกคนงาน · สั่งเก็บทรัพยากร</button>
-    <p class="help-copy">เลือกคนงาน → เลือกงาน → แตะแหล่งทรัพยากร · ของเข้าคลังเมื่อส่งถึงวิหารกลางเมือง</p>
+    <p class="help-copy">เลือกคนงาน → กดตัดไม้ / ขุดแร่ / เก็บผลไม้ · AI หาแหล่งและเดินไปเก็บเอง ของเข้าคลังเมื่อส่งถึงวิหารกลางเมือง</p>
     <div class="construction-options"><button class="btn-mini" data-build="house">บ้าน · ไม้ 25 + แร่ 18</button><button class="btn-mini" data-build="tower">ป้อม · ไม้ 25 + แร่ 18</button></div>
     <label class="help-copy auto-build-option"><input type="checkbox" id="auto-build"> สร้างอัตโนมัติ (ใช้ไม้ 25 + แร่ 18 ต่อหลัง)</label>
     <p class="help-copy">ปิดไว้เริ่มต้น · เลือกพื้นเกาะและยืนยันก่อนจ่าย · คนงานขนของเสร็จแล้วไปสร้าง</p>
@@ -204,7 +204,6 @@
     </div>
     <div class="threat-line"><span>คน <strong id="quick-pop">7</strong> · อสูร <strong id="quick-enemies">0</strong> · <span id="night-countdown"></span></span><span id="night-guidance" role="status"></span></div>
   </div>
-  <div id="work-command-bar" class="glass-card" hidden><span id="work-command-hint" role="status"></span><button id="btn-cancel-work" class="btn-mini">ยกเลิก</button></div>
   <div id="construction-bar" class="glass-card" hidden><span id="construction-hint" role="status"></span><div><button id="btn-confirm-construction" class="btn-mini">ยืนยันก่อสร้าง</button><button id="btn-cancel-construction" class="btn-mini">ยกเลิก</button></div></div>
   <div id="placement-feedback" hidden="" role="status"></div>
   <div id="sub-power-bar">

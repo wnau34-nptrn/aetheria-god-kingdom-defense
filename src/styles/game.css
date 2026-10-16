@@ -213,25 +213,26 @@ body.bubbles-hidden #thought-bubbles-layer, body.hud-hidden #thought-bubbles-lay
 .construction-options { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
 .construction-options button { flex:1; }
 .auto-build-option { display:flex; gap:8px; align-items:center; }
-#work-command-bar, #construction-bar { order:-3; padding:8px 10px; margin:0; border:1px solid var(--border-gold); border-radius:var(--radius); background:var(--surface); font-size:12px; }
-#work-command-bar:not([hidden]), #construction-bar:not([hidden]) { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+#construction-bar { order:-3; padding:8px 10px; margin:0; border:1px solid var(--border-gold); border-radius:var(--radius); background:var(--surface); font-size:12px; }
+#construction-bar:not([hidden]) { display:flex; align-items:center; justify-content:space-between; gap:8px; }
 #construction-bar > div { display:flex; flex-shrink:0; gap:4px; }
 #construction-bar[data-state="blocked"] { border-color:var(--accent-rose); }
 .worker-commands { display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:8px; }
 .worker-commands .btn-mini { font-size:11px; }
+.worker-commands [aria-pressed="true"] { color:var(--accent-gold); border-color:var(--border-gold); background:#ddc58b18; }
 .worker-order { color:var(--accent-gold); font-size:11px; margin-top:6px; }
 #economy-feedback-layer { position:fixed; inset:0; z-index:36; pointer-events:none; }
 .economy-delivery { position:absolute; transform:translate(-50%,-100%); padding:5px 9px; background:var(--surface); border:1px solid var(--accent-cyan); border-radius:8px; font-size:12px; font-weight:600; white-space:nowrap; }
 body.hud-hidden #economy-feedback-layer { display:none; }
 @media (max-width:600px) {
   .quick-resources > button { gap:5px; min-height:28px; font-size:10px; padding:1px; }
-  #work-command-bar, #construction-bar { font-size:11px; flex-wrap:wrap; }
-  #construction-bar .btn-mini, #work-command-bar .btn-mini { min-height:30px; padding:4px 8px; font-size:11px; }
+  #construction-bar { font-size:11px; flex-wrap:wrap; }
+  #construction-bar .btn-mini { min-height:30px; padding:4px 8px; font-size:11px; }
 }
 @media (max-height:540px) and (orientation:landscape) {
   .quick-resources > button { min-height:22px; padding:0 2px; }
-  #work-command-bar, #construction-bar { padding:4px 8px; font-size:10px; }
-  #work-command-bar .btn-mini, #construction-bar .btn-mini { min-height:26px; padding:3px 5px; font-size:10px; }
+  #construction-bar { padding:4px 8px; font-size:10px; }
+  #construction-bar .btn-mini { min-height:26px; padding:3px 5px; font-size:10px; }
   #inspector-card { top:112px; bottom:calc(var(--power-dock-height,110px) + 14px); max-height:none; }
 }
 

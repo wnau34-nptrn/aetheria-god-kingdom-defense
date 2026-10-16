@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { RESOURCE_INFO, availableNode, workerResource, depositCargo } from '../../src/systems/economy.js';
+import { RESOURCE_INFO, availableNode, nearestResourceNode, workerResource, depositCargo } from '../../src/systems/economy.js';
 import { createEconomyControls } from '../../src/ui/economy-controls.js';
 import { JSDOM } from 'jsdom';
 import { createFixedStepper } from '../../src/systems/fixed-step.js';
@@ -37,7 +37,7 @@ export function createGameHarness({ seed = 1234, source } = {}) {
     render() {}
   };
   w.THREE.Clock = class { getDelta() { return frameDelta; } };
-  Object.assign(w, { RESOURCE_INFO, availableNode, workerResource, depositCargo, createEconomyControls, parseProgress, PROGRESS_KEY, createFixedStepper, chooseFoodTree });
+  Object.assign(w, { RESOURCE_INFO, availableNode, nearestResourceNode, workerResource, depositCargo, createEconomyControls, parseProgress, PROGRESS_KEY, createFixedStepper, chooseFoodTree });
   w.eval((source ?? readFileSync(new URL('../../src/legacy/game.js', import.meta.url), 'utf8')).replace(/^import .+;\n/gm, ''));
   const api = w.AETHERIA_API;
   // Avoid unnecessary thought-bubble DOM churn; this does not change simulation.
