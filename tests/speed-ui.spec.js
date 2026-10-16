@@ -8,7 +8,8 @@ test('real WebGL frames advance at 1x/5x, event tabs pause and unfunded trade is
     await page.click(`[data-speed="${speed}"]`);
     const start=await page.evaluate(()=>AETHERIA_API.simulationTime);
     await page.waitForFunction(time=>AETHERIA_API.simulationTime>=time+0.2,start);
-    await page.click('#btn-trigger-dilemma');await page.click('#btn-decision-details');
+    if (!(await page.locator('#decision-card').isVisible())) await page.click('#btn-trigger-dilemma');
+    await page.click('#btn-decision-details');
     if (await page.locator('.event-stories').getAttribute('open') === null) await page.locator('.event-stories > summary').click();
     await page.click('[data-dl-idx="1"]');
     // A controlled insufficient-funds fixture, not a natural-play balance measurement.
