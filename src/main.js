@@ -1,4 +1,5 @@
 import './styles/game.css';
+import { initializeInterface } from './ui/interface.js';
 import './legacy/webgl-engine.js';
 
 function showStartupError(error) {
@@ -10,7 +11,7 @@ function showStartupError(error) {
   document.body.appendChild(message);
 }
 // Keep a visible error when WebGL or shaders cannot start.
-import('./legacy/game.js').catch(showStartupError);
+import('./legacy/game.js').then(initializeInterface).catch(showStartupError);
 document.getElementById('game-canvas').addEventListener('webglcontextlost', (event) => {
   event.preventDefault();
   showStartupError(new Error('WebGL context lost; reload to restart.'));

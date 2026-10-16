@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 async function boot(page) {
   const errors = []; page.on('pageerror', e => errors.push(e.message));
   await page.goto('/'); await page.waitForFunction(() => window.AETHERIA_API);
-  await page.click('[data-speed="0"]'); await page.click('#btn-toggle-bubbles');
+  await page.click('[data-speed="0"]');
   for (const side of ['left', 'right']) {
     if (await page.locator(`#btn-toggle-${side}-hud`).evaluate(e => e.classList.contains('active'))) await page.click(`#btn-toggle-${side}-hud`);
   }
@@ -71,8 +71,8 @@ for (const viewport of [{width:390,height:844},{width:400,height:300},{width:844
     const summary=await page.locator('#kingdom-readout').boundingBox();
     expect(camera.y+camera.height).toBeLessThanOrEqual(summary.y);
     if(viewport.height<=500) {
-      const eras=await page.locator('#era-dock').boundingBox();
-      expect(camera.y).toBeGreaterThanOrEqual(eras.y+eras.height);
+      const tools=await page.locator('#hud-master-control').boundingBox();
+      expect(camera.y).toBeGreaterThanOrEqual(tools.y+tools.height);
     }
     await page.keyboard.press('KeyH');
     // H hides the containing dock, including its resources and placement prompt.

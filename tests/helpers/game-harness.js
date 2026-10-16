@@ -39,7 +39,7 @@ export function createGameHarness({ seed = 1234, source } = {}) {
   w.eval((source ?? readFileSync(new URL('../../src/legacy/game.js', import.meta.url), 'utf8')).replace(/^import .+;\n/gm, ''));
   const api = w.AETHERIA_API;
   // Avoid unnecessary thought-bubble DOM churn; this does not change simulation.
-  w.document.getElementById('btn-toggle-bubbles')?.click();
+  if (w.document.getElementById('btn-toggle-bubbles')?.classList.contains('active')) w.document.getElementById('btn-toggle-bubbles').click();
   return { window: w, api, click(selector) { const element = w.document.querySelector(selector); if (!element) throw new Error(`Missing ${selector}`); element.click(); },
     frame(delta = 0.05) { frameDelta = delta; wallSeconds += delta; scheduled(); frame(); },
     advance(seconds, speed, delta = 0.05) {

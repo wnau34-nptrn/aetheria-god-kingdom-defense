@@ -45,7 +45,7 @@ try {
     try {
       const response = await page.goto(target, {timeout:60000}); assert.equal(response.status(), 200);
       await page.waitForFunction(() => window.AETHERIA_API, null, {timeout:60000});
-      await page.click('[data-speed="0"]'); await page.click('#btn-toggle-bubbles');
+      await page.click('[data-speed="0"]');
       const read = () => page.evaluate(() => {
         const a = AETHERIA_API;
         return { time:a.simulationTime, speed:a.state.timeScale, faith:a.state.faith,

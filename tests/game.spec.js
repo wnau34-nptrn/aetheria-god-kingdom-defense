@@ -8,6 +8,7 @@ test('boots, pauses combat, preserves dilemma speed, changes era and saves progr
   const hud=await page.locator('#hud-master-control').boundingBox();
   expect(top.x+top.width).toBeLessThanOrEqual(hud.x);
   await page.click('#btn-trigger-dilemma');
+  if (await page.locator('.event-stories').getAttribute('open') === null) await page.locator('.event-stories > summary').click();
   await page.click('[data-dl-idx="1"]');
   await page.click('#btn-close-dilemma');
   expect(await page.evaluate(()=>AETHERIA_API.state.timeScale)).toBe(0);
@@ -17,8 +18,11 @@ test('boots, pauses combat, preserves dilemma speed, changes era and saves progr
   await page.waitForTimeout(1600);
   expect(await page.evaluate(()=>({time:AETHERIA_API.state.timeOfDay,hp:AETHERIA_API.monsters.map(m=>m.hp),projectiles:AETHERIA_API.projectiles.map(p=>[p.x,p.y,p.z])}))).toEqual(frozen);
   await page.evaluate(()=>{AETHERIA_API.state.civProgress=0;});
+  await page.click('#btn-toggle-left-hud');
   await page.click('#btn-advance-era');
   expect(await page.evaluate(()=>AETHERIA_API.state.civEra)).toBe(1);
+  await page.click('#btn-menu');
+  await page.getByText('เครื่องมือโลกและยุค', {exact:true}).click();
   await page.click('[data-era="2"]');
   expect(await page.evaluate(()=>AETHERIA_API.state.civEra)).toBe(2);
   await page.screenshot({path:'docs/screenshots/current-desktop.png'});
@@ -27,6 +31,7 @@ test('boots, pauses combat, preserves dilemma speed, changes era and saves progr
   await page.reload();await page.waitForFunction(()=>window.AETHERIA_API);
   expect(await page.evaluate(()=>AETHERIA_API.state.civEra)).toBe(2);
   await page.evaluate(()=>{AETHERIA_API.state.timeScale=0;Storage.prototype.setItem=()=>{throw new DOMException('Quota exceeded','QuotaExceededError');};});
+  await page.click('#btn-menu');
   await page.click('#btn-save-game');
   await expect(page.locator('#dilemma-toast')).toContainText('บันทึกไม่สำเร็จ');
   expect(errors).toEqual([]);

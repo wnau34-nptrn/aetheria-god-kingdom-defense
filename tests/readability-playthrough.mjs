@@ -53,7 +53,7 @@ async function capture(label, entry) {
 try {
   await page.goto(process.env.GAME_URL || 'http://127.0.0.1:5174');
   await page.waitForFunction(() => window.AETHERIA_API);
-  await speed(0); await page.click('#btn-toggle-bubbles');
+  await speed(0); if (await page.locator('#btn-toggle-bubbles').evaluate(e=>e.classList.contains('active'))) { await page.click('#btn-menu'); await page.getByText('การแสดงผล',{exact:true}).click(); await page.click('#btn-toggle-bubbles'); await page.keyboard.press('Escape'); }
   await page.keyboard.press('KeyH'); await page.mouse.move(200, 150); await page.mouse.wheel(0, 2200); await page.keyboard.press('KeyH');
   await speed(5);
   const start = Date.now();

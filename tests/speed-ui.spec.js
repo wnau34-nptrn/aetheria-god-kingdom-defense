@@ -9,6 +9,7 @@ test('real WebGL frames advance at 1x/5x, event tabs pause and unfunded trade is
     const start=await page.evaluate(()=>AETHERIA_API.simulationTime);
     await page.waitForFunction(time=>AETHERIA_API.simulationTime>=time+0.2,start);
     await page.click('#btn-trigger-dilemma');
+    if (await page.locator('.event-stories').getAttribute('open') === null) await page.locator('.event-stories > summary').click();
     await page.click('[data-dl-idx="1"]');
     // A controlled insufficient-funds fixture, not a natural-play balance measurement.
     await page.evaluate(()=>{AETHERIA_API.state.faith=AETHERIA_API.state.wood=AETHERIA_API.state.food=0;});
@@ -41,7 +42,8 @@ test('a blocked council plot keeps resources and decision open in the actual UI'
     for(let x=-45;x<=45;x+=5)for(let z=-45;z<=45;z+=5)a.buildings.push({type:'house',x,z,hp:100,maxHp:100,progress:1});
   });
   const before=await page.evaluate(()=>({wood:AETHERIA_API.state.wood,pop:AETHERIA_API.agents.length}));
-  await page.click('#btn-trigger-dilemma');await page.click('[data-dl-idx="1"]');await page.click('#dl-choice-0');
+  await page.click('#btn-trigger-dilemma');if (await page.locator('.event-stories').getAttribute('open') === null) await page.locator('.event-stories > summary').click();
+  await page.click('[data-dl-idx="1"]');await page.click('#dl-choice-0');
   await expect(page.locator('#dilemma-toast')).toContainText('ไม่พบพื้นที่เหมาะสม');
   await expect(page.locator('#dilemma-overlay')).toHaveClass(/visible/);
   expect(await page.evaluate(()=>({wood:AETHERIA_API.state.wood,pop:AETHERIA_API.agents.length}))).toEqual(before);

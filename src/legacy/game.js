@@ -2556,6 +2556,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   });
   window.addEventListener('keyup', (e) => { camCtrl.keys[e.code] = false; });
   window.addEventListener('blur', () => { camCtrl.keys = {}; camCtrl.isDragging = camCtrl.isPanning = isTerraformDragging = false; });
+  window.addEventListener('aetheria:drawer-open', () => { camCtrl.keys = {}; camCtrl.isDragging = camCtrl.isPanning = isTerraformDragging = false; });
   canvas.addEventListener('pointercancel', () => { camCtrl.isDragging = camCtrl.isPanning = isTerraformDragging = false; });
   window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
 
@@ -2993,7 +2994,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
 
 
   // -------------------- FLOATING THOUGHT & SPEECH BUBBLES SYSTEM --------------------
-  let bubblesEnabled = true;
+  let bubblesEnabled = false;
   const bubblesLayer = document.getElementById('thought-bubbles-layer');
   const btnToggleBubbles = document.getElementById('btn-toggle-bubbles');
   if (btnToggleBubbles) {
@@ -4728,22 +4729,6 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
 
 
   // -------------------- COLLAPSIBLE & HIDEABLE HUD CONTROLLER --------------------
-  document.querySelectorAll('.glass-card').forEach((card) => {
-    if (card.id === 'inspector-card') return;
-    const header = card.querySelector('.card-header');
-    if (!header || header.querySelector('.btn-collapse-card')) return;
-    const btn = document.createElement('button');
-    btn.className = 'btn-collapse-card';
-    btn.textContent = 'พับ —';
-    btn.title = 'พับ/ขยายหน้าต่างนี้';
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isCollapsed = card.classList.toggle('collapsed');
-      btn.textContent = isCollapsed ? 'ขยาย +' : 'พับ —';
-    });
-    header.appendChild(btn);
-  });
-
   let allHudHidden = false;
   const btnAllHud = document.getElementById('btn-toggle-all-hud');
   const btnTopHud = document.getElementById('btn-toggle-top-hud');
@@ -4811,22 +4796,6 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     camCtrl.targetTheta = 0.52;
     camCtrl.targetPhi = 0.96;
   });
-
-  // Auto-tuck side panels on mobile viewports so the 3D island is unobstructed on phones!
-  function checkMobilePanelDefaults() {
-    const isMobileView = window.innerWidth <= 960 || window.innerHeight <= 540;
-    const lp = document.getElementById('left-panel');
-    const rp = document.getElementById('right-panel');
-    if (isMobileView && lp && rp && !lp.dataset.mobileInit) {
-      lp.dataset.mobileInit = '1';
-      lp.classList.add('hud-panel-hidden-left');
-      rp.classList.add('hud-panel-hidden-right');
-      if (btnLeftHud) btnLeftHud.classList.remove('active');
-      if (btnRightHud) btnRightHud.classList.remove('active');
-    }
-  }
-  checkMobilePanelDefaults();
-  window.addEventListener('resize', checkMobilePanelDefaults);
 
   // Full Multi-Touch Support on WebGL Canvas (1-Finger Orbit/Cast/Tap, 2-Finger Pinch-Zoom & 2-Finger Pan)
   let touchMode = null; // 'single' | 'pinch'

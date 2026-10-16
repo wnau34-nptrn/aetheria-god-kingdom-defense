@@ -1,38 +1,37 @@
 <!DOCTYPE html>
-<html lang="th">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<link rel="icon" href="data:," />
-<title>AETHERIA: 3D Floating Island God Simulator & Kingdom Defense</title>
+<html lang="th"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="icon" href="data:,">
+<title>AETHERIA: 3D Floating Island God Simulator &amp; Kingdom Defense</title>
 
 </head>
-<body>
+<body class="bubbles-hidden">
 <canvas id="game-canvas"></canvas>
 <div id="screen-flash"></div>
 <div id="thought-bubbles-layer"></div>
 <div id="dilemma-toast"></div>
 <div id="dilemma-overlay">
-  <div id="dilemma-modal">
+  <div id="dilemma-modal" role="dialog" aria-modal="true" aria-labelledby="dl-title">
     <div class="dl-badge-row" style="flex-wrap:wrap; gap:6px;">
       <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
         <span class="dl-category" id="dl-category">⚡ เหตุการณ์ตัดสินใจแห่งองค์เทพ</span>
-        <div id="dl-scene-tabs" style="display:flex; gap:4px;" title="คลิกเพื่อสลับชมฉากเหตุการณ์และตัวละคร NPC ทั้ง 5 เรื่องราว">
+
+      <details class="event-stories"><summary>เรื่องราวอื่น</summary><div id="dl-scene-tabs" style="display:flex; gap:4px;" title="คลิกเพื่อสลับชมฉากเหตุการณ์และตัวละคร NPC ทั้ง 5 เรื่องราว">
           <button class="btn-mini dl-tab" data-dl-idx="0" style="padding:2px 7px; font-size:10.5px;">1🍎 ชาวนา</button>
           <button class="btn-mini dl-tab" data-dl-idx="1" style="padding:2px 7px; font-size:10.5px;">2⚖️ สภาเมือง</button>
           <button class="btn-mini dl-tab" data-dl-idx="2" style="padding:2px 7px; font-size:10.5px;">3🎪 เรือเหาะ</button>
           <button class="btn-mini dl-tab" data-dl-idx="3" style="padding:2px 7px; font-size:10.5px;">4🔮 ศิลาเทพ</button>
           <button class="btn-mini dl-tab" data-dl-idx="4" style="padding:2px 7px; font-size:10.5px;">5🛡️ แม่ทัพ</button>
-        </div>
-      </div>
-      <div style="display:flex; align-items:center; gap:6px;">
-        <input type="file" id="custom-asset-input" accept="image/*" style="display:none;" />
+        </div></details></div>
+
+    <details class="event-tools"><summary>ภาพและมุมมอง</summary><div style="display:flex; align-items:center; gap:6px;">
+        <input type="file" id="custom-asset-input" accept="image/*" style="display:none;">
         <button class="btn-mini active" id="btn-toggle-art-mode" title="สลับระหว่างภาพ AI เหมือนจริง (Realistic AI Art) กับภาพวาด 2D Vector" style="padding:2px 8px; color:#34d399; border-color:rgba(52,211,153,0.5);">✨ ภาพ: AI เหมือนจริง</button>
         <button class="btn-mini" id="btn-upload-scene-img" title="นำเข้าไฟล์ภาพของคุณเอง (PNG/JPG/WebP) เพื่อใช้เป็นภาพฉากหรือพอร์ตเทรต NPC ในเหตุการณ์นี้" style="padding:2px 8px; color:#fde047; border-color:rgba(251,191,36,0.5);">🖼️ นำเข้ารูปเอง</button>
         <button class="btn-mini" id="btn-peek-3d-scene" title="สลับโหมดโปร่งแสงเพื่อส่องดูสถานที่เกิดเหตุจริงในโลก 3 มิติ" style="padding:2px 8px; color:#38bdf8; border-color:rgba(56,189,248,0.45);">🎥 ส่องฉาก 3D จริง</button>
-        <button class="btn-mini" id="btn-close-dilemma" title="ปิดหน้าต่างนี้ไว้ตัดสินใจภายหลัง [Esc]" style="padding:2px 7px; color:#fda4af; border-color:rgba(251,113,133,0.4);">✕ ปิด [Esc]</button>
-      </div>
-    </div>
+
+      </div></details><button class="btn-mini" id="btn-close-dilemma" title="ปิดหน้าต่างนี้ไว้ตัดสินใจภายหลัง [Esc]" style="padding:2px 7px; color:#fda4af; border-color:rgba(251,113,133,0.4);" aria-label="ปิดเหตุการณ์">ปิด</button></div>
     <div class="dl-body-grid">
       <div class="dl-visual-pane">
         <canvas id="dl-scene-canvas" width="320" height="310"></canvas>
@@ -65,65 +64,46 @@
 </div>
 <div id="siege-banner"><span>⚠️ รัตติกาลมาเยือน! ฝูงอสูรบุกจากประตูมิติฝั่งตะวันออกเฉียงเหนือ!</span><button class="btn-mini" id="btn-jump-battle" style="background:#be123c; color:#fff; border-color:#fda4af;">⚔️ กล้องไปดูจุดปะทะ</button></div>
 
-<div id="hud-master-control" title="ควบคุมการซ่อน/แสดง HUD ทั้งหมด">
-  <button class="btn-mini" id="btn-toggle-all-hud" style="color:#fbbf24; border-color:rgba(251,191,36,0.5);">👁️ ซ่อน HUD ทั้งหมด [H]</button>
-  <button class="btn-mini active" id="btn-toggle-bubbles" title="ซ่อน/แสดงกล่องความคิดชาวบ้าน">💭 ความคิด</button>
-  <button class="btn-mini active" id="btn-toggle-top-hud" title="ซ่อน/แสดงแถบด้านบน">บน</button>
-  <button class="btn-mini active" id="btn-toggle-left-hud" title="ซ่อน/แสดงแผงด้านซ้าย">ซ้าย</button>
-  <button class="btn-mini active" id="btn-toggle-right-hud" title="ซ่อน/แสดงแผงด้านขวา">ขวา</button>
-  <button class="btn-mini active" id="btn-toggle-bottom-hud" title="ซ่อน/แสดงแถบพลังด้านล่าง">ล่าง</button>
-</div>
+<div id="hud-master-control" aria-label="เมนูเกม"><button class="btn-mini nav-button" id="btn-toggle-left-hud" title="เปิดสถานะอาณาจักร"><span data-icon="crown"></span><span>อาณาจักร</span></button><button class="btn-mini nav-button" id="btn-toggle-right-hud" title="เปิดแผนที่และบันทึก"><span data-icon="map"></span><span>แผนที่</span></button><button class="btn-mini nav-button" id="btn-trigger-dilemma" title="เปิดดูและตัดสินใจเหตุการณ์ของชาวบ้านและอาณาจักร"><span data-icon="scroll"></span><span>เหตุการณ์</span></button><button id="btn-menu" class="btn-mini nav-button" aria-controls="game-menu" aria-expanded="false"><span data-icon="menu"></span><span>เมนู</span></button></div>
 
 <div id="mobile-cam-controls" title="ปุ่มซูมและรีเซ็ตมุมกล้องสำหรับมือถือ">
-  <button class="btn-mob-cam" id="btn-zoom-in" title="ซูมเข้า">➕</button>
-  <button class="btn-mob-cam" id="btn-zoom-out" title="ซูมออก">➖</button>
-  <button class="btn-mob-cam" id="btn-mob-reset-cam" title="รีเซ็ตมุมกล้อง">🧭</button>
+  <button class="btn-mob-cam" id="btn-zoom-in" title="ซูมเข้า" aria-label="ซูมเข้า"><span data-icon="plus"></span></button>
+  <button class="btn-mob-cam" id="btn-zoom-out" title="ซูมออก" aria-label="ซูมออก"><span data-icon="minus"></span></button>
+  <button class="btn-mob-cam" id="btn-mob-reset-cam" title="รีเซ็ตมุมกล้อง" aria-label="รีเซ็ตกล้อง"><span data-icon="target"></span></button>
 </div>
 <div id="top-bar">
   <div class="brand-title">
-    <span>🏛️ AETHERIA CIV</span>
-    <span id="era-top-badge" style="font-size:11.5px; color:#fde047; font-weight:700; background:rgba(251,191,36,0.18); padding:2px 9px; border-radius:999px; border:1px solid rgba(251,191,36,0.45);">🔥 ยุคที่ 1: ชนเผ่าดึกดำบรรพ์</span>
+    <span>AETHERIA</span>
+    <span id="era-top-badge">🔥 ยุคที่ 1: ชนเผ่าดึกดำบรรพ์</span>
   </div>
   <div class="clock-widget">
-    <span id="day-counter" style="font-weight:800; color:#fbbf24;">วันที่ 1</span>
-    <span id="clock-display" style="font-family:monospace; font-size:14px; font-weight:700;">08:00</span>
+    <span id="day-counter">วันที่ 1</span>
+    <span id="clock-display" aria-label="เวลาในเกม">08:00</span>
     <span id="phase-badge" class="phase-pill">☀️ กลางวัน (Day)</span>
   </div>
   <div class="speed-controls">
-    <button class="btn-mini" data-speed="0">⏸</button>
-    <button class="btn-mini active" data-speed="1">1x</button>
-    <button class="btn-mini" data-speed="2.5">2.5x</button>
-    <button class="btn-mini" data-speed="5">5x</button>
+    <button class="btn-mini" data-speed="0" aria-label="หยุดเวลา"><span data-icon="pause"></span></button>
+    <button class="btn-mini active" data-speed="1" aria-label="ความเร็ว 1 เท่า">1x</button>
+    <button class="btn-mini" data-speed="2.5" aria-label="ความเร็ว 2.5 เท่า">2.5x</button>
+    <button class="btn-mini" data-speed="5" aria-label="ความเร็ว 5 เท่า">5x</button>
   </div>
 </div>
 
-<div id="era-dock" title="คลิกเพื่อสลับพัฒนายุคอารยธรรม หรือข้ามเวลา">
-  <span style="font-size:11px; color:#cbd5e1; font-weight:600; margin-right:2px;">🏛️ ยุค:</span>
-  <button class="btn-mini active" data-era="1">⛺ ยุค 1 ชนเผ่า</button>
-  <button class="btn-mini" data-era="2">🌾 ยุค 2 เกษตรกรรม</button>
-  <button class="btn-mini" data-era="3">🏰 ยุค 3 เมืองการค้า</button>
-  <button class="btn-mini" data-era="4">✨ ยุค 4 จักรวรรดิเวท</button>
-  <span style="color:rgba(148,163,184,0.35); margin:0 3px;">|</span>
-  <button class="btn-mini" id="btn-jump-day">☀️ กลางวัน</button>
-  <button class="btn-mini" id="btn-jump-night">🌙 กลางคืน</button>
-  <button class="btn-mini" id="btn-regen-island" title="สุ่มสร้างเกาะใหม่และเริ่มยุคที่ 1">🎲 เกาะใหม่</button>
-  <button class="btn-mini" id="btn-trigger-dilemma" title="เปิดดูและตัดสินใจเหตุการณ์ของชาวบ้านและอาณาจักร" style="background:rgba(245,158,11,0.25); color:#fde047; border-color:#fbbf24;">📜 เหตุการณ์!</button>
-  <button class="btn-mini" id="btn-save-game" title="บันทึกทรัพยากรและยุคลงเครื่อง (ยังไม่รวมโลกและยูนิต)" style="color:#34d399; border-color:rgba(52,211,153,0.4);">💾 เซฟ</button>
-</div>
 
-<div id="left-panel" class="side-panel">
+
+<div id="left-panel" class="side-panel interface-drawer hud-panel-hidden-left" role="dialog" aria-labelledby="left-panel-title"><header class="drawer-heading"><div><span class="drawer-eyebrow">AETHERIA</span><h2 id="left-panel-title">อาณาจักรของคุณ</h2></div><button class="icon-button" data-close-drawer="" aria-label="ปิดแผง"><span data-icon="close"></span></button></header>
   <div class="glass-card">
     <div class="card-header">
-      <span>👑 สถานะอาณาจักร</span>
+      <span>ทรัพยากรและประชากร</span>
       <span id="kingdom-Status-badge" style="color:#34d399; font-size:11px;">สงบสุข</span>
     </div>
     <div class="stats-grid">
-      <div class="stat-box"><span class="stat-label">👥 ประชากร</span><span class="stat-val" id="stat-pop">12 / 18</span></div>
-      <div class="stat-box"><span class="stat-label">⚔️ ทหารองครักษ์</span><span class="stat-val" id="stat-soldiers" style="color:#38bdf8;">4</span></div>
-      <div class="stat-box"><span class="stat-label">🍎 อาหาร (ผลไม้)</span><span class="stat-val" id="stat-food" style="color:#fb7185;">60</span></div>
-      <div class="stat-box"><span class="stat-label">🪵 ไม้ซุง</span><span class="stat-val" id="stat-wood" style="color:#fbbf24;">55</span></div>
-      <div class="stat-box"><span class="stat-label">⛏️ แร่ศิลา</span><span class="stat-val" id="stat-ore" style="color:#cbd5e1;">45</span></div>
-      <div class="stat-box"><span class="stat-label">🏠 บ้าน / 🗼 ป้อม</span><span class="stat-val" id="stat-buildings">3 / 2</span></div>
+      <div class="stat-box"><span class="stat-label">ประชากร</span><span class="stat-val" id="stat-pop">12 / 18</span></div>
+      <div class="stat-box"><span class="stat-label">ทหาร</span><span class="stat-val" id="stat-soldiers" style="color:#38bdf8;">4</span></div>
+      <div class="stat-box"><span class="stat-label">อาหาร</span><span class="stat-val" id="stat-food" style="color:#fb7185;">60</span></div>
+      <div class="stat-box"><span class="stat-label">ไม้</span><span class="stat-val" id="stat-wood" style="color:#fbbf24;">55</span></div>
+      <div class="stat-box"><span class="stat-label">แร่ศิลา</span><span class="stat-val" id="stat-ore" style="color:#cbd5e1;">45</span></div>
+      <div class="stat-box"><span class="stat-label">บ้าน / หอคอย</span><span class="stat-val" id="stat-buildings">3 / 2</span></div>
     </div>
     <div class="faith-bar-wrap">
       <div class="faith-bar-top">
@@ -137,29 +117,29 @@
     </div>
     <div class="faith-bar-wrap">
       <div class="faith-bar-top">
-        <span style="color:#fde047; font-weight:700;">✨ พลังศรัทธาพระเจ้า (Divine Faith)</span>
+        <span style="color:#fde047; font-weight:700;">✨ พลังศรัทธา</span>
         <span id="stat-faith" style="font-weight:800; color:#fef08a;">120 / 200</span>
       </div>
       <div class="progress-track"><div class="progress-fill" id="faith-bar-fill" style="width:60%;"></div></div>
     </div>
     <div style="display:flex; gap:6px; margin-top:9px;">
-      <button class="btn-mini" id="btn-spawn-villager" style="flex:1; padding:6px;">✨ เสกชาวบ้าน (-20 ศรัทธา)</button>
-      <button class="btn-mini" id="btn-train-soldier" style="flex:1; padding:6px;">🛡️ แต่งตั้งทหาร (-25 ศรัทธา)</button>
+      <button class="btn-mini" id="btn-spawn-villager" style="flex:1; padding:6px;">เพิ่มชาวบ้าน · 20 ศรัทธา</button>
+      <button class="btn-mini" id="btn-train-soldier" style="flex:1; padding:6px;">แต่งตั้งทหาร · 25 ศรัทธา</button>
     </div>
   </div>
 
   <div class="glass-card">
     <div class="card-header">
-      <span>🧠 สถานะชีวิตชาวบ้าน (AI)</span>
+      <span>ชีวิตชาวบ้าน</span>
       <span id="ai-active-count" style="color:#94a3b8; font-size:11px;">12 ยูนิต</span>
     </div>
     <div class="state-list">
-      <div class="state-row"><span><i class="state-dot" style="background:#fb7185;"></i>🌾 ทำนา / ตลาด / ประมง / หิว (Daily Life)</span><strong id="st-forage">0</strong></div>
-      <div class="state-row"><span><i class="state-dot" style="background:#fbbf24;"></i>🐎 ขับเกวียน / ตัดไม้ / ขุดแร่ (Carts & Work)</span><strong id="st-gather">0</strong></div>
-      <div class="state-row"><span><i class="state-dot" style="background:#34d399;"></i>👧 เด็กวิ่งเล่น / ก่อสร้างและซ่อมแซม</span><strong id="st-build">0</strong></div>
-      <div class="state-row"><span><i class="state-dot" style="background:#fde047;"></i>จุดไฟเข้าบ้าน / สวดภาวนา (Shelter)</span><strong id="st-shelter">0</strong></div>
-      <div class="state-row"><span><i class="state-dot" style="background:#38bdf8;"></i>ถือคบเพลิงลาดตระเวน / ตั้งแถวรบ</span><strong id="st-patrol">0</strong></div>
-      <div class="state-row"><span><i class="state-dot" style="background:#c084fc;"></i>👾 มอนสเตอร์บุกจากประตูมิติ</span><strong id="st-monsters" style="color:#fb7185;">0</strong></div>
+      <div class="state-row"><span>หาอาหาร / ประมง</span><strong id="st-forage">0</strong></div>
+      <div class="state-row"><span>ขนส่ง / เก็บทรัพยากร</span><strong id="st-gather">0</strong></div>
+      <div class="state-row"><span>ก่อสร้าง / ซ่อมแซม</span><strong id="st-build">0</strong></div>
+      <div class="state-row"><span>พักพิง / ภาวนา</span><strong id="st-shelter">0</strong></div>
+      <div class="state-row"><span>ลาดตระเวน / ต่อสู้</span><strong id="st-patrol">0</strong></div>
+      <div class="state-row"><span>อสูรบนเกาะ</span><strong id="st-monsters" style="color:#fb7185;">0</strong></div>
     </div>
   </div>
 
@@ -168,15 +148,15 @@
 <div class="glass-card" id="inspector-card">
   <div class="card-header">
     <span id="insp-title">🔍 ข้อมูลยูนิตที่เลือก</span>
-    <button class="btn-mini" id="btn-close-insp" style="padding:1px 6px;">✕</button>
+    <button class="btn-mini" id="btn-close-insp" style="padding:1px 6px;" aria-label="ปิดข้อมูลที่เลือก">✕</button>
   </div>
   <div id="insp-body" style="font-size:12px; line-height:1.55; color:#e2e8f0;"></div>
 </div>
 
-<div id="right-panel" class="side-panel">
+<div id="right-panel" class="side-panel interface-drawer hud-panel-hidden-right" role="dialog" aria-labelledby="right-panel-title"><header class="drawer-heading"><div><span class="drawer-eyebrow">AETHERIA</span><h2 id="right-panel-title">เกาะและบันทึก</h2></div><button class="icon-button" data-close-drawer="" aria-label="ปิดแผง"><span data-icon="close"></span></button></header>
   <div class="glass-card" id="minimap-wrap">
     <div class="card-header">
-      <span>🗺️ เรดาร์แผนที่เกาะ & สถิติ</span>
+      <span>แผนที่เกาะ</span>
       <span class="hide-on-mob" style="font-size:10px; color:#fde047;">คลิกแผนที่=วาร์ป</span>
     </div>
     <div style="display:flex; gap:8px; align-items:center;">
@@ -197,22 +177,10 @@
     </div>
   </div>
 
-  <div class="glass-card">
-    <div class="card-header">
-      <span>🎵 ระบบสังเคราะห์เสียง (Web Audio Synth)</span>
-      <button class="btn-mini" id="btn-toggle-audio">🔊 เปิดเสียง</button>
-    </div>
-    <div class="audio-row"><span>🌬️ เสียงลมบนเกาะลอยฟ้า</span><input type="range" id="vol-wind" min="0" max="100" value="55" /></div>
-    <div class="audio-row"><span>🌊 เสียงแม่น้ำและน้ำตก</span><input type="range" id="vol-water" min="0" max="100" value="65" /></div>
-    <div class="audio-row"><span>🔔 เสียงระฆัง & เวทมนตร์</span><input type="range" id="vol-sfx" min="0" max="100" value="75" /></div>
-    <div style="display:flex; gap:6px; margin-top:8px;">
-      <button class="btn-mini" id="btn-ring-bell" style="flex:1;">🔔 ลั่นระฆังหมู่บ้าน</button>
-      <button class="btn-mini" id="btn-cam-reset" style="flex:1;">🎥 รีเซ็ตมุมกล้อง</button>
-    </div>
-  </div>
+
 
   <div class="glass-card">
-    <div class="card-header"><span>📜 บันทึกเหตุการณ์ (Kingdom Chronicle)</span></div>
+    <div class="card-header"><span>บันทึกเหตุการณ์</span></div>
     <div id="event-log"></div>
   </div>
 </div>
@@ -220,28 +188,28 @@
 <div id="god-dock-wrapper">
   <div id="kingdom-readout" aria-label="สถานการณ์อาณาจักร">
     <div class="quick-resources">
-      <span>✨ ศรัทธา <strong id="quick-faith">60</strong></span>
-      <span>🍎 อาหาร <strong id="quick-food">35</strong></span>
-      <span>👥 คน <strong id="quick-pop">7</strong></span>
-      <span>⚔️ อสูร <strong id="quick-enemies">0</strong></span>
+      <span><span data-icon="spark"></span><span class="resource-name">ศรัทธา</span><strong id="quick-faith">60</strong></span>
+      <span><span data-icon="apple"></span><span class="resource-name">อาหาร</span><strong id="quick-food">35</strong></span>
+      <span><span data-icon="people"></span><span class="resource-name">คน</span><strong id="quick-pop">7</strong></span>
+      <span><span data-icon="swords"></span><span class="resource-name">อสูร</span><strong id="quick-enemies">0</strong></span>
     </div>
     <div class="threat-line"><span id="night-countdown"></span><span id="night-guidance" role="status"></span></div>
   </div>
-  <div id="placement-feedback" hidden role="status"></div>
+  <div id="placement-feedback" hidden="" role="status"></div>
   <div id="sub-power-bar">
     <span id="sub-power-hint" style="color:#fde047; font-weight:600;">โหมดปรับพื้นดิน:</span>
     <button class="btn-mini active" id="btn-terra-raise">⛰️ ยกภูเขาขึ้น</button>
     <button class="btn-mini" id="btn-terra-lower">🌊 ขุดร่องน้ำลง</button>
     <span style="color:#94a3b8;">รัศมี:</span>
-    <input type="range" id="terra-radius" min="4" max="15" value="8" style="width:80px; accent-color:#fbbf24;" />
+    <input type="range" id="terra-radius" min="4" max="15" value="8" style="width:80px; accent-color:#fbbf24;">
   </div>
   <div id="god-dock">
-    <button class="power-btn active" data-power="observe"><span class="power-key">[1]</span><span class="power-icon">👁️</span><span class="power-name">สำรวจ / หมุนกล้อง</span><span class="power-desc">คลิกดูสถานะ AI</span></button>
-    <button class="power-btn" data-power="rain"><span class="power-key">[2]</span><span class="power-cost">15 ✨</span><span class="power-icon">🌧️</span><span class="power-name">เสกฝนเร่งโต</span><span class="power-desc">ต้นไม้โตไว+ผลไม้ดก</span></button>
-    <button class="power-btn" data-power="terraform"><span class="power-key">[3]</span><span class="power-cost">2 ✨</span><span class="power-icon">⛰️</span><span class="power-name">ปรับพื้นดิน</span><span class="power-desc">ยกภูเขา / ขุดร่องน้ำ</span></button>
-    <button class="power-btn" data-power="meteor"><span class="power-key">[4]</span><span class="power-cost">35 ✨</span><span class="power-icon">☄️</span><span class="power-name">เสกอุกกาบาต</span><span class="power-desc">พุ่งชน+คลื่นกระแทก</span></button>
-    <button class="power-btn" data-power="lightning"><span class="power-key">[5]</span><span class="power-cost">20 ✨</span><span class="power-icon">⚡</span><span class="power-name">สายฟ้าฟาด</span><span class="power-desc">ผ่ามอนสเตอร์เป็นลูกโซ่</span></button>
-    <button class="power-btn" data-power="miracle"><span class="power-key">[6]</span><span class="power-cost">25 ✨</span><span class="power-icon">🌟</span><span class="power-name">พรสร้างหอคอย</span><span class="power-desc">ฮีลหมู่+สร้างป้อมทันที</span></button>
+    <button class="power-btn active" data-power="observe" title="[1]👁️สำรวจ / หมุนกล้องคลิกดูสถานะ AI"><span class="power-key">1</span><span class="power-icon"><span data-icon="eye"></span></span><span class="power-name">สำรวจ</span><span class="power-desc">คลิกดูสถานะ AI</span></button>
+    <button class="power-btn" data-power="rain" title="[2]15 ✨🌧️เสกฝนเร่งโตต้นไม้โตไว+ผลไม้ดก"><span class="power-key">2</span><span class="power-cost">15 ✨</span><span class="power-icon"><span data-icon="rain"></span></span><span class="power-name">เรียกฝน</span><span class="power-desc">ต้นไม้โตไว+ผลไม้ดก</span></button>
+    <button class="power-btn" data-power="terraform" title="[3]2 ✨⛰️ปรับพื้นดินยกภูเขา / ขุดร่องน้ำ"><span class="power-key">3</span><span class="power-cost">2 ✨</span><span class="power-icon"><span data-icon="mountain"></span></span><span class="power-name">ปรับพื้นดิน</span><span class="power-desc">ยกภูเขา / ขุดร่องน้ำ</span></button>
+    <button class="power-btn" data-power="meteor" title="[4]35 ✨☄️เสกอุกกาบาตพุ่งชน+คลื่นกระแทก"><span class="power-key">4</span><span class="power-cost">35 ✨</span><span class="power-icon"><span data-icon="meteor"></span></span><span class="power-name">อุกกาบาต</span><span class="power-desc">พุ่งชน+คลื่นกระแทก</span></button>
+    <button class="power-btn" data-power="lightning" title="[5]20 ✨⚡สายฟ้าฟาดผ่ามอนสเตอร์เป็นลูกโซ่"><span class="power-key">5</span><span class="power-cost">20 ✨</span><span class="power-icon"><span data-icon="bolt"></span></span><span class="power-name">สายฟ้า</span><span class="power-desc">ผ่ามอนสเตอร์เป็นลูกโซ่</span></button>
+    <button class="power-btn" data-power="miracle" title="[6]25 ✨🌟พรสร้างหอคอยฮีลหมู่+สร้างป้อมทันที"><span class="power-key">6</span><span class="power-cost">25 ✨</span><span class="power-icon"><span data-icon="spark"></span></span><span class="power-name">สร้างหอคอย</span><span class="power-desc">ฮีลหมู่+สร้างป้อมทันที</span></button>
   </div>
 </div>
 
@@ -250,5 +218,30 @@
 <!-- Main Game Application -->
 
 <script type="module" src="/src/main.js"></script>
-</body>
-</html>
+
+
+<section id="game-menu" class="interface-drawer" role="dialog" aria-labelledby="menu-title" hidden=""><header class="drawer-heading"><div><span class="drawer-eyebrow">AETHERIA</span><h2 id="menu-title">เมนูเกม</h2></div><button class="icon-button" data-close-drawer="" aria-label="ปิดเมนู"><span data-icon="close"></span></button></header><section class="menu-section"><h3>บันทึกการเดินทาง</h3><p>บันทึกทรัพยากรและยุคบนเครื่องนี้<br>โลกและยูนิตยังไม่รวมในบันทึก</p><button class="btn-mini" id="btn-save-game" title="บันทึกทรัพยากรและยุคลงเครื่อง (ยังไม่รวมโลกและยูนิต)" style="color:#34d399; border-color:rgba(52,211,153,0.4);">💾 เซฟ</button></section><div class="glass-card">
+    <div class="card-header">
+      <span>เสียงบรรยากาศ</span>
+      <button class="btn-mini" id="btn-toggle-audio">🔊 เปิดเสียง</button>
+    </div>
+    <div class="audio-row"><span>🌬️ เสียงลมบนเกาะลอยฟ้า</span><input type="range" id="vol-wind" min="0" max="100" value="55"></div>
+    <div class="audio-row"><span>🌊 เสียงแม่น้ำและน้ำตก</span><input type="range" id="vol-water" min="0" max="100" value="65"></div>
+    <div class="audio-row"><span>🔔 เสียงระฆัง &amp; เวทมนตร์</span><input type="range" id="vol-sfx" min="0" max="100" value="75"></div>
+    <div style="display:flex; gap:6px; margin-top:8px;">
+      <button class="btn-mini" id="btn-ring-bell" style="flex:1;">🔔 ลั่นระฆังหมู่บ้าน</button>
+      <button class="btn-mini" id="btn-cam-reset" style="flex:1;">🎥 รีเซ็ตมุมกล้อง</button>
+    </div>
+  </div><details class="menu-section"><summary>วิธีเล่นและปุ่มลัด</summary><div class="help-copy"><p>ลากบนเกาะเพื่อหมุนกล้อง · เลื่อนล้อเพื่อซูม<br>มือถือ: ลากหนึ่งนิ้ว · จีบสองนิ้วเพื่อซูม</p><p>เลือกพลังแล้วแตะพื้นเกาะเพื่อใช้<br>หอคอย: แตะค้างเพื่อเล็ง แล้วยกนิ้วเพื่อวาง</p><p>1–6 เลือกพลัง · H ซ่อนหน้าจอ · Esc ปิดแผง<br>หยุดเวลาได้ด้วยปุ่มพักด้านบน</p></div></details><details class="menu-section"><summary>การแสดงผล</summary><div class="display-options"><button class="btn-mini" id="btn-toggle-all-hud">👁️ ซ่อน HUD ทั้งหมด [H]</button><button class="btn-mini" id="btn-toggle-bubbles" title="ซ่อน/แสดงกล่องความคิดชาวบ้าน">💭 ความคิด</button><button class="btn-mini active" id="btn-toggle-top-hud" title="ซ่อน/แสดงแถบด้านบน">บน</button><button class="btn-mini active" id="btn-toggle-bottom-hud" title="ซ่อน/แสดงแถบพลังด้านล่าง">ล่าง</button></div></details><details class="menu-section"><summary>เครื่องมือโลกและยุค</summary><p>ข้ามเวลา เปลี่ยนยุค หรือสุ่มเกาะใหม่</p><div id="era-dock" title="คลิกเพื่อสลับพัฒนายุคอารยธรรม หรือข้ามเวลา">
+
+  <button class="btn-mini active" data-era="1">⛺ ยุค 1 ชนเผ่า</button>
+  <button class="btn-mini" data-era="2">🌾 ยุค 2 เกษตรกรรม</button>
+  <button class="btn-mini" data-era="3">🏰 ยุค 3 เมืองการค้า</button>
+  <button class="btn-mini" data-era="4">✨ ยุค 4 จักรวรรดิเวท</button>
+  <span style="color:rgba(148,163,184,0.35); margin:0 3px;">|</span>
+  <button class="btn-mini" id="btn-jump-day">☀️ กลางวัน</button>
+  <button class="btn-mini" id="btn-jump-night">🌙 กลางคืน</button>
+  <button class="btn-mini" id="btn-regen-island" title="สุ่มสร้างเกาะใหม่และเริ่มยุคที่ 1">🎲 เกาะใหม่</button>
+
+
+</div></details></section><div id="drawer-scrim" hidden=""></div></body></html>
