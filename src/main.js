@@ -11,7 +11,11 @@ function showStartupError(error) {
   document.body.appendChild(message);
 }
 // Keep a visible error when WebGL or shaders cannot start.
-import('./legacy/game.js').then(initializeInterface).catch(showStartupError);
+const fontsReady = document.fonts ? Promise.all([
+  document.fonts.load('400 14px "Aetheria Thai"', 'กขABC012'),
+  document.fonts.load('600 14px "Aetheria Thai"', 'กขABC012')
+]).catch(() => {}) : Promise.resolve();
+fontsReady.then(() => import('./legacy/game.js')).then(initializeInterface).catch(showStartupError);
 document.getElementById('game-canvas').addEventListener('webglcontextlost', (event) => {
   event.preventDefault();
   showStartupError(new Error('WebGL context lost; reload to restart.'));

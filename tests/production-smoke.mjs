@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 const evidence = process.env.GAME_SMOKE_EVIDENCE || `/tmp/aetheria-production-${Date.now()}`;
 await mkdir(evidence, { recursive: true });
 const root = resolve('dist'), prefix = '/aetheria-god-kingdom-defense/';
-const types = { '.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.json':'application/json', '.png':'image/png', '.svg':'image/svg+xml', '.ico':'image/x-icon' };
+const types = { '.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.json':'application/json', '.png':'image/png', '.svg':'image/svg+xml', '.ico':'image/x-icon', '.ttf':'font/ttf', '.woff':'font/woff' };
 let server, target = process.env.GAME_SMOKE_URL;
 if (!target) {
   server = createServer(async (req, res) => {
@@ -45,6 +45,7 @@ try {
     try {
       const response = await page.goto(target, {timeout:60000}); assert.equal(response.status(), 200);
       await page.waitForFunction(() => window.AETHERIA_API, null, {timeout:60000});
+      assert.equal(await page.evaluate(()=>(()=>{const faces=[...document.fonts].filter(f=>f.family.includes('Aetheria Thai'));return faces.length===4&&faces.every(f=>f.status==='loaded');})()),true);
       await page.click('[data-speed="0"]');
       const read = () => page.evaluate(() => {
         const a = AETHERIA_API;

@@ -1,3 +1,7 @@
+@font-face { font-family:'Aetheria Thai'; src:url('../assets/fonts/AetheriaLatin-Regular.woff') format('woff'); font-weight:400; font-style:normal; font-display:swap; unicode-range:U+0020-00FF,U+2000-206F,U+2190-21FF,U+25CC; }
+@font-face { font-family:'Aetheria Thai'; src:url('../assets/fonts/AetheriaLatin-Bold.woff') format('woff'); font-weight:600 900; font-style:normal; font-display:swap; unicode-range:U+0020-00FF,U+2000-206F,U+2190-21FF,U+25CC; }
+@font-face { font-family:'Aetheria Thai'; src:url('../assets/fonts/NotoSansThai-Regular.ttf') format('truetype'); font-weight:400; font-style:normal; font-display:swap; unicode-range:U+0E00-0E7F; }
+@font-face { font-family:'Aetheria Thai'; src:url('../assets/fonts/NotoSansThai-Bold.ttf') format('truetype'); font-weight:600 900; font-style:normal; font-display:swap; unicode-range:U+0E00-0E7F; }
 :root {
   color-scheme: dark;
   --surface: #101d28; --surface-raised: #1b2b36; --text-main: #edf2ee;
@@ -7,7 +11,7 @@
   --radius: 12px; --shadow: 0 6px 24px #0003;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { width: 100%; height: 100%; overflow: hidden; background: #0b1324; color: var(--text-main); font: 14px/1.5 'Leelawadee UI','Noto Sans Thai','Tahoma',system-ui,sans-serif; overscroll-behavior: none; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #0b1324; color: var(--text-main); font: 14px/1.5 'Aetheria Thai','Leelawadee UI','Noto Sans Thai','Tahoma',system-ui,sans-serif; overscroll-behavior: none; }
 button, input, summary { font: inherit; }
 button { cursor: pointer; }
 button, summary { -webkit-tap-highlight-color: transparent; }
