@@ -3022,6 +3022,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   function updateWorkerCommands() {
     const worker = state.selectedEntity;
     const visible = worker?.alive && worker.role === 'villager';
+    document.body.classList.toggle('worker-selected', !!visible);
     const bar = document.getElementById('worker-task-bar');
     const changed = bar.hidden !== !visible;
     bar.hidden = !visible;
