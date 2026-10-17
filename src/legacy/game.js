@@ -2144,9 +2144,8 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     createCentralTemple(era);
     createVoidPortal();
     createAncientRelicMonolith(-22, -20);
-    createSkyAirship(-6, 13.2, 14);
-    createHotAirBalloon(14, 14.8, 8, 0x0284c7, 0xfbbf24, 16, 12, 0.09, 0.8);
-    createHotAirBalloon(-18, 15.5, -6, 0x10b981, 0xf43f5e, 15, 11, -0.08, 2.5);
+    // Decorative aircraft obscure the playable island. Caravan trading is
+    // handled by its decision event independently of these scene decorations.
 
     // 2) Bridges across the River
     createVillageBridge(14.0, era);
