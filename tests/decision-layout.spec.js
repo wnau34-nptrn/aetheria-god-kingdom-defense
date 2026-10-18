@@ -19,12 +19,14 @@ test('all five decisions expose every answer with worker selection across five s
           await page.waitForFunction(()=>{const a=AETHERIA_API,t=a.camCtrl.target,v=a.cameraView.target;return Math.hypot(t.x-v.x,t.y-v.y,t.z-v.z)<1e-6;});
           const selectors=['#dl-choice-0','#dl-choice-1','#dl-choice-2','#btn-decision-continue'];
           if(viewport.height>540){
+            selectors.push('#btn-select-army','button[data-hud-view="auto"]','button[data-hud-view="city"]','button[data-hud-view="battle"]');
             selectors.push('#btn-train-soldier','#btn-spawn-villager','#btn-select-worker','[data-build="house"]','[data-build="tower"]','#btn-advance-era','#btn-zoom-in','#btn-zoom-out','#btn-mob-reset-cam');
             if(selected)for(const job of ['wood','ore','food','auto'])selectors.push(`[data-worker-resource="${job}"]`);
           }
           await expect.poll(()=>page.evaluate(selectors=>{
             const card=document.getElementById('decision-card'),dock=document.getElementById('god-dock-wrapper'),failures=[];
             if(card.hidden||card.scrollHeight>card.clientHeight+1)failures.push({cardFit:false,hidden:card.hidden,scroll:card.scrollHeight,client:card.clientHeight});
+            if(innerHeight>540&&card.getBoundingClientRect().bottom+2>document.getElementById('hud-view-bar').getBoundingClientRect().top)failures.push({cardOverlapsHUD:true});
             for(const selector of selectors){
               const button=document.querySelector(selector),r=button.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
               if(r.x<0||r.y<0||r.right>innerWidth+1||r.bottom>innerHeight+1||hit?.closest('button')!==button)failures.push({selector,rect:r.toJSON(),hit:hit?.outerHTML.slice(0,220)});

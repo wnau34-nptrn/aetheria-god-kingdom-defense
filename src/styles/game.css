@@ -396,23 +396,32 @@ body.drawer-open #decision-card { visibility:hidden; pointer-events:none; }
 @media (max-width:600px) and (min-height:541px) {
   body.decision-pending #mobile-cam-controls { flex-direction:row; }
   body.decision-pending #decision-card { max-height:calc(100dvh - var(--power-dock-height,240px) - 210px); }
-  body[data-hud-view="battle"] #decision-card .dl-choices,body.worker-selected #decision-card .dl-choices { flex-direction:row; }
-  body[data-hud-view="battle"] #decision-card .dl-choice-btn,body.worker-selected #decision-card .dl-choice-btn { flex:1;min-width:0;padding:7px 5px; }
-  body[data-hud-view="battle"] #decision-card .dl-choice-title,body.worker-selected #decision-card .dl-choice-title { flex-direction:column;align-items:flex-start;gap:2px; }
-  body[data-hud-view="battle"] #decision-card .dl-choice-effect,body.worker-selected #decision-card .dl-choice-effect { font-size:10px;line-height:1.4; }
+  #decision-card .dl-choices { flex-direction:row; }
+  #decision-card .dl-choice-btn { flex:1;min-width:0;padding:7px 5px; }
+  #decision-card .dl-choice-title { flex-direction:column;align-items:flex-start;gap:2px; }
+  #decision-card .dl-choice-effect { font-size:10px;line-height:1.4; }
 }
 @media (max-height:540px) and (orientation:landscape) {
   #dilemma-toast { top:auto; bottom:calc(var(--power-dock-height,120px) + 12px); }
 }
 
 @media (min-width:961px) and (min-height:541px) and (max-height:740px) {
-  body.worker-selected #decision-card { width:min(680px,calc(100vw - 36px)); }
-  body.worker-selected #decision-card .dl-choices { flex-direction:row; }
-  body.worker-selected #decision-card .dl-choice-btn { flex:1; min-width:0; }
+  #decision-card { top:70px;width:min(680px,calc(100vw - 36px));max-height:calc(100dvh - 84px); }
+  #decision-card .dl-choices { flex-direction:row; }
+  #decision-card .dl-choice-btn { flex:1; min-width:0; }
 }
 
 @media (min-width:601px) and (max-width:960px) and (min-height:541px) {
   #decision-card { top:70px; width:min(680px,calc(100vw - 24px)); max-height:calc(100dvh - 84px); }
   #decision-card .dl-choices { flex-direction:row; }
   #decision-card .dl-choice-btn { flex:1; min-width:0; }
+}
+
+@media (min-width:601px) and (min-height:541px) and (max-height:740px) {
+  body.decision-pending #god-dock-wrapper { gap:4px; }
+  body.decision-pending #kingdom-readout { padding:5px 8px; }
+  body.decision-pending #command-bar { padding:4px; }
+  body.decision-pending #command-bar .command-btn { min-height:40px;padding:3px 1px !important;gap:1px; }
+  body.decision-pending #god-dock { padding:4px; }
+  body.decision-pending #god-dock .power-btn { min-height:48px;padding:4px 1px;gap:2px; }
 }
