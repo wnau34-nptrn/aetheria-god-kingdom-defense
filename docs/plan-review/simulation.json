@@ -1,0 +1,132 @@
+{
+  "sourceCommit": "7bd3f97beb381e4b24ca5550eb981727c1db5465",
+  "method": "Seeded integration harness; renderer/audio stubbed. Diagnostic manipulation explicitly separated from UI browser review.",
+  "initial": {
+    "era": 1,
+    "people": {
+      "villager": 4,
+      "child": 1,
+      "soldier": 2
+    },
+    "buildings": {
+      "temple": 1,
+      "house": 3,
+      "tower": 1
+    },
+    "fields": 0,
+    "wagons": 0,
+    "livestock": 0,
+    "food": 35,
+    "wood": 20,
+    "ore": 15
+  },
+  "eras": [
+    {
+      "era": 2,
+      "people": {
+        "farmer": 2,
+        "fisherman": 1,
+        "child": 3,
+        "villager": 5,
+        "soldier": 3
+      },
+      "buildings": {
+        "temple": 1,
+        "house": 6,
+        "windmill": 1,
+        "tower": 2
+      },
+      "fields": 2,
+      "wagons": 1,
+      "livestock": 9,
+      "food": 35,
+      "wood": 20,
+      "ore": 15
+    },
+    {
+      "era": 3,
+      "people": {
+        "farmer": 4,
+        "merchant": 3,
+        "fisherman": 2,
+        "child": 4,
+        "villager": 5,
+        "soldier": 5
+      },
+      "buildings": {
+        "temple": 1,
+        "house": 10,
+        "windmill": 1,
+        "market": 4,
+        "tower": 3
+      },
+      "fields": 4,
+      "wagons": 2,
+      "livestock": 9,
+      "food": 35,
+      "wood": 20,
+      "ore": 15
+    },
+    {
+      "era": 4,
+      "people": {
+        "farmer": 4,
+        "merchant": 3,
+        "fisherman": 2,
+        "child": 6,
+        "villager": 7,
+        "soldier": 7
+      },
+      "buildings": {
+        "temple": 1,
+        "house": 12,
+        "windmill": 1,
+        "market": 4,
+        "tower": 4
+      },
+      "fields": 4,
+      "wagons": 3,
+      "livestock": 9,
+      "food": 35,
+      "wood": 20,
+      "ore": 15
+    }
+  ],
+  "transition": {
+    "originalUnitRetained": false,
+    "originalHouseRetained": false,
+    "originalTreeRetained": true,
+    "oldHouseHP": 31
+  },
+  "dayJobs": {
+    "GATHER": 4,
+    "PLAY": 1,
+    "PATROL": 2
+  },
+  "safeNight": {
+    "enemies": 0,
+    "jobs": {
+      "SHELTER": 5,
+      "NIGHT_DEFENSE": 2
+    }
+  },
+  "resumedDayJobs": {
+    "GATHER": 4,
+    "PLAY": 1,
+    "PATROL": 2
+  },
+  "speed5AutoAdvance": {
+    "era": 2,
+    "progress": 0.22931034482758617
+  },
+  "saveFields": [
+    "day",
+    "timeOfDay",
+    "food",
+    "wood",
+    "ore",
+    "faith",
+    "civEra",
+    "civProgress"
+  ]
+}

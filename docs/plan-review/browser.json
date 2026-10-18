@@ -1,0 +1,214 @@
+{
+  "sourceCommit": "7bd3f97beb381e4b24ca5550eb981727c1db5465",
+  "method": "Actual WebGL and normal HUD recruitment/night sandbox controls. Night shortcut is not a natural full-day playthrough. Browser extension/CUA tools unavailable in current tool catalog; repository Playwright used.",
+  "runs": [
+    {
+      "name": "desktop",
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "city": {
+        "era": 1,
+        "time": 8.210999999999999,
+        "people": 7,
+        "soldiers": 2,
+        "enemies": 0,
+        "threat": "calm",
+        "contacts": 0,
+        "commands": [
+          {
+            "id": "btn-train-soldier",
+            "text": "ทหาร +125 ศรัทธา",
+            "insideViewport": true,
+            "hittable": true
+          },
+          {
+            "id": "btn-spawn-villager",
+            "text": "ชาวบ้าน +120 ศรัทธา",
+            "insideViewport": true,
+            "hittable": true
+          },
+          {
+            "id": "btn-select-worker",
+            "text": "เลือกคนงานสั่งเก็บทรัพยากร",
+            "insideViewport": true,
+            "hittable": true
+          },
+          {
+            "id": "house",
+            "text": "สร้างบ้านไม้ 25 · แร่ 18",
+            "insideViewport": true,
+            "hittable": true
+          },
+          {
+            "id": "tower",
+            "text": "สร้างป้อมไม้ 25 · แร่ 18",
+            "insideViewport": true,
+            "hittable": true
+          },
+          {
+            "id": "btn-advance-era",
+            "text": "พัฒนายุคก้าวหน้า 0%",
+            "insideViewport": true,
+            "hittable": true
+          }
+        ],
+        "bodyClasses": "bubbles-hidden"
+      },
+      "combat": {
+        "era": 1,
+        "time": 20.937500000000174,
+        "people": 7,
+        "soldiers": 4,
+        "enemies": 7,
+        "threat": "combat",
+        "contacts": 3,
+        "commands": [
+          {
+            "id": "btn-train-soldier",
+            "text": "ทหาร +1ศรัทธา 13/25",
+            "insideViewport": true,
+            "hittable": true
+          },
+          {
+            "id": "btn-spawn-villager",
+            "text": "ชาวบ้าน +1ศรัทธา 13/20",
+            "insideViewport": true,
+            "hittable": true
+          },
+          {
+            "id": "btn-select-worker",
+            "text": "เลือกคนงานสั่งเก็บทรัพยากร",
+            "insideViewport": true,
+            "hittable": true
+          },
+          {
+            "id": "house",
+            "text": "สร้างบ้านไม้ 25 · แร่ 18",
+            "insideViewport": true,
+            "hittable": true
+          },
+          {
+            "id": "tower",
+            "text": "สร้างป้อมไม้ 25 · แร่ 18",
+            "insideViewport": true,
+            "hittable": true
+          },
+          {
+            "id": "btn-advance-era",
+            "text": "พัฒนายุคก้าวหน้า 1%",
+            "insideViewport": true,
+            "hittable": true
+          }
+        ],
+        "bodyClasses": "bubbles-hidden"
+      },
+      "errors": []
+    },
+    {
+      "name": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "city": {
+        "era": 1,
+        "time": 8.205499999999999,
+        "people": 7,
+        "soldiers": 2,
+        "enemies": 0,
+        "threat": "calm",
+        "contacts": 0,
+        "commands": [
+          {
+            "id": "btn-train-soldier",
+            "text": "ทหาร +125 ศรัทธา",
+            "insideViewport": true,
+            "hittable": true
+          },
+          {
+            "id": "btn-spawn-villager",
+            "text": "ชาวบ้าน +120 ศรัทธา",
+            "insideViewport": true,
+            "hittable": true
+          },
+          {
+            "id": "btn-select-worker",
+            "text": "เลือกคนงานสั่งเก็บทรัพยากร",
+            "insideViewport": true,
+            "hittable": true
+          },
+          {
+            "id": "house",
+            "text": "สร้างบ้านไม้ 25 · แร่ 18",
+            "insideViewport": true,
+            "hittable": true
+          },
+          {
+            "id": "tower",
+            "text": "สร้างป้อมไม้ 25 · แร่ 18",
+            "insideViewport": true,
+            "hittable": true
+          },
+          {
+            "id": "btn-advance-era",
+            "text": "พัฒนายุคก้าวหน้า 0%",
+            "insideViewport": true,
+            "hittable": true
+          }
+        ],
+        "bodyClasses": "bubbles-hidden"
+      },
+      "combat": {
+        "era": 1,
+        "time": 20.772500000000132,
+        "people": 7,
+        "soldiers": 4,
+        "enemies": 7,
+        "threat": "combat",
+        "contacts": 1,
+        "commands": [
+          {
+            "id": "btn-train-soldier",
+            "text": "ทหาร +1ศรัทธา 15/25",
+            "insideViewport": true,
+            "hittable": true
+          },
+          {
+            "id": "btn-spawn-villager",
+            "text": "ชาวบ้าน +1ศรัทธา 15/20",
+            "insideViewport": true,
+            "hittable": true
+          },
+          {
+            "id": "btn-select-worker",
+            "text": "เลือกคนงานสั่งเก็บทรัพยากร",
+            "insideViewport": true,
+            "hittable": true
+          },
+          {
+            "id": "house",
+            "text": "สร้างบ้านไม้ 25 · แร่ 18",
+            "insideViewport": true,
+            "hittable": true
+          },
+          {
+            "id": "tower",
+            "text": "สร้างป้อมไม้ 25 · แร่ 18",
+            "insideViewport": true,
+            "hittable": true
+          },
+          {
+            "id": "btn-advance-era",
+            "text": "พัฒนายุคก้าวหน้า 1%",
+            "insideViewport": true,
+            "hittable": true
+          }
+        ],
+        "bodyClasses": "bubbles-hidden"
+      },
+      "errors": []
+    }
+  ]
+}

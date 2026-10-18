@@ -1,0 +1,54 @@
+{
+  "reviewedAt": "2026-10-18",
+  "sourceCommit": "7bd3f97beb381e4b24ca5550eb981727c1db5465",
+  "changes": "Documentation and roadmap only",
+  "checks": {
+    "npm test": {
+      "result": "passed",
+      "nodeVersion": "24.19.0",
+      "reportedTestFileGroups": 12,
+      "failed": 0
+    },
+    "npm run build": {
+      "result": "passed",
+      "gameBundle": "game-BTcXFBzO.js"
+    },
+    "browserReview": {
+      "result": "passed",
+      "viewports": [
+        "1366x900",
+        "390x844 touch emulation"
+      ],
+      "normalHudRecruitment": true,
+      "nightShortcut": "sandbox menu",
+      "actualCombatContact": true,
+      "pageErrors": 0,
+      "coreCommandsVisibleAndHittable": 6
+    },
+    "seededSimulationReview": {
+      "result": "completed",
+      "seed": 18102026,
+      "eraPreviews": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "renderer": "stubbed"
+    }
+  },
+  "limits": [
+    "No natural full-day or four-era browser playthrough in this review",
+    "Full 28-scenario browser regression suite not rerun",
+    "No physical mobile device, hardware FPS or human fun/balance measurement",
+    "Screenshots, diagnostic runners and full logs are in task workspace attachments"
+  ],
+  "sourceHashes": {
+    "src/legacy/game.js": "6c636d1ac6b2bb27c5ab48f63d0e91b8032fe68096a33d04e9e4022677d45226",
+    "src/legacy/webgl-engine.js": "7ace52b1164db7963fb90bf35db818c15011a164bdb124ef5aceb5d81456d3b9",
+    "src/systems/economy.js": "4d6852f59088e13ebc188325ad69ff8125b3e8dcf43ced3140ba976231ea845b",
+    "src/systems/combat.js": "329b206f23f36218a755ada50f2f0caecb54c18a6b7eb2874a10882cebbbb842",
+    "src/systems/progress-save.js": "f2a8da4a71ddd63a56bd1868d09fccf85ce98c8d5558449ad59fd999d5ffa7eb",
+    "index.html": "390bcbb4822269838f523a8fd75b47dfc5bc353d401c5a76c15b9f95d1d7306c"
+  }
+}

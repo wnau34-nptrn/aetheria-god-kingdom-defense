@@ -16,6 +16,8 @@ The original uploaded HTML is preserved under `original/`, with SHA-256 recorded
 
 ## Proposed boundaries
 
+The current product sequence is documented in [ROADMAP.th.md](ROADMAP.th.md), based on the [October 18 system review](CURRENT_REVIEW.th.md). Extract serializable entity identity, progression and world persistence first, then add orders/threat state and contextual DOM HUDs. Existing economy and combat helpers remain the starting point. Treat render migration as a separate parity spike rather than a prerequisite for issuing army orders.
+
 | Module | Owns | Must not own |
 |---|---|---|
 | simulation/world | Serializable IDs, resources, positions, health, orders, RNG | DOM nodes, WebGL objects |
@@ -50,4 +52,4 @@ Use instancing for repeated foliage/props, spatial indexing for AI neighbors, di
 
 ## Hosting
 
-`npm run build` emits static `dist/`. Vite `base: './'` supports serving from a repository subpath such as GitHub Pages. No backend or remote gameplay service is required. CI validates builds/tests; it does not automatically publish a live site. Repository upload and site hosting are separate actions.
+`npm run build` emits static `dist/`. Vite `base: './'` supports serving from a repository subpath such as GitHub Pages. No backend or remote gameplay service is required. The current CI validates builds/tests and production-path smoke checks, deploys successful `main` builds to Pages, then verifies the hosted game against the expected commit. See [PAGES.th.md](PAGES.th.md).
