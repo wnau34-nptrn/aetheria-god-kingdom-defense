@@ -1,9 +1,10 @@
+import {enableDirectControls} from './helpers/controls-mode.js';
 import { test, expect } from '@playwright/test';
 
 test('a fisherman produces food from the walkable river bank in real WebGL', async ({ page }) => {
   await page.setViewportSize({ width: 400, height: 300 });
   const errors = []; page.on('pageerror', e => errors.push(e.message));
-  await page.goto('/'); await page.waitForFunction(() => window.AETHERIA_API);
+  await page.goto('/'); await page.waitForFunction(() => window.AETHERIA_API);await enableDirectControls(page);
   await page.click('[data-speed="0"]');
   // Controlled era-2 work fixture; this is not natural progression into the era.
   const start = await page.evaluate(() => {
@@ -24,7 +25,7 @@ test('a fisherman produces food from the walkable river bank in real WebGL', asy
 test('the river-bank worker moves and a nearby meal works in real WebGL', async ({ page }) => {
   await page.setViewportSize({ width: 800, height: 600 });
   const errors = []; page.on('pageerror', e => errors.push(e.message));
-  await page.goto('/'); await page.waitForFunction(() => window.AETHERIA_API);
+  await page.goto('/'); await page.waitForFunction(() => window.AETHERIA_API);await enableDirectControls(page);
   await page.click('[data-speed="0"]');
   const start = await page.evaluate(() => {
     const a = AETHERIA_API, w = a.agents.find(x => x.id === 3);

@@ -31,13 +31,13 @@ export function createEconomyControls(env) {
     const worker = pool[nextWorker++ % pool.length];
     reset(); closeDrawer(); env.setObserve(); select(worker, true);
   }
-  function issueOrder(worker, kind) {
+  function issueOrder(worker, kind, {quiet=false}={}) {
     if (!worker?.alive || worker.role !== 'villager' || !['wood', 'ore', 'food'].includes(kind)) return false;
     const target = nearestResourceNode(worker, kind, kind === 'ore' ? ores : trees);
     worker.workOrder = { resource: kind };
     worker.targetObj = target; worker.workTimer = 0; worker.buildTarget = null;
     lastChange = `${worker.name} รับคำสั่งเก็บ${RESOURCE_INFO[kind].name} · ${target ? 'AI หาแหล่งและเดินไปเก็บเอง' : 'ยังไม่มีแหล่งพร้อม · AI จะรอและค้นหาให้อัตโนมัติ'}${worker.carryAmount > 0 ? ' · ส่งของที่แบกอยู่เข้าคลังก่อน' : ''}`;
-    reset(); env.setObserve(); select(worker); env.log(lastChange); env.notify(lastChange);
+    if(!quiet){reset();env.setObserve();select(worker);env.log(lastChange);env.notify(lastChange);}
     return true;
   }
   function constructionIssue() {
@@ -71,13 +71,18 @@ export function createEconomyControls(env) {
     const issue = constructionIssue();
     if (!plan || issue) { if (plan) env.issue(issue); return false; }
     const { type, point } = plan;
+    return commitConstruction(type,point);
+  }
+  function commitConstruction(type,point,quiet=false) {
+    const issue=env.placementIssue(point.x,point.z)||constructionRequirement(type,state,agents,buildings);
+    if(issue){env.issue(issue);return false;}
     // Revalidate at confirmation. No spending occurs when aiming or cancelling.
     const building = env.createBuilding(type, point.x, point.z);
     state.wood -= CONSTRUCTION_COST.wood; state.ore -= CONSTRUCTION_COST.ore;
     const worker = agents.filter(a => a.alive && a.role === 'villager').sort((a,b) => Math.hypot(a.x-point.x,a.z-point.z)-Math.hypot(b.x-point.x,b.z-point.z))[0];
     worker.buildTarget = building;
     lastChange = `เริ่มสร้าง${type === 'house' ? 'บ้าน' : 'ป้อม'} · จ่ายไม้ 25 + แร่ 18 · ${worker.name} จะไปก่อสร้างหลังส่งของ`;
-    env.log(lastChange); env.notify(lastChange); reset(); select(building); env.updateHUD(); return true;
+    env.log(lastChange);if(!quiet){env.notify(lastChange);reset();select(building);}env.updateHUD();return true;
   }
   function chooseConstructionSite(point) {
     if (!plan) return false;
@@ -95,7 +100,7 @@ export function createEconomyControls(env) {
     text('economy-title', info.name); text('economy-source', info.source); text('economy-use', info.use);
     text('economy-stock', `${Math.floor(state[resource])}`); text('economy-transit', `${summary.inTransit}`); text('economy-working', `${summary.working.length}`);
     const active = summary.assigned;
-    text('economy-reason', resource === 'faith' ? `${state.timeScale === 0 ? 'หยุดเวลา · ศรัทธาจะฟื้นเมื่อเดินเวลา' : 'ศรัทธาฟื้นตามเวลาเกม'} · โบนัสพลัง/เหตุการณ์เข้าคลังทันที` : !active.length ? 'ยังไม่มีผู้รับผิดชอบ · เลือกคนงานแล้วสั่งเก็บ' : state.isNight ? 'กลางคืน · พักงานไปหลบภัย คำสั่งจะทำต่อในตอนเช้า' : summary.working.length ? 'เก็บ → แบก → ส่งที่วิหารกลางเมือง · ของระหว่างขนยังใช้สร้างไม่ได้' : 'ตรวจสถานะด้านล่าง: อาจกำลังกิน ขนของ ก่อสร้าง หรือรอแหล่งทรัพยากร');
+    text('economy-reason', resource === 'faith' ? `${state.timeScale === 0 ? 'หยุดเวลา · ศรัทธาจะฟื้นเมื่อเดินเวลา' : 'ศรัทธาฟื้นตามเวลาเกม'} · โบนัสพลัง/เหตุการณ์เข้าคลังทันที` : !active.length ? 'ยังไม่มีผู้รับผิดชอบ · เลือกเร่งทรัพยากรเพื่อให้ AI จัดคน' : active.every(a=>a.state==='SHELTER') ? 'รอพื้นที่ปลอดภัย · เก็บคำสั่งและของที่แบกไว้' : summary.working.length ? 'เก็บ → แบก → ส่งที่วิหารกลางเมือง · ของระหว่างขนยังใช้สร้างไม่ได้' : 'ตรวจสถานะด้านล่าง: อาจกำลังกิน ขนของ ก่อสร้าง หรือรอแหล่งทรัพยากร');
     const rows = [...new Set([...active, ...summary.cargo])];
     const signature = rows.map(a => `${a.id}|${a.name}|${a.stateLabel}|${a.carryType}|${a.carryAmount}`).join(';');
     if (el('economy-workers').dataset.rows !== signature) {
@@ -107,6 +112,8 @@ export function createEconomyControls(env) {
     }
     text('economy-last-change', lastChange || 'ยังไม่มีการส่งของหรือคำสั่งใหม่ในรอบนี้');
     el('btn-economy-source').disabled = resource !== 'faith' && !nodes(resource).length;
+    text('btn-economy-worker',env.strategic?.()?'ให้ AI จัดคนเก็บ'+(RESOURCE_INFO[resource]?.name||''):'เลือกคนงาน');
+    el('btn-economy-worker').disabled=!!env.strategic?.()&&resource==='faith';
   }
   function delivery(agent, result) {
     if (!result) return;
@@ -129,7 +136,7 @@ export function createEconomyControls(env) {
     }
   }
   for (const b of d.querySelectorAll('[data-resource]')) b.addEventListener('click', () => { resource = b.dataset.resource; });
-  el('btn-select-worker').addEventListener('click', chooseWorker); el('btn-economy-worker').addEventListener('click', chooseWorker);
+  el('btn-select-worker').addEventListener('click', chooseWorker); el('btn-economy-worker').addEventListener('click',()=>{if(env.strategic?.()){if(resource!=='faith'){env.resourceIntent(resource);closeDrawer();}}else chooseWorker();});
   el('btn-economy-source').addEventListener('click', () => {
     const pool = resource === 'faith' ? buildings.filter(b => b.type === 'temple') : nodes(resource);
     const target = [...pool].sort((a,b) => Math.hypot(a.x-camCtrl.target.x,a.z-camCtrl.target.z)-Math.hypot(b.x-camCtrl.target.x,b.z-camCtrl.target.z))[0];
@@ -148,6 +155,6 @@ export function createEconomyControls(env) {
       reset(); select(worker); env.log(`${worker.name} กลับไปทำงานอัตโนมัติ`);
     } else issueOrder(worker, button.dataset.workerResource);
   });
-  return { reset, select, chooseWorker, beginOrder: issueOrder, issueOrder, handlePoint, preview, beginConstruction, chooseConstructionSite, confirmConstruction, updatePanel, delivery, render,
+  return { reset, select, chooseWorker, beginOrder: issueOrder, issueOrder, handlePoint, preview, beginConstruction, chooseConstructionSite, confirmConstruction, constructAutomatic:(type,point)=>commitConstruction(type,point,true),updatePanel, delivery, render,
     get active() { return !!plan; } };
 }

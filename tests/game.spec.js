@@ -1,8 +1,9 @@
+import {enableDirectControls} from './helpers/controls-mode.js';
 import { test, expect } from '@playwright/test';
 
 test('boots, pauses combat, preserves dilemma speed, changes era and saves progress', async ({page})=>{
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.goto('/');await page.waitForFunction(()=>window.AETHERIA_API);
+  await page.goto('/');await page.waitForFunction(()=>window.AETHERIA_API);await enableDirectControls(page);
   await page.evaluate(()=>{AETHERIA_API.state.timeScale=0;});
   const top=await page.locator('#top-bar').boundingBox();
   const hud=await page.locator('#hud-master-control').boundingBox();
@@ -29,7 +30,7 @@ test('boots, pauses combat, preserves dilemma speed, changes era and saves progr
   await page.screenshot({path:'docs/screenshots/current-desktop.png'});
   await page.click('#btn-save-game');
   expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('AETHERIA_CIV_SAVE_V1')).civEra)).toBe(2);
-  await page.reload();await page.waitForFunction(()=>window.AETHERIA_API);
+  await page.reload();await page.waitForFunction(()=>window.AETHERIA_API);await enableDirectControls(page);
   expect(await page.evaluate(()=>AETHERIA_API.state.civEra)).toBe(2);
   await page.evaluate(()=>{AETHERIA_API.state.timeScale=0;Storage.prototype.setItem=()=>{throw new DOMException('Quota exceeded','QuotaExceededError');};});
   await page.click('#btn-menu');
@@ -41,7 +42,7 @@ test('boots, pauses combat, preserves dilemma speed, changes era and saves progr
 test('touch casts exactly once and core mobile HUD stays within viewport',async({browser})=>{
   const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,deviceScaleFactor:1});
   const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.goto('http://127.0.0.1:5173');await page.waitForFunction(()=>window.AETHERIA_API);
+  await page.goto('http://127.0.0.1:5173');await page.waitForFunction(()=>window.AETHERIA_API);await enableDirectControls(page);
   await page.evaluate(()=>{const a=AETHERIA_API;a.state.timeScale=0;a.state.faith=200;a.setGodPower('rain');});
   await page.touchscreen.tap(195,460);
   expect(await page.evaluate(()=>AETHERIA_API.state.faith)).toBe(185);

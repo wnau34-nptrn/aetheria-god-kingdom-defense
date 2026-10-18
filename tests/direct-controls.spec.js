@@ -1,3 +1,4 @@
+import {enableDirectControls} from './helpers/controls-mode.js';
 import { test, expect } from '@playwright/test';
 
 // Fresh games, UI commands only. World state is read for assertions, never granted.
@@ -22,7 +23,7 @@ for (const mobile of [false, true]) test(`essential commands and pending choices
       expect(box.x+box.width).toBeLessThanOrEqual(viewport.width+1); expect(box.y+box.height).toBeLessThanOrEqual(viewport.height+1);
       await expect.poll(()=>button.evaluate(b=>{const r=b.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('button')===b;}), {message:`${selector} receives input after the responsive layout settles`}).toBe(true);
     }
-    await page.goto('/'); await page.waitForFunction(()=>window.AETHERIA_API); await press('[data-speed="0"]');
+    await page.goto('/'); await page.waitForFunction(()=>window.AETHERIA_API);await enableDirectControls(page); await press('[data-speed="0"]');
     await expect(page.locator('#left-panel')).toBeHidden();
     for (const selector of ['#btn-train-soldier','#btn-spawn-villager','#btn-select-worker','[data-build="house"]','[data-build="tower"]','#btn-advance-era']) await reachable(selector);
     const start = await read();

@@ -12,10 +12,12 @@ import { createEntityIdentity } from '../systems/entity-identity.js';
 import { armyAction, civilianDanger, chooseRefuge, threatened } from '../systems/battle.js';
 import { createArmyControls } from '../ui/army-controls.js';
 import { createArmyView } from '../render/army-view.js';
+import { createStrategyDirector } from '../systems/strategy.js';
+import { createStrategyControls } from '../ui/strategy-controls.js';
 
 (() => {
   'use strict';
-  let economy, decisionUI, combatView, army, armyView;
+  let economy, decisionUI, combatView, army, armyView, strategy, strategyUI;
   let pendingDilemmaIdx = null;
   const entityIdentity = createEntityIdentity();
   function bindEntity(mesh, entity) { mesh.userData.entity = entityIdentity.assign(entity); }
@@ -2133,6 +2135,7 @@ import { createArmyView } from '../render/army-view.js';
   function populateWorld(era = 1, resetNature = false) {
     combatView?.reset();
     army?.reset();
+    strategy?.reset();
     worldLayout.bridgeLevels.length = 0;
     worldLayout.well = worldLayout.pasture = false;
     currentCivEra = era;
@@ -2618,7 +2621,7 @@ import { createArmyView } from '../render/army-view.js';
       updatePointerRay(e);const hits=raycaster.intersectObjects(worldObjectsGroup.children,true);let obj=hits[0]?.object;
       while(obj&&!obj.userData.entity&&obj.parent)obj=obj.parent;
       const entity=obj?.userData.entity;
-      if(!army?.select(entity,e.shiftKey)){state.selectedEntity=entity||null;document.getElementById('inspector-card').classList.toggle('visible',!!entity);if(entity)updateInspectorUI();}
+      if(strategy?.enabled||!army?.select(entity,e.shiftKey)){state.selectedEntity=entity||null;document.getElementById('inspector-card').classList.toggle('visible',!!entity);if(entity)updateInspectorUI();}
     }
     armyPointerStart=observePointerStart=null;
   });
@@ -2775,7 +2778,7 @@ import { createArmyView } from '../render/army-view.js';
       ag.hunger = Math.min(100, ag.hunger + dt * 1.45); ag.walkCycle += dt * 9.5;
       ag.torchGroup.visible = state.isNight;
       if (state.isNight) ag.flameOrb.scale.setScalar(0.85 + Math.sin(elapsedTime * 16 + ag.id) * 0.22);
-      const incompleteBuilding = buildings.find(b => b.progress !== undefined && b.progress < 1.0);
+      const incompleteBuilding = buildings.find(b => b.progress !== undefined && b.progress < 1.0 && !threatened(b,monsters,22));
 
       if (ag.role === 'soldier') {
         soldierIdx++; ag.mesh.visible = true;
@@ -2859,7 +2862,7 @@ import { createArmyView } from '../render/army-view.js';
         }
         continue;
       }
-      if (ag.buildTarget && (!buildings.includes(ag.buildTarget) || ag.buildTarget.progress >= 1)) ag.buildTarget = null;
+      if (ag.buildTarget && (!buildings.includes(ag.buildTarget) || ag.buildTarget.progress >= 1 && (ag.strategyAssignment?.kind!=='repair'||ag.buildTarget.hp>=ag.buildTarget.maxHp))) ag.buildTarget = null;
       if (ag.role === 'child') {
         ag.state = 'PLAY'; ag.stateLabel = '👧 วิ่งเล่นกับเพื่อน'; ag.stateGem.material.color.setHex(0x34d399);
         const playAng = elapsedTime * 1.35 + ag.id * 1.4;
@@ -2897,7 +2900,7 @@ import { createArmyView } from '../render/army-view.js';
         }
         continue;
       }
-      const damagedBuilding = buildings.find(b => b.hp < b.maxHp && (b.progress === undefined || b.progress >= 1.0));
+      const damagedBuilding = buildings.find(b => b.hp < b.maxHp && (b.progress === undefined || b.progress >= 1.0) && !threatened(b,monsters,22));
       const targetB = ag.buildTarget || (!ag.workOrder && (incompleteBuilding || (state.wood >= 5 && damagedBuilding)));
       if (targetB) {
         const incomplete = targetB.progress !== undefined && targetB.progress < 1;
@@ -3104,7 +3107,7 @@ import { createArmyView } from '../render/army-view.js';
     document.getElementById('kingdom-readout').dataset.threat = enemies ? 'combat' : firstWarning ? 'warning' : 'calm';
     setReadoutText('night-countdown', night ? 'กลางคืน' : `บุก 20:00 · อีก ${clock} ชม.ในเกม`);
     const recovery = people.length === 0 ? (night ? 'เมืองฟื้นได้: รอรุ่งเช้า แล้วกดชาวบ้าน +1' : enemies ? 'เมืองฟื้นได้: จัดการอสูร แล้วกดชาวบ้าน +1' : 'ฟื้นเมือง: กดชาวบ้าน +1 (เพิ่มชาวบ้าน · 20 ศรัทธา)') : null;
-    setReadoutText('night-guidance', recovery || (firstWarning ? 'ก่อนคืนแรก: เตรียมทหารและศรัทธา' : enemies ? 'ยังมีอสูรมีชีวิตบนเกาะ' : night ? (state.secondWaveTonight ? 'แสงอาทิตย์เริ่มเผาอสูร 05:30' : 'เฝ้าระวังทัพหนุน 00:30') : 'แตะทรัพยากรเพื่อสั่งคนงาน'));
+    setReadoutText('night-guidance', recovery || (firstWarning ? 'ก่อนคืนแรก: เตรียมทหารและศรัทธา' : enemies ? 'ยังมีอสูรมีชีวิตบนเกาะ' : night ? (state.secondWaveTonight ? 'แสงอาทิตย์เริ่มเผาอสูร 05:30' : 'เฝ้าระวังทัพหนุน 00:30') : (strategy?.enabled ? 'ตัดสินใจแล้ว AI จัดคนให้' : 'แตะทรัพยากรเพื่อสั่งคนงาน')));
   }
 
   function syncHudDockHeight() {
@@ -3157,6 +3160,7 @@ import { createArmyView } from '../render/army-view.js';
 
   function updateHUD() {
     army?.render();
+    strategyUI?.render();
     updateKingdomReadout();
     updateCommandHUD();
     refreshDilemmaChoices();
@@ -3887,7 +3891,7 @@ import { createArmyView } from '../render/army-view.js';
     if (pendingDilemmaIdx === null) return;
     window.dispatchEvent(new Event('aetheria:close-drawer'));
     document.body.classList.add('decision-pending');
-    decisionUI.show({ compact, title: DECISION_TITLES[pendingDilemmaIdx], speaker: DILEMMA_SCENE_META[pendingDilemmaIdx].npcName.split(' (')[0], paused: dilemmaActive, resumeSpeed: preDilemmaSpeed, takeFocus: !(compact&&army?.inBattle) });
+    decisionUI.show({ compact, title: DECISION_TITLES[pendingDilemmaIdx], speaker: DILEMMA_SCENE_META[pendingDilemmaIdx].npcName.split(' (')[0], paused: dilemmaActive, resumeSpeed: preDilemmaSpeed, takeFocus: !(compact&&(strategy?.enabled||army?.inBattle)) });
     refreshDilemmaChoices();
   }
 
@@ -4517,7 +4521,7 @@ import { createArmyView } from '../render/army-view.js';
       if (!compact) pauseForDilemma();
       presentDilemma(compact); return;
     }
-    const liveBattle=compact&&army?.inBattle;
+    const liveBattle=compact&&(strategy?.enabled||army?.inBattle);
     if(!liveBattle)pauseForDilemma();
 
     let idx = forceIdx !== null ? forceIdx : Math.floor(Math.random() * DILEMMA_EVENTS.length);
@@ -4758,25 +4762,29 @@ import { createArmyView } from '../render/army-view.js';
     advanceEra();
   });
 
-  document.getElementById('btn-spawn-villager').addEventListener('click', () => {
+  function recruitVillager() {
     audio.init();
     const issue = recruitmentIssue('villager', state, agents, buildings);
-    if (issue) { reportActionIssue(issue); return; }
+    if (issue) { reportActionIssue(issue); return false; }
     state.faith -= 20; audio.playBlessChime();
     const a = Math.random() * Math.PI * 2, ag = createAgent(Math.cos(a) * 4, Math.sin(a) * 4, 'villager');
     addLog(`✨ ประทานพรกำเนิด ${ag.name} เข้าร่วมหมู่บ้าน!`, 'bless');
     showDilemmaToast(`เพิ่ม ${ag.name} แล้ว · ใช้ 20 ศรัทธา`); updateHUD();
-  });
-  document.getElementById('btn-train-soldier').addEventListener('click', () => {
+    return true;
+  }
+  document.getElementById('btn-spawn-villager').addEventListener('click',recruitVillager);
+  function recruitSoldier() {
     audio.init();
     const issue = recruitmentIssue('soldier', state, agents, buildings);
-    if (issue) { reportActionIssue(issue); return; }
+    if (issue) { reportActionIssue(issue); return false; }
     state.faith -= 25; audio.playBlessChime();
     const civilian = agents.find(a => a.alive && a.role === 'villager' && !(a.carryAmount > 0));
     if (civilian) { const cx = civilian.x, cz = civilian.z; civilian.alive = false; worldObjectsGroup.remove(civilian.mesh); const sol = createAgent(cx, cz, 'soldier'); addLog(`🛡️ แต่งตั้งชาวบ้านขึ้นเป็น ${sol.name}!`, 'bless'); }
     else { const sol = createAgent(26, -18, 'soldier'); addLog(`🛡️ เสก ${sol.name} ลงมาพิทักษ์แนวหน้า!`, 'bless'); }
     showDilemmaToast('แต่งตั้งทหาร +1 แล้ว · ใช้ 25 ศรัทธา'); updateHUD();
-  });
+    return true;
+  }
+  document.getElementById('btn-train-soldier').addEventListener('click',recruitSoldier);
   document.getElementById('btn-toggle-audio').addEventListener('click', () => audio.toggle());
   document.getElementById('vol-wind').addEventListener('input', (e) => { audio.volWind = parseFloat(e.target.value) / 100; audio.updateVolumes(); });
   document.getElementById('vol-water').addEventListener('input', (e) => { audio.volWater = parseFloat(e.target.value) / 100; audio.updateVolumes(); });
@@ -4882,6 +4890,7 @@ import { createArmyView } from '../render/army-view.js';
 
     combatView?.step(dt);
     separateCombatants([...agents.filter(a=>a.role==='soldier'),...monsters],dt,(entity,x,z)=>Math.hypot(x,z)<ISLAND_RADIUS-4&&getTerrainHeightAt(x,z)<9.5&&(!isPointInRiver(x,z)||isOnBridgeDeck(x,z))&&!isNearBuildingFoundation(x,z,0.35));
+    strategy?.update(simulationTime);
     updateAutonomousAgents(dt, simulationTime);
     updateMonstersAndTowers(dt, simulationTime);
   }
@@ -4967,7 +4976,8 @@ import { createArmyView } from '../render/army-view.js';
     economy?.render();
     updateWorkerSelection();
     army?.render();
-    armyView?.render(army.selected(),allHudHidden);
+    strategyUI?.render();
+    armyView?.render(strategy?.enabled?agents.filter(a=>a.alive&&a.role==='soldier'&&a.strategyArmy):army.selected(),allHudHidden);
     renderMinimap();
     combatView?.render([...agents,...monsters],state.selectedEntity,allHudHidden);
 
@@ -5159,7 +5169,7 @@ import { createArmyView } from '../render/army-view.js';
         }
         if (found) break;
       }
-      if(army?.select(found)){touchMode=null;return;}
+      if(!strategy?.enabled&&army?.select(found)){touchMode=null;return;}
       state.selectedEntity = found;
       if (found) {
         updateInspectorUI();
@@ -5182,6 +5192,7 @@ import { createArmyView } from '../render/army-view.js';
     if (workerSelection.visible) workerSelection.position.set(agent.x, getTerrainHeightAt(agent.x,agent.z)+0.18, agent.z);
   }
   economy = createEconomyControls({ window, state, agents, trees, ores, buildings, camCtrl,
+    strategic:()=>!!strategy?.enabled,resourceIntent:kind=>strategy?.choose(kind),
     updateInspector: updateInspectorUI, updateWorkerCommands, updateLayout: syncHudDockHeight, updateHUD, issue: reportActionIssue, log: addLog, notify: showDilemmaToast,
     setObserve: () => setGodPower('observe'), placementIssue: getBuildingPlacementIssue,
     createBuilding: (type,x,z) => type === 'house' ? createHouse(x,z,0.05,state.civEra) : createWatchtower(x,z,0.05,state.civEra),
@@ -5195,18 +5206,23 @@ import { createArmyView } from '../render/army-view.js';
     height:e=>Math.max(getTerrainHeightAt(e.x,e.z),isOnBridgeDeck(e.x,e.z)?4.22:-Infinity),
     project:projectWorldToScreen,sound:(kind,heavy,armor)=>audio.playCombatSound(kind,heavy,armor)});
   army=createArmyControls({window,state,agents,monsters,buildings,camCtrl,time:()=>simulationClock.time,height:getTerrainHeightAt,
+    passive:()=>!!strategy?.enabled,
     canStand:p=>armyGround(p),basePoint:()=>[{x:12,z:8},{x:16,z:4},{x:0,z:12},{x:10,z:16}].find(p=>armyGround(p))||{x:16,z:4},
     setObserve:()=>setGodPower('observe'),resetEconomy:()=>economy.reset(),layout:syncHudDockHeight,hideReticle:()=>{reticleGroup.visible=false;},
     showReticle:(p,blocked)=>{reticleGroup.visible=true;reticleGroup.position.set(p.x,getTerrainHeightAt(p.x,p.z)+.35,p.z);reticleGroup.scale.setScalar(3);reticleRing.material.color.setHex(blocked?0xef4444:0x7dd3fc);reticleFill.material.color.setHex(blocked?0xef4444:0x7dd3fc);},
     issue:reportActionIssue,notify:message=>{addLog(message,'bless');showDilemmaToast(message);}});
   armyView=createArmyView({THREE,scene,height:(x,z)=>Math.max(getTerrainHeightAt(x,z),isOnBridgeDeck(x,z)?4.22:-Infinity)});
+  strategy=createStrategyDirector({state,agents,buildings,monsters,trees,ores,time:()=>simulationClock.time,canStand:armyGround,placementIssue:getBuildingPlacementIssue,
+    orderWorker:(a,kind)=>economy.issueOrder(a,kind,{quiet:true}),construct:(type,point)=>economy.constructAutomatic(type,point),advance:advanceEra,
+    recruit:kind=>kind==='soldier'?recruitSoldier():recruitVillager(),issue:reportActionIssue,notify:message=>{addLog(message,'bless');showDilemmaToast(message);}});
+  strategyUI=createStrategyControls({window,director:strategy,army,economy,state,layout:syncHudDockHeight});
 
   window.AETHERIA_API = {
     get combatFeedback(){return combatView.snapshot();},
     get simulationTime() { return simulationClock.time; },
     // Copied camera pose for read-only diagnostics, including between render frames.
     get cameraView() { return { position: { ...camera.position }, target: { ...camera._lookTarget }, fov: camera.fov }; },
-    economy, army, setAllHudHidden, advanceEra, previewEra,
+    economy, army, strategy, strategyUI, setAllHudHidden, advanceEra, previewEra,
     // Compatibility alias for existing diagnostic fixtures; never used by progression.
     evolveToEra: previewEra, openInteractiveDilemma,
     get worldLayout() { return { bridgeLevels: [...worldLayout.bridgeLevels], well: worldLayout.well, pasture: worldLayout.pasture }; },

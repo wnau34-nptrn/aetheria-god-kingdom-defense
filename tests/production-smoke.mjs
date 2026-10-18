@@ -75,11 +75,11 @@ try {
       // Important commands are available from the HUD, without a drawer.
       assert.equal(await page.locator('#left-panel').isVisible(), false);
       const beforeRecruit = await read();
-      await page.click('#btn-spawn-villager');
+      await page.click('[data-strategy-action="villager"]');
       const afterRecruit = await read();
       assert.equal(afterRecruit.people, beforeRecruit.people + 1);
       assert.ok(Math.abs(afterRecruit.faith - (beforeRecruit.faith - 20)) < 1e-6);
-      await page.click('#btn-train-soldier');
+      await page.click('[data-strategy-action="soldier"]');
       const afterTraining = await read();
       assert.equal(afterTraining.soldiers, beforeRecruit.soldiers + 1);
       assert.ok(Math.abs(afterTraining.faith - (afterRecruit.faith - 25)) < 1e-6);
@@ -101,10 +101,11 @@ try {
       assert.equal(await page.locator('#economy-panel').isVisible(), true);
       assert.match(await page.locator('#economy-source').textContent(), /ส่งคลังกลาง/);
       await page.click('#btn-economy-worker');
-      await page.click('[data-worker-resource="wood"]');
-      assert.equal(await page.evaluate(() => AETHERIA_API.state.selectedEntity.workOrder.resource), 'wood');
+      assert.equal(await page.evaluate(() => AETHERIA_API.strategy.snapshot.city), 'wood');
+      assert.equal(await page.evaluate(() => AETHERIA_API.state.selectedEntity), null);
       assert.equal(await page.evaluate(() => AETHERIA_API.economy.active), false);
-      assert.equal(await page.locator('[data-worker-resource="wood"]').getAttribute('aria-pressed'), 'true');
+      assert.equal(await page.evaluate(() => AETHERIA_API.strategy.enabled), true);
+      assert.ok(await page.evaluate(() => AETHERIA_API.agents.some(a=>a.strategyAssignment?.kind==='wood')));
       const final = await read(); assert.equal(final.people, final.hudPeople);
       assert.equal(final.wood,beforeOrder.wood); assert.equal(final.ore,beforeOrder.ore);
       for (const id of ['#top-bar','#god-dock','#kingdom-readout']) {

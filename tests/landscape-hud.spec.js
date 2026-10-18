@@ -1,9 +1,10 @@
+import {enableDirectControls} from './helpers/controls-mode.js';
 import { test, expect } from '@playwright/test';
 
 for (const viewport of [{ width: 400, height: 300 }, { width: 640, height: 480 }, { width: 844, height: 390 }]) {
 test(`landscape HUD keeps speed controls reachable at ${viewport.width}x${viewport.height}`, async ({ page }) => {
   await page.setViewportSize(viewport);
-  await page.goto('/'); await page.waitForFunction(() => window.AETHERIA_API);
+  await page.goto('/'); await page.waitForFunction(() => window.AETHERIA_API);await enableDirectControls(page);
   const top = await page.locator('#top-bar').boundingBox();
   const tools = await page.locator('#hud-master-control').boundingBox();
   await page.screenshot({ path: `test-results/landscape-hud-${viewport.width}.png` });

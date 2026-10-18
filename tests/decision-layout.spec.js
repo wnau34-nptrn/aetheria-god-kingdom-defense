@@ -1,3 +1,4 @@
+import {enableDirectControls} from './helpers/controls-mode.js';
 import { test, expect } from '@playwright/test';
 
 // Controlled no-funds presentation fixtures; no event effects or time jumps.
@@ -7,7 +8,7 @@ test('all five decisions expose every answer with worker selection across five s
   test.setTimeout(300000);
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
   try {
-    await page.goto('/');await page.waitForFunction(()=>window.AETHERIA_API);await page.click('[data-speed="0"]');
+    await page.goto('/');await page.waitForFunction(()=>window.AETHERIA_API);await enableDirectControls(page);await page.click('[data-speed="0"]');
     expect(await page.evaluate(()=>{const faces=[...document.fonts].filter(f=>f.family.includes('Aetheria Thai'));return faces.length===4&&faces.every(f=>f.status==='loaded');})).toBe(true);
     await page.evaluate(()=>{const a=AETHERIA_API;a.state.faith=a.state.wood=a.state.ore=a.state.food=0;a.updateHUD();});
     for(const viewport of [{width:1024,height:640},{width:800,height:600},{width:390,height:844},{width:844,height:390},{width:400,height:300}]){

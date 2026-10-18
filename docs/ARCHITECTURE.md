@@ -31,7 +31,9 @@ The current product sequence is documented in [ROADMAP.th.md](ROADMAP.th.md), ba
 
 Army orders, formation slots, phase classification and local civilian danger are pure helpers in `systems/battle.js`; `ui/army-controls.js` owns group IDs, HUD overrides and camera bookmarks, while `render/army-view.js` pools selection/destination rings. Legacy movement/combat execute the accepted orders. This does not add a full navigation mesh or bridge reservation queue. See [ARMY_RTS.th.md](ARMY_RTS.th.md).
 
-Simulation time freezes during pause and full-story dilemmas (also peacetime compact cards); compact battle cards retain the current speed and focus; camera and purely cosmetic animation may continue. Do not apply timeScale twice. The accumulator bounds frame delta and step count and clears pending debt on pause; background tab suspension cannot trigger a large catch-up burst. Further extraction into serializable world systems is still pending.
+`systems/strategy.js` owns persistent city and military intents. It evaluates context without mutating the simulation, then assigns existing worker orders, validated construction sites and atomic army formations every two simulation seconds. It uses the existing cargo, movement, danger and combat systems; there is no parallel economy or damage loop. `ui/strategy-controls.js` presents three contextual choices and always-visible recruitment/AI controls. Direct unit controls remain an opt-in preference. A city intent and a military intent coexist; advancement preserves them and world replacement resets them.
+
+Simulation time freezes during pause and full-story dilemmas. Compact cards in the default decision mode retain speed, camera and focus in both peace and battle; the opt-in direct mode retains its earlier peacetime pause behavior. Camera and purely cosmetic animation may continue. Do not apply timeScale twice. The accumulator bounds frame delta and step count and clears pending debt on pause; background tab suspension cannot trigger a large catch-up burst. Further extraction into serializable world systems is still pending.
 
 ## Three.js migration hazards
 

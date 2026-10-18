@@ -1,8 +1,9 @@
+import {enableDirectControls} from './helpers/controls-mode.js';
 import { test, expect } from '@playwright/test';
 
 async function boot(page) {
   const errors = []; page.on('pageerror', e => errors.push(e.message));
-  await page.goto('/'); await page.waitForFunction(() => window.AETHERIA_API);
+  await page.goto('/'); await page.waitForFunction(() => window.AETHERIA_API);await enableDirectControls(page);
   await page.click('[data-speed="0"]');
   for (const side of ['left', 'right']) {
     if (await page.locator(`#btn-toggle-${side}-hud`).evaluate(e => e.classList.contains('active'))) await page.click(`#btn-toggle-${side}-hud`);

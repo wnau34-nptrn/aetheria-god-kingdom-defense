@@ -14,13 +14,16 @@ import { createEntityIdentity } from '../../src/systems/entity-identity.js';
 import { armyAction, civilianDanger, chooseRefuge, threatened } from '../../src/systems/battle.js';
 import { createArmyControls } from '../../src/ui/army-controls.js';
 import { createArmyView } from '../../src/render/army-view.js';
+import { createStrategyDirector } from '../../src/systems/strategy.js';
+import { createStrategyControls } from '../../src/ui/strategy-controls.js';
 
 // Controlled clock + DOM integration harness. The actual game/geometry code runs;
 // pixels/audio are stubbed. Browser tests separately exercise real WebGL and input.
-export function createGameHarness({ seed = 1234, source } = {}) {
+export function createGameHarness({ seed = 1234, source, decisions = false } = {}) {
   const html = readFileSync(new URL('../../index.html', import.meta.url), 'utf8');
   const dom = new JSDOM(html, { url: 'https://aetheria.test/', runScripts: 'outside-only' });
   const w = dom.window;
+  if(!decisions)w.localStorage.setItem('AETHERIA_COMMAND_MODE','direct');
   let randomState = seed >>> 0, wallSeconds = 0, frameDelta = 0, scheduled, frame;
   w.Math.random = () => {
     randomState = (Math.imul(randomState, 1664525) + 1013904223) >>> 0;
@@ -46,7 +49,7 @@ export function createGameHarness({ seed = 1234, source } = {}) {
     render() {}
   };
   w.THREE.Clock = class { getDelta() { return frameDelta; } };
-  Object.assign(w, { armyAction, civilianDanger, chooseRefuge, threatened, createArmyControls, createArmyView, progressionIssue, nextCivilization, createEntityIdentity, RESOURCE_INFO, availableNode, nearestResourceNode, workerResource, depositCargo, createEconomyControls, recruitmentIssue, constructionRequirement, createDecisionControls, parseProgress, PROGRESS_KEY, createFixedStepper, chooseFoodTree, advanceMelee, chooseCombatTarget, clearMelee, meleeReach, separateCombatants, createCombatView });
+  Object.assign(w, { createStrategyDirector,createStrategyControls,armyAction, civilianDanger, chooseRefuge, threatened, createArmyControls, createArmyView, progressionIssue, nextCivilization, createEntityIdentity, RESOURCE_INFO, availableNode, nearestResourceNode, workerResource, depositCargo, createEconomyControls, recruitmentIssue, constructionRequirement, createDecisionControls, parseProgress, PROGRESS_KEY, createFixedStepper, chooseFoodTree, advanceMelee, chooseCombatTarget, clearMelee, meleeReach, separateCombatants, createCombatView });
   w.eval((source ?? readFileSync(new URL('../../src/legacy/game.js', import.meta.url), 'utf8')).replace(/^import .+;\n/gm, ''));
   const api = w.AETHERIA_API;
   // Avoid unnecessary thought-bubble DOM churn; this does not change simulation.

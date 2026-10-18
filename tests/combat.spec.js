@@ -1,10 +1,11 @@
+import {enableDirectControls} from './helpers/controls-mode.js';
 import { test, expect } from '@playwright/test';
 import { installCombatFixture, armCombatPause } from './helpers/combat-fixture.js';
 
 test('a rendered duel connects windup, contact, recoil and a paused falling body',async({page})=>{
   test.setTimeout(240000);
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.goto('/');await page.waitForFunction(()=>window.AETHERIA_API);await page.click('[data-speed="0"]');
+  await page.goto('/');await page.waitForFunction(()=>window.AETHERIA_API);await enableDirectControls(page);await page.click('[data-speed="0"]');
   const before=await page.evaluate(installCombatFixture);
   await page.evaluate(armCombatPause,{kind:'windup'});
   await page.click('[data-speed="1"]');
@@ -37,7 +38,7 @@ test('a touch-sized group battle shows bounded feedback and leaves commands clic
   const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true});
   try{
     const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
-    await page.goto('http://127.0.0.1:5173');await page.waitForFunction(()=>window.AETHERIA_API);await page.locator('[data-speed="0"]').tap();
+    await page.goto('http://127.0.0.1:5173');await page.waitForFunction(()=>window.AETHERIA_API);await enableDirectControls(page);await page.locator('[data-speed="0"]').tap();
     const before=await page.evaluate(installCombatFixture,{group:true});
     await page.evaluate(armCombatPause,{kind:'contacts',value:before.contacts+5});
     await page.locator('[data-speed="1"]').tap();
@@ -56,7 +57,7 @@ test('a touch-sized group battle shows bounded feedback and leaves commands clic
 test('a fresh kingdom reaches actual night combat through normal player controls',async({page})=>{
   test.setTimeout(240000);
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.goto('/');await page.waitForFunction(()=>window.AETHERIA_API);await page.click('[data-speed="0"]');
+  await page.goto('/');await page.waitForFunction(()=>window.AETHERIA_API);await enableDirectControls(page);await page.click('[data-speed="0"]');
   await page.click('#btn-train-soldier');await page.click('#btn-train-soldier');
   await page.click('#btn-menu');await page.getByText('เครื่องมือโลกและยุค',{exact:true}).click();await page.click('#btn-jump-night');await page.click('#btn-menu');
   await page.click('[data-speed="5"]');

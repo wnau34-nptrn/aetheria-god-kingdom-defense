@@ -1,9 +1,10 @@
+import {enableDirectControls} from './helpers/controls-mode.js';
 import { test, expect } from '@playwright/test';
 
 for (const viewport of [{width:1280,height:800},{width:390,height:844}]) {
   test(`progressive UI protects playfield and keeps tools accessible at ${viewport.width}`,async({page})=>{
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
-    await page.setViewportSize(viewport);await page.goto('/');await page.waitForFunction(()=>window.AETHERIA_API);
+    await page.setViewportSize(viewport);await page.goto('/');await page.waitForFunction(()=>window.AETHERIA_API);await enableDirectControls(page);
     await page.click('[data-speed="0"]');
     await expect(page.locator('#left-panel')).toBeHidden();await expect(page.locator('#right-panel')).toBeHidden();await expect(page.locator('#game-menu')).toBeHidden();
     await expect(page.locator('body')).toHaveClass(/bubbles-hidden/);

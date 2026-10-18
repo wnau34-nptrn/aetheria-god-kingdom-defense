@@ -1,3 +1,4 @@
+import {enableDirectControls} from './helpers/controls-mode.js';
 import {test,expect} from '@playwright/test';
 
 function fixture(){
@@ -30,7 +31,7 @@ for(const mobile of [false,true])test(`RTS commands, battle HUD and live decisio
   try{
     const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
     const press=s=>mobile?page.locator(s).tap():page.locator(s).click();
-    await page.goto('http://127.0.0.1:5173');await page.waitForFunction(()=>window.AETHERIA_API);await press('[data-speed="0"]');
+    await page.goto('http://127.0.0.1:5173');await page.waitForFunction(()=>window.AETHERIA_API);await enableDirectControls(page);await press('[data-speed="0"]');
     await press('#btn-train-soldier');await page.evaluate(fixture);
     await expect(page.locator('body')).toHaveAttribute('data-hud-view','battle');
     await press('#btn-select-army');expect(await page.evaluate(()=>AETHERIA_API.army.snapshot.selected.length)).toBe(3);
@@ -68,7 +69,7 @@ for(const mobile of [false,true])test(`RTS commands, battle HUD and live decisio
 });
 
 test('battle controls remain reachable on a small landscape display',async({page})=>{
-  await page.setViewportSize({width:400,height:300});await page.goto('/');await page.waitForFunction(()=>window.AETHERIA_API);await page.click('[data-speed="0"]');await page.evaluate(fixture);await page.click('#btn-select-army');
+  await page.setViewportSize({width:400,height:300});await page.goto('/');await page.waitForFunction(()=>window.AETHERIA_API);await enableDirectControls(page);await page.click('[data-speed="0"]');await page.evaluate(fixture);await page.click('#btn-select-army');
   await page.screenshot({path:'test-results/army-landscape.png',animations:'disabled',timeout:90000});
   expect(await page.locator('#hud-view-bar').evaluate(b=>b.getBoundingClientRect().top>=document.getElementById('top-bar').getBoundingClientRect().bottom+2)).toBe(true);
   for(const selector of ['#btn-select-army','[data-army-order="hold"]','[data-army-order="retreat"]','button[data-hud-view="city"]','[data-speed="0"]']){

@@ -1,3 +1,4 @@
+import {enableDirectControls} from './helpers/controls-mode.js';
 import {test,expect} from '@playwright/test';
 
 // These playthroughs use real UI input and read-only world snapshots for aiming.
@@ -30,7 +31,7 @@ for(const mobile of [false,true])test(`resource orders, deliveries and a paid bu
    await press('[data-speed="5"]');await page.waitForFunction(predicate,arg,{timeout:120000});await press('[data-speed="0"]');
    if(!mobile)await page.setViewportSize(viewport);
   }
-  await page.goto(process.env.PLAYTEST_URL||'/');await page.waitForFunction(()=>window.AETHERIA_API);await press('[data-speed="0"]');
+  await page.goto(process.env.PLAYTEST_URL||'/');await page.waitForFunction(()=>window.AETHERIA_API);await enableDirectControls(page);await press('[data-speed="0"]');
   expect((await snapshot()).auto).toBe(false);
   for(const resource of ['wood','ore']){
    await press(`#resource-${resource}`);await expect(page.locator('#economy-panel')).toBeVisible();await expect(page.locator('#economy-source')).toContainText('ส่งคลังกลาง');

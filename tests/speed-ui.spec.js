@@ -1,9 +1,10 @@
+import {enableDirectControls} from './helpers/controls-mode.js';
 import { test, expect } from '@playwright/test';
 test.use({viewport:{width:800,height:600}});
 
 test('real WebGL frames advance at 1x/5x, event tabs pause and unfunded trade is rejected', async ({page})=>{
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.goto('/');await page.waitForFunction(()=>window.AETHERIA_API);
+  await page.goto('/');await page.waitForFunction(()=>window.AETHERIA_API);await enableDirectControls(page);
   for(const speed of [1,5]){
     await page.click(`[data-speed="${speed}"]`);
     const start=await page.evaluate(()=>AETHERIA_API.simulationTime);
@@ -35,7 +36,7 @@ test('real WebGL frames advance at 1x/5x, event tabs pause and unfunded trade is
 
 test('a blocked council plot keeps resources and decision open in the actual UI',async({page})=>{
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.goto('/');await page.waitForFunction(()=>window.AETHERIA_API);
+  await page.goto('/');await page.waitForFunction(()=>window.AETHERIA_API);await enableDirectControls(page);
   await page.click('[data-speed="0"]');
   await page.evaluate(()=>{
     const a=AETHERIA_API;a.state.wood=100;

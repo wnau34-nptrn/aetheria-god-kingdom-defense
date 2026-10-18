@@ -1,3 +1,4 @@
+import {enableDirectControls} from './helpers/controls-mode.js';
 import {test,expect} from '@playwright/test';
 
 for(const mobile of [false,true])test(`normal era progression keeps the same kingdom on ${mobile?'touch':'desktop'} while sandbox preview resets it`,async({browser})=>{
@@ -6,7 +7,7 @@ for(const mobile of [false,true])test(`normal era progression keeps the same kin
   try{
     const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
     const press=selector=>mobile?page.locator(selector).tap():page.locator(selector).click();
-    await page.goto('http://127.0.0.1:5173');await page.waitForFunction(()=>window.AETHERIA_API);await press('[data-speed="0"]');
+    await page.goto('http://127.0.0.1:5173');await page.waitForFunction(()=>window.AETHERIA_API);await enableDirectControls(page);await press('[data-speed="0"]');
     await press('#btn-select-worker');await press('[data-worker-resource="wood"]');
     // Controlled starting condition: near-ready progress, injured house and a
     // worker carrying wood. All advancement and preview actions use actual UI.

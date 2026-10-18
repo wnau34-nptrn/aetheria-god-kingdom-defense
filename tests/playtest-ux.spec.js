@@ -1,3 +1,4 @@
+import {enableDirectControls} from './helpers/controls-mode.js';
 import {test,expect} from '@playwright/test';
 
 for(const viewport of [{width:400,height:300},{width:390,height:844}]){
@@ -9,7 +10,7 @@ for(const viewport of [{width:400,height:300},{width:390,height:844}]){
    // Observe real audio nodes without replacing Web Audio or changing game state.
    await page.addInitScript(()=>{const original=AudioContext.prototype.createGain;window.observedAudioGains=[];AudioContext.prototype.createGain=function(...args){const gain=original.apply(this,args);window.observedAudioGains.push(gain);return gain;};});
    const press=async selector=>mobile?page.locator(selector).tap():page.locator(selector).click();
-   await page.goto(process.env.PLAYTEST_URL||'http://127.0.0.1:5173');await page.waitForFunction(()=>window.AETHERIA_API);
+   await page.goto(process.env.PLAYTEST_URL||'http://127.0.0.1:5173');await page.waitForFunction(()=>window.AETHERIA_API);await enableDirectControls(page);
    await press('[data-speed="0"]');await press('[data-power="rain"]');
    const start=await page.evaluate(()=>AETHERIA_API.state.faith);
    const point=await page.evaluate(()=>{const nav=document.getElementById('hud-master-control').getBoundingClientRect(),dock=document.getElementById('god-dock-wrapper').getBoundingClientRect();return{x:innerWidth/2,y:(nav.bottom+dock.top)/2};});
@@ -37,7 +38,7 @@ for(const viewport of [{width:400,height:300},{width:390,height:844}]){
 }
 
 test('empty-city guidance leads to the existing recovery action',async({page})=>{
- await page.setViewportSize({width:390,height:844});await page.goto(process.env.PLAYTEST_URL||'/');await page.waitForFunction(()=>window.AETHERIA_API);await page.click('[data-speed="0"]');
+ await page.setViewportSize({width:390,height:844});await page.goto(process.env.PLAYTEST_URL||'/');await page.waitForFunction(()=>window.AETHERIA_API);await enableDirectControls(page);await page.click('[data-speed="0"]');
  // Controlled empty-city fixture. Natural overnight losses are recorded by the
  // separate day/night driver; no resources or clock are granted here.
  await page.evaluate(()=>{for(const a of AETHERIA_API.agents){a.alive=false;a.mesh.visible=false;}AETHERIA_API.updateHUD();});

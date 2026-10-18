@@ -32,6 +32,7 @@ export function createArmyControls(env) {
   }
   function reset(){ids.clear();lastPrimary=null;cancelAim();phase='city';lastEnemies=0;recoveryUntil=0;savedCamera=null;baseline=null;view='auto';}
   function sync(){
+    if(env.passive?.()){ids.clear();if(aiming)cancelAim();lastPrimary=null;return;}
     let units=selected();
     if(!state.selectedEntity&&lastPrimary?.alive===false&&units.length)state.selectedEntity=units[0];
     if(state.selectedEntity?.role==='soldier'&&state.selectedEntity.alive){if(!ids.has(state.selectedEntity.entityId)){ids.clear();ids.add(state.selectedEntity.entityId);}}
@@ -79,12 +80,14 @@ export function createArmyControls(env) {
   for(const b of d.querySelectorAll('button[data-hud-view]'))b.addEventListener('click',()=>{view=b.dataset.hudView;render();});
   el('btn-army-cancel').addEventListener('click',()=>{cancelAim();render();});
   el('btn-battle-focus').addEventListener('click',focusBattle);
-  el('btn-return-city').addEventListener('click',()=>{if(!savedCamera)return;camCtrl.followEntity=null;camCtrl.target.set(savedCamera.x,savedCamera.y,savedCamera.z);camCtrl.targetRadius=savedCamera.radius;camCtrl.targetTheta=savedCamera.theta;camCtrl.targetPhi=savedCamera.phi;savedCamera=null;render();});
+  function returnCity(){if(!savedCamera)return;camCtrl.followEntity=null;camCtrl.target.set(savedCamera.x,savedCamera.y,savedCamera.z);camCtrl.targetRadius=savedCamera.radius;camCtrl.targetTheta=savedCamera.theta;camCtrl.targetPhi=savedCamera.phi;savedCamera=null;render();}
+  el('btn-return-city').addEventListener('click',returnCity);
   w.addEventListener('keydown',e=>{if(e.code==='Escape'&&aiming){cancelAim();render();}});
-  return {select,selectAll,issue,begin,render,reset,cancelAim,focusBattle,selected,
+  return {select,selectAll,issue,begin,render,reset,cancelAim,focusBattle,returnCity,selected,
     point(point){if(!aiming)return false;if(point)issue(aiming,point);else env.issue('เลือกพื้นเกาะเพื่อสั่งกองทัพ');return true;},
     preview(point){if(aiming&&point)env.showReticle(point,!env.canStand(point));},
     get awaiting(){return !!aiming;},get phase(){return phase;},get inBattle(){return ['prepare','combat','waiting'].includes(phase)||livingEnemies(monsters).length>0;},
+    get focused(){return !!savedCamera;},
     get snapshot(){return {phase,view,selected: selected().map(u=>u.entityId),aiming};}
   };
 }
