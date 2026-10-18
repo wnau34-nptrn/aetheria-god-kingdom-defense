@@ -29,7 +29,9 @@ The current product sequence is documented in [ROADMAP.th.md](ROADMAP.th.md), ba
 | ui | HUD, events, accessibility, placement feedback | Independent gameplay timers |
 | persistence | Schema validation, migration, storage and error reporting | Rebuilding unrelated world state implicitly |
 
-Simulation time freezes during pause and dilemmas; camera and purely cosmetic animation may continue. Do not apply timeScale twice. The accumulator bounds frame delta and step count and clears pending debt on pause; background tab suspension cannot trigger a large catch-up burst. Further extraction into serializable world systems is still pending.
+Army orders, formation slots, phase classification and local civilian danger are pure helpers in `systems/battle.js`; `ui/army-controls.js` owns group IDs, HUD overrides and camera bookmarks, while `render/army-view.js` pools selection/destination rings. Legacy movement/combat execute the accepted orders. This does not add a full navigation mesh or bridge reservation queue. See [ARMY_RTS.th.md](ARMY_RTS.th.md).
+
+Simulation time freezes during pause and full-story dilemmas (also peacetime compact cards); compact battle cards retain the current speed and focus; camera and purely cosmetic animation may continue. Do not apply timeScale twice. The accumulator bounds frame delta and step count and clears pending debt on pause; background tab suspension cannot trigger a large catch-up burst. Further extraction into serializable world systems is still pending.
 
 ## Three.js migration hazards
 

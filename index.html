@@ -197,6 +197,8 @@
 </div>
 
 <div id="god-dock-wrapper">
+  <div id="hud-view-bar"><strong id="battle-phase">พัฒนาเมือง</strong><button id="btn-select-army" class="btn-mini"><span id="army-count">เลือกทั้งกอง</span></button><div role="group" aria-label="มุมมองคำสั่ง"><button class="btn-mini" data-hud-view="auto" aria-pressed="true">อัตโนมัติ</button><button class="btn-mini" data-hud-view="city" aria-pressed="false">เมือง</button><button class="btn-mini" data-hud-view="battle" aria-pressed="false">รบ</button></div></div>
+  <div id="battle-overview"><span id="battle-temple">วิหาร</span><button id="btn-battle-focus" class="btn-mini">ดูแนวหน้า</button><button id="btn-return-city" class="btn-mini" hidden>กลับมุมเดิม</button></div>
   <div id="kingdom-readout" aria-label="สถานการณ์อาณาจักร">
     <div class="quick-resources" aria-label="ทรัพยากรในคลัง · แตะดูแหล่งที่มา">
       <button id="resource-faith" data-resource="faith" aria-label="ศรัทธา · ดูแหล่งที่มา"><span class="resource-name">ศรัทธา</span><strong id="quick-faith">60</strong></button>
@@ -212,6 +214,7 @@
       <button class="btn-mini" data-worker-resource="wood">ตัดไม้</button><button class="btn-mini" data-worker-resource="ore">ขุดแร่</button><button class="btn-mini" data-worker-resource="food">เก็บผลไม้</button><button class="btn-mini" data-worker-resource="auto">งานอัตโนมัติ</button>
     </div>
   </section>
+  <section id="army-task-bar" hidden aria-label="คำสั่งกองทัพ"><div id="army-state" role="status"></div><div class="army-orders"><button class="btn-mini" data-army-order="rally">รวมพลที่เมือง</button><button class="btn-mini" data-army-order="move">เคลื่อนพล</button><button class="btn-mini" data-army-order="hold">ตั้งรับจุดนี้</button><button class="btn-mini" data-army-order="attack">โจมตีพื้นที่</button><button class="btn-mini" data-army-order="retreat">ถอยกลับฐาน</button><button class="btn-mini" data-army-order="auto">คืน AI</button></div><div id="army-aim" hidden><span id="army-aim-text"></span><button class="btn-mini" id="btn-army-cancel">ยกเลิก</button></div></section>
   <div id="command-bar" role="group" aria-label="คำสั่งอาณาจักร · กดใช้ได้ทันที">
     <button class="command-btn" id="btn-train-soldier" aria-describedby="soldier-cost"><span>ทหาร +1</span><small id="soldier-cost">25 ศรัทธา</small></button>
     <button class="command-btn" id="btn-spawn-villager" aria-describedby="villager-cost"><span>ชาวบ้าน +1</span><small id="villager-cost">20 ศรัทธา</small></button>

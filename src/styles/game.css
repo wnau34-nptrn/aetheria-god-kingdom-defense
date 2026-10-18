@@ -206,7 +206,50 @@ body.bubbles-hidden #thought-bubbles-layer, body.hud-hidden #thought-bubbles-lay
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
 
 /* Economy: the existing resource strip opens details; no permanent extra panels. */
+#hud-view-bar { order:-7;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 8px;color:var(--text-dim);font-size:11px;background:var(--surface);border:1px solid var(--border-glass);border-radius:10px; }
+#hud-view-bar > div { display:flex;gap:4px; }
+#hud-view-bar .btn-mini { min-height:30px;min-width:52px;padding:4px 8px; }
+#hud-view-bar #btn-select-army { font-size:10px;padding:4px 6px; }
+body[data-hud-view="city"]:not(.army-selected):not(.battle-camera) #battle-overview { display:none; }
+#hud-view-bar [aria-pressed="true"],.army-orders [aria-pressed="true"] { border-color:var(--accent-gold);background:#ddc58b22;color:var(--accent-gold); }
+#battle-overview { order:-5;display:flex;align-items:center;gap:5px;padding:4px 8px;font-size:11px;background:var(--surface);border:1px solid var(--border-glass);border-radius:10px; }
+#battle-temple { margin-right:auto;color:var(--text-main);font-variant-numeric:tabular-nums; }
+#battle-overview .btn-mini { min-height:32px;padding:4px 7px;font-size:10px; }
+#army-task-bar { order:-3;padding:5px 8px;border:1px solid var(--border-glass);border-radius:10px;background:var(--surface); }
+.battle-alert { color:#fda4af;border-color:#fb7185; }
+#army-state { font-size:10px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px; }
+.army-orders { display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px; }
+.army-orders .btn-mini { min-height:38px;padding:4px 2px;font-size:11px; }
+.army-orders [aria-disabled="true"] { opacity:.6; }
+#army-aim { display:flex;align-items:center;justify-content:space-between;gap:5px;font-size:11px;color:var(--accent-gold);margin-top:5px; }
+#army-aim[hidden],#army-task-bar[hidden] { display:none; }
+body[data-hud-view="battle"] #command-bar { grid-template-columns:repeat(3,minmax(0,1fr)); }
+body[data-hud-view="battle"] #btn-select-worker,body[data-hud-view="battle"] #btn-advance-era,body[data-hud-view="battle"] #command-bar [data-build="house"],body[data-hud-view="battle"] #worker-task-bar { display:none; }
+body[data-hud-view="battle"] #battle-phase { color:#fda4af; }
+body.army-selected #inspector-card,body[data-hud-view="battle"] #inspector-card { display:none; }
+@media(min-height:541px) {
+  body[data-hud-view="battle"] #god-dock-wrapper { gap:4px; }
+  body[data-hud-view="battle"] #kingdom-readout { padding:5px 8px; }
+  body[data-hud-view="battle"] #hud-view-bar { padding-top:3px;padding-bottom:3px; }
+  body[data-hud-view="battle"] #god-dock { padding:4px;gap:3px; }
+  body[data-hud-view="battle"] #god-dock .power-btn { min-height:48px;padding:4px 1px;gap:2px; }
+  body[data-hud-view="battle"] #command-bar { padding:4px; }
+  body[data-hud-view="battle"] #command-bar .command-btn { min-height:40px;padding:3px 1px !important;gap:1px; }
+}
+@media(max-width:600px) and (min-height:541px) {
+  #hud-view-bar { padding:4px 6px; }.army-orders { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  #hud-view-bar .btn-mini { min-height:34px; }.army-orders .btn-mini { min-height:36px; }
+  #battle-overview { flex-wrap:wrap;gap:4px; }#battle-temple { font-size:10px; }
+  #battle-overview .btn-mini { min-height:32px;font-size:9px;padding:3px 5px; }
+}
+@media(max-height:540px) {
+  #hud-view-bar { padding:2px 4px;font-size:9px; }#hud-view-bar .btn-mini { min-height:24px;padding:2px 4px;font-size:9px; }
+  #battle-overview { padding:2px 4px;font-size:9px; }#battle-overview .btn-mini { min-height:24px;font-size:9px;padding:2px 4px; }
+  #army-task-bar { padding:2px 4px; }#army-state { font-size:9px;margin-bottom:2px; }.army-orders .btn-mini { min-height:26px;font-size:9px; }
+  #army-aim { font-size:9px;margin-top:2px; }
+}
 #kingdom-readout { pointer-events: auto; }
+#kingdom-readout { order:-6; }
 .quick-resources > button { display:flex; align-items:center; justify-content:center; gap:7px; padding:2px 4px; min-height:32px; background:transparent; color:var(--text-dim); border:0; border-right:1px solid var(--border-glass); font:inherit; font-size:11px; border-radius:5px; }
 .quick-resources > button:last-child { border-right:0; }
 .quick-resources > button:hover, .quick-resources > button.active { background:#ddc58b18; color:var(--accent-gold); }
@@ -303,6 +346,16 @@ body.drawer-open #decision-card { visibility:hidden; pointer-events:none; }
   #btn-decision-continue { margin-top:8px; }
 }
 @media (max-width:480px) and (max-height:360px) {
+  #hud-master-control { top:54px;padding:1px;gap:1px; }
+  #hud-master-control .nav-button { min-height:18px;padding:1px 4px;font-size:8px;gap:2px; }
+  #hud-master-control .nav-button [data-icon] { width:10px;height:10px; }
+  #god-dock-wrapper { gap:2px; }
+  #hud-view-bar,#battle-overview { padding:0 4px; }
+  #hud-view-bar #btn-select-army { font-size:9px;padding:2px 4px; }
+  body[data-hud-view="battle"] #army-state { display:none; }
+  #command-bar .command-btn { min-height:28px;gap:0;line-height:1.2;padding:2px 1px !important; }
+  #command-bar .command-btn small { line-height:1.2; }
+  #god-dock .power-btn { min-height:34px;gap:1px;padding:2px 1px;line-height:1.2; }
   #command-bar .command-btn { min-height:30px; font-size:9px; }
   .command-btn small { font-size:8px; }
   #kingdom-readout { padding:3px 6px; }
@@ -343,6 +396,10 @@ body.drawer-open #decision-card { visibility:hidden; pointer-events:none; }
 @media (max-width:600px) and (min-height:541px) {
   body.decision-pending #mobile-cam-controls { flex-direction:row; }
   body.decision-pending #decision-card { max-height:calc(100dvh - var(--power-dock-height,240px) - 210px); }
+  body[data-hud-view="battle"] #decision-card .dl-choices,body.worker-selected #decision-card .dl-choices { flex-direction:row; }
+  body[data-hud-view="battle"] #decision-card .dl-choice-btn,body.worker-selected #decision-card .dl-choice-btn { flex:1;min-width:0;padding:7px 5px; }
+  body[data-hud-view="battle"] #decision-card .dl-choice-title,body.worker-selected #decision-card .dl-choice-title { flex-direction:column;align-items:flex-start;gap:2px; }
+  body[data-hud-view="battle"] #decision-card .dl-choice-effect,body.worker-selected #decision-card .dl-choice-effect { font-size:10px;line-height:1.4; }
 }
 @media (max-height:540px) and (orientation:landscape) {
   #dilemma-toast { top:auto; bottom:calc(var(--power-dock-height,120px) + 12px); }

@@ -4,7 +4,7 @@ export function createDecisionControls(window, handlers) {
   const d = window.document, el = id => d.getElementById(id);
   const card = el('decision-card'), overlay = el('dilemma-overlay'), choices = el('dl-choices');
   let previousFocus = null;
-  function show({ compact, title, speaker, paused, resumeSpeed }) {
+  function show({ compact, title, speaker, paused, resumeSpeed, takeFocus = true }) {
     if (card.hidden && !overlay.classList.contains('visible')) previousFocus = d.activeElement;
     el('decision-title').textContent = title;
     el('decision-speaker').textContent = speaker;
@@ -14,7 +14,7 @@ export function createDecisionControls(window, handlers) {
     el('btn-trigger-dilemma').setAttribute('aria-expanded', 'true');
     el(compact ? 'decision-choices' : 'dl-choices-host').append(choices);
     status(paused, resumeSpeed);
-    (compact ? el('decision-title') : el('dl-title')).focus({ preventScroll: true });
+    if(takeFocus)(compact ? el('decision-title') : el('dl-title')).focus({ preventScroll: true });
   }
   function status(paused, resumeSpeed) {
     const text = paused ? 'รอคำตัดสิน · หยุดเวลาให้แล้ว' : 'คำถามยังรอคำตอบ · ตอบได้ทันที';

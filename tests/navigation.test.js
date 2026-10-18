@@ -22,6 +22,7 @@ for (const speed of [1, 5]) {
       const worker = a.agents.find(x => x.role === 'villager'), houses = a.buildings.filter(x => x.type === 'house').slice(0, 2);
       isolate(h, { agents: [worker], buildings: houses, time: 21 });
       Object.assign(worker, { id: 0, x: 0, z: 0 });
+      worker.safeAfter=a.simulationTime+20; // Lingering danger after an attack, not the clock alone.
       h.play(15, speed);
       assert.equal(worker.state, 'SHELTER'); assert.equal(worker.mesh.visible, false);
       assert.ok(Math.hypot(worker.x - houses[1].x, worker.z - houses[1].z) < 2.2);
@@ -35,6 +36,7 @@ for (const speed of [1, 5]) {
       const temple = a.buildings.find(x => x.type === 'temple'), blocked = a.buildings.find(x => x.type === 'house');
       isolate(h, { agents: [worker], buildings: [temple, blocked], time: 21 });
       Object.assign(worker, { id: 0, x: 8, z: 0 }); const faith = a.state.faith;
+      worker.safeAfter=a.simulationTime+20;
       h.play(15, speed);
       assert.ok(Math.hypot(worker.x, worker.z) < 2.2);
       assert.equal(worker.state, 'SHELTER'); assert.equal(worker.mesh.visible, true);

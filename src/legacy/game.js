@@ -9,10 +9,13 @@ import { createCombatView } from '../render/combat-view.js';
 import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
 import { progressionIssue, nextCivilization } from '../systems/progression.js';
 import { createEntityIdentity } from '../systems/entity-identity.js';
+import { armyAction, civilianDanger, chooseRefuge, threatened } from '../systems/battle.js';
+import { createArmyControls } from '../ui/army-controls.js';
+import { createArmyView } from '../render/army-view.js';
 
 (() => {
   'use strict';
-  let economy, decisionUI, combatView;
+  let economy, decisionUI, combatView, army, armyView;
   let pendingDilemmaIdx = null;
   const entityIdentity = createEntityIdentity();
   function bindEntity(mesh, entity) { mesh.userData.entity = entityIdentity.assign(entity); }
@@ -2129,6 +2132,7 @@ import { createEntityIdentity } from '../systems/entity-identity.js';
 
   function populateWorld(era = 1, resetNature = false) {
     combatView?.reset();
+    army?.reset();
     worldLayout.bridgeLevels.length = 0;
     worldLayout.well = worldLayout.pasture = false;
     currentCivEra = era;
@@ -2557,6 +2561,7 @@ import { createEntityIdentity } from '../systems/entity-identity.js';
     return hits.length > 0 ? hits[0].point : null;
   }
 
+  let armyPointerStart = null, observePointerStart = null;
   canvas.addEventListener('pointerdown', (e) => {
     if (e.pointerType === 'touch') return; // Touch gestures have their own handlers below.
     audio.init(); camCtrl.lastX = e.clientX; camCtrl.lastY = e.clientY;
@@ -2565,13 +2570,9 @@ import { createEntityIdentity } from '../systems/entity-identity.js';
       camCtrl.isDragging = true; camCtrl.isPanning = e.button === 1; return;
     }
     if (state.activePower === 'observe') {
+      if (army?.awaiting) { armyPointerStart = { x:e.clientX, y:e.clientY }; camCtrl.isDragging = true; camCtrl.isPanning = e.shiftKey; return; }
       if (economy?.handlePoint(e)) return;
-      updatePointerRay(e);
-      const hits = raycaster.intersectObjects(worldObjectsGroup.children, true);
-      if (hits.length > 0) {
-        let obj = hits[0].object; while (obj && !obj.userData.entity && obj.parent) obj = obj.parent;
-        if (obj && obj.userData.entity) { state.selectedEntity = obj.userData.entity; updateInspectorUI(); document.getElementById('inspector-card').classList.add('visible'); }
-      }
+      observePointerStart = { x:e.clientX, y:e.clientY };
       camCtrl.isDragging = true; camCtrl.isPanning = e.shiftKey; return;
     }
     const pt = getTerrainIntersection(e); if (!pt) { camCtrl.isDragging = true; return; }
@@ -2609,9 +2610,21 @@ import { createEntityIdentity } from '../systems/entity-identity.js';
     } else reticleGroup.visible = false;
   });
   canvas.addEventListener('pointermove', e => { if (economy?.active) economy.preview(getTerrainIntersection(e)); });
+  canvas.addEventListener('pointermove', e => { if (army?.awaiting) army.preview(getTerrainIntersection(e)); });
+  canvas.addEventListener('pointerup', e => {
+    if(e.button!==0)return;
+    if(armyPointerStart&&Math.hypot(e.clientX-armyPointerStart.x,e.clientY-armyPointerStart.y)<8)army?.point(getTerrainIntersection(e));
+    if(observePointerStart&&state.activePower==='observe'&&Math.hypot(e.clientX-observePointerStart.x,e.clientY-observePointerStart.y)<8){
+      updatePointerRay(e);const hits=raycaster.intersectObjects(worldObjectsGroup.children,true);let obj=hits[0]?.object;
+      while(obj&&!obj.userData.entity&&obj.parent)obj=obj.parent;
+      const entity=obj?.userData.entity;
+      if(!army?.select(entity,e.shiftKey)){state.selectedEntity=entity||null;document.getElementById('inspector-card').classList.toggle('visible',!!entity);if(entity)updateInspectorUI();}
+    }
+    armyPointerStart=observePointerStart=null;
+  });
   canvas.addEventListener('pointerleave', () => { miracleTarget = null; reticleGroup.visible = false; updateMiraclePreview(); });
 
-  window.addEventListener('pointerup', () => { camCtrl.isDragging = camCtrl.isPanning = isTerraformDragging = false; });
+  window.addEventListener('pointerup', () => { armyPointerStart=observePointerStart=null;camCtrl.isDragging = camCtrl.isPanning = isTerraformDragging = false; });
   canvas.addEventListener('contextmenu', (e) => e.preventDefault());
   canvas.addEventListener('wheel', (e) => { e.preventDefault(); camCtrl.targetRadius = THREE.MathUtils.clamp(camCtrl.targetRadius + e.deltaY * 0.085, 18, 280); }, { passive: false });
   window.addEventListener('keydown', (e) => {
@@ -2622,7 +2635,7 @@ import { createEntityIdentity } from '../systems/entity-identity.js';
   window.addEventListener('keyup', (e) => { camCtrl.keys[e.code] = false; });
   window.addEventListener('blur', () => { camCtrl.keys = {}; camCtrl.isDragging = camCtrl.isPanning = isTerraformDragging = false; });
   window.addEventListener('aetheria:drawer-open', () => { camCtrl.keys = {}; camCtrl.isDragging = camCtrl.isPanning = isTerraformDragging = false; });
-  canvas.addEventListener('pointercancel', () => { camCtrl.isDragging = camCtrl.isPanning = isTerraformDragging = false; });
+  canvas.addEventListener('pointercancel', () => { armyPointerStart=observePointerStart=null;camCtrl.isDragging = camCtrl.isPanning = isTerraformDragging = false; });
   window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
 
   function moveTowards(entity, tx, tz, speed, dt, stopDistance = 0) {
@@ -2731,19 +2744,23 @@ import { createEntityIdentity } from '../systems/entity-identity.js';
     return result;
   }
 
+  function armyGround(point, allowBuilding = false) {
+    return Number.isFinite(point?.x)&&Number.isFinite(point?.z)&&getIslandMask(point.x,point.z)>.42&&getTerrainHeightAt(point.x,point.z)<9.5&&getTerrainSlopeAt(point.x,point.z)<.85&&(!isPointInRiver(point.x,point.z)||isOnBridgeDeck(point.x,point.z))&&(allowBuilding||!isNearBuildingFoundation(point.x,point.z,.3));
+  }
+
   function updateAutonomousAgents(dt, elapsedTime) {
     let cForage = 0, cGather = 0, cBuild = 0, cShelter = 0, cPatrol = 0;
     state.autoBuildCooldown -= dt;
     const curHouses = buildings.filter(b => b.type === 'house').length, curTowers = buildings.filter(b => b.type === 'tower').length;
     const maxEraHouses = 3 + state.civEra * 3, maxEraTowers = 1 + state.civEra * 2;
-    if (state.autoBuild && !state.isNight && state.autoBuildCooldown <= 0 && state.wood >= 25 && state.ore >= 18 && (curHouses < maxEraHouses || curTowers < maxEraTowers)) {
+    if (state.autoBuild && !threatened({x:0,z:0},monsters,30) && state.autoBuildCooldown <= 0 && state.wood >= 25 && state.ore >= 18 && (curHouses < maxEraHouses || curTowers < maxEraTowers)) {
       state.autoBuildCooldown = 8.5;
       const buildTower = (curTowers < maxEraTowers) && (curTowers < Math.floor(curHouses * 0.6) || monsters.length > 0);
       for (let attempt = 0; attempt < 30; attempt++) {
         const ang = buildTower ? (Math.atan2(-58, 68) + (Math.random() - 0.5) * 0.6) : Math.random() * Math.PI * 2;
         const dist = buildTower ? (32 + Math.random() * 18) : (9 + Math.random() * 22);
         const bx = Math.cos(ang) * dist, bz = Math.sin(ang) * dist;
-        if (!canPlaceBuildingAt(bx, bz)) continue;
+        if (!canPlaceBuildingAt(bx, bz) || threatened({x:bx,z:bz},monsters,22)) continue;
         state.wood -= 25; state.ore -= 18;
         if (buildTower) { createWatchtower(bx, bz, 0.25, state.civEra); addLog('🏗️ สร้างป้อมอัตโนมัติ · จ่ายไม้ 25 + แร่ 18'); }
         else { createHouse(bx, bz, 0.25, state.civEra); addLog('🏗️ สร้างบ้านอัตโนมัติ · จ่ายไม้ 25 + แร่ 18'); }
@@ -2762,6 +2779,14 @@ import { createEntityIdentity } from '../systems/entity-identity.js';
 
       if (ag.role === 'soldier') {
         soldierIdx++; ag.mesh.visible = true;
+        const command=armyAction(ag,monsters);
+        if(command){
+          ag.state=command.kind==='melee'?'COMBAT':ag.armyOrder.kind==='retreat'?'RETREAT':command.kind==='move'?'ARMY_MOVE':'HOLD';
+          ag.stateLabel=command.kind==='melee'?'⚔️ ต่อสู้ตามคำสั่ง':command.label;ag.stateGem.material.color.setHex(command.kind==='melee'?0xef4444:0x38bdf8);cPatrol++;
+          if(command.kind==='melee'){const strike=approachAndStrike(ag,command.target,6.6,dt);if(strike.hit)applyCombatDamage(command.target,24,ag,'melee',6);}
+          else{clearMelee(ag);ag.rightArm.rotation.z=0;if(command.kind==='move')moveTowards(ag,command.point.x,command.point.z,6.2,dt,.8);else{ag.leftLeg.rotation.x=ag.rightLeg.rotation.x=ag.rightArm.rotation.x=0;ag.leftArm.rotation.x=-.15;}}
+          continue;
+        }
         const nearestMonster=chooseCombatTarget(ag,monsters);
         const minMDist=nearestMonster?Math.hypot(nearestMonster.x-ag.x,nearestMonster.z-ag.z):Infinity;
         if (ag.hunger > 78 && !nearestMonster) {
@@ -2791,8 +2816,20 @@ import { createEntityIdentity } from '../systems/entity-identity.js';
         ag.hp -= dt * 3.5;
         if (ag.hp <= 0) { ag.alive = false; worldObjectsGroup.remove(ag.mesh); addLog(`⚠️ ${ag.name} สิ้นใจจากความอดอยาก!`, 'warn'); continue; }
       }
-      if (!state.isNight) ag.mesh.visible = true;
+      ag.mesh.visible = true;
       ag.carryBundle.visible = (ag.carryAmount > 0);
+
+      const civilianGoal=ag.hunger>=65?chooseFoodTree(ag,state.food,trees.filter(t=>!threatened(t,monsters,22)))||templeObj:ag.carryAmount>0?templeObj:ag.buildTarget||ag.targetObj||(ag.role==='farmer'?cropFields[ag.id%Math.max(1,cropFields.length)]:null);
+      if(civilianDanger(ag,civilianGoal,monsters,elapsedTime)){
+        if(!ag.refuge||threatened(ag.refuge,monsters,22)||(ag.refuge.building&&!buildings.includes(ag.refuge.building)))ag.refuge=chooseRefuge(ag,buildings,monsters,(p,building)=>armyGround(p,building));
+        ag.state='SHELTER';ag.stateLabel='หลบภัย · เก็บงานเดิมไว้';ag.stateGem.material.color.setHex(0xfde047);cShelter++;
+        if(moveTowards(ag,ag.refuge.x,ag.refuge.z,5.4,dt)<2.2){
+          ag.mesh.visible=ag.refuge.building?.type!=='house';state.faith=Math.min(state.maxFaith,state.faith+dt*.45);
+          if(ag.hunger>=65&&state.food>=2){state.food-=2;ag.hunger=0;ag.hp=Math.min(ag.maxHp,ag.hp+15);}
+        }
+        continue;
+      }
+      ag.refuge=null;
 
       // Survival interrupts a job without discarding its order or cargo.
       if (ag.hunger >= 65) {
@@ -2801,7 +2838,7 @@ import { createEntityIdentity } from '../systems/entity-identity.js';
           ag.carryAmount -= 2; if (!ag.carryAmount) ag.carryType = null;
           ag.hunger = 0; ag.hp = Math.min(ag.maxHp, ag.hp + 15);
         } else {
-          const ripeTree = chooseFoodTree(ag, state.food, trees);
+          const ripeTree = chooseFoodTree(ag, state.food, trees.filter(t=>!threatened(t,monsters,22)));
           if (moveTowards(ag, ripeTree ? ripeTree.x : 0, ripeTree ? ripeTree.z : 0, 5.2, dt) < 2.3) {
             if (ripeTree) {
               ripeTree.hasFruit = false; ripeTree.fruitMeshes.forEach(fm => { fm.visible = false; }); ag.hunger = 0; ag.hp = Math.min(ag.maxHp, ag.hp + 20);
@@ -2810,15 +2847,6 @@ import { createEntityIdentity } from '../systems/entity-identity.js';
             } else if (state.food >= 2) { state.food -= 2; ag.hunger = 0; ag.hp = Math.min(ag.maxHp, ag.hp + 15); }
           }
         }
-        continue;
-      }
-      if (state.isNight) {
-        ag.state = 'SHELTER'; ag.stateLabel = '🏮 พักงาน ➔ กลับเข้าบ้าน'; ag.stateGem.material.color.setHex(0xfde047); cShelter++;
-        const myHouses = buildings.filter(b => b.type === 'house' && b.progress >= 1.0 && (!isPointInRiver(b.x, b.z) || isOnBridgeDeck(b.x, b.z))), targetHouse = myHouses.length > 0 ? myHouses[ag.id % myHouses.length] : templeObj;
-        if (moveTowards(ag, targetHouse ? targetHouse.x : 0, targetHouse ? targetHouse.z : 0, 4.8, dt) < 2.2) {
-          if (targetHouse && targetHouse.type === 'house') ag.mesh.visible = false;
-          state.faith = Math.min(state.maxFaith, state.faith + dt * 0.45);
-        } else ag.mesh.visible = true;
         continue;
       }
       // Finish deliveries before taking another production or construction task.
@@ -2883,7 +2911,7 @@ import { createEntityIdentity } from '../systems/entity-identity.js';
         }
       } else {
         const resource = ag.workOrder?.resource || (((ag.id % 2 === 0) || ores.length === 0) ? 'wood' : 'ore');
-        const pool = (resource === 'ore' ? ores : trees).filter(n => availableNode(n, resource));
+        const pool = (resource === 'ore' ? ores : trees).filter(n => availableNode(n, resource)&&!threatened(n,monsters,22));
         if (!pool.includes(ag.targetObj)) {
           ag.targetObj = ag.workOrder ? nearestResourceNode(ag, resource, pool) : pool[ag.id % Math.max(1,pool.length)] || null;
           ag.workTimer = 0;
@@ -3128,6 +3156,7 @@ import { createEntityIdentity } from '../systems/entity-identity.js';
   }
 
   function updateHUD() {
+    army?.render();
     updateKingdomReadout();
     updateCommandHUD();
     refreshDilemmaChoices();
@@ -3217,8 +3246,8 @@ import { createEntityIdentity } from '../systems/entity-identity.js';
     }
     if (ag.state === 'SHELTER') {
       return {
-        thought: '💭 "พระอาทิตย์ตกดินแล้ว รีบจุดโคมไฟกลับเข้าบ้านดีกว่า"',
-        plan: '📍 เดินไป: บ้านพักของครอบครัว • ⏭️ ต่อไป: สวดภาวนาและพักผ่อนรอเช้าวันใหม่'
+        thought: '💭 "มีอสูรใกล้ตัวหรืองานที่ต้องไป ขอหลบให้ปลอดภัยก่อน"',
+        plan: '📍 เดินไป: ที่พักหรือจุดปลอดภัย • ⏭️ ต่อไป: ภัยผ่านแล้วกลับงานเดิม พร้อมของที่แบกไว้'
       };
     }
     if (ag.state === 'WAIT') return { thought: '💭 \"ยังไม่มีแหล่งพร้อมให้เก็บ\"', plan: 'AI ค้นหาแหล่งให้อัตโนมัติ → พร้อมเมื่อไรจะกลับไปเก็บเอง' };
@@ -3858,7 +3887,7 @@ import { createEntityIdentity } from '../systems/entity-identity.js';
     if (pendingDilemmaIdx === null) return;
     window.dispatchEvent(new Event('aetheria:close-drawer'));
     document.body.classList.add('decision-pending');
-    decisionUI.show({ compact, title: DECISION_TITLES[pendingDilemmaIdx], speaker: DILEMMA_SCENE_META[pendingDilemmaIdx].npcName.split(' (')[0], paused: dilemmaActive, resumeSpeed: preDilemmaSpeed });
+    decisionUI.show({ compact, title: DECISION_TITLES[pendingDilemmaIdx], speaker: DILEMMA_SCENE_META[pendingDilemmaIdx].npcName.split(' (')[0], paused: dilemmaActive, resumeSpeed: preDilemmaSpeed, takeFocus: !(compact&&army?.inBattle) });
     refreshDilemmaChoices();
   }
 
@@ -4488,7 +4517,8 @@ import { createEntityIdentity } from '../systems/entity-identity.js';
       if (!compact) pauseForDilemma();
       presentDilemma(compact); return;
     }
-    pauseForDilemma();
+    const liveBattle=compact&&army?.inBattle;
+    if(!liveBattle)pauseForDilemma();
 
     let idx = forceIdx !== null ? forceIdx : Math.floor(Math.random() * DILEMMA_EVENTS.length);
     if (forceIdx === null && idx === lastDilemmaIdx) idx = (idx + 1) % DILEMMA_EVENTS.length;
@@ -4505,8 +4535,7 @@ import { createEntityIdentity } from '../systems/entity-identity.js';
     const pMoodEl = document.getElementById('dl-portrait-mood'); if (pMoodEl) pMoodEl.textContent = meta.mood;
     const pLocEl = document.getElementById('dl-scene-loc'); if (pLocEl) pLocEl.textContent = meta.loc;
     // Smoothly focus 3D island camera on the event's real location!
-    camCtrl.followEntity = null;
-    camCtrl.target.set(meta.camX, getTerrainHeightAt(meta.camX, meta.camZ), meta.camZ);
+    if(!liveBattle){camCtrl.followEntity = null;camCtrl.target.set(meta.camX, getTerrainHeightAt(meta.camX, meta.camZ), meta.camZ);}
     renderDilemmaSceneCanvas(performance.now() * 0.001);
 
     document.getElementById('dl-category').textContent = ev.category;
@@ -4697,6 +4726,7 @@ import { createEntityIdentity } from '../systems/entity-identity.js';
   }
 
   function setGodPower(powerName) {
+    army?.cancelAim();
     economy?.reset();
     state.activePower = powerName;
     miracleTarget = null; reticleGroup.visible = false; updateMiraclePreview();
@@ -4936,6 +4966,8 @@ import { createEntityIdentity } from '../systems/entity-identity.js';
     updateThoughtBubbles(elapsedTime);
     economy?.render();
     updateWorkerSelection();
+    army?.render();
+    armyView?.render(army.selected(),allHudHidden);
     renderMinimap();
     combatView?.render([...agents,...monsters],state.selectedEntity,allHudHidden);
 
@@ -5051,6 +5083,7 @@ import { createEntityIdentity } from '../systems/entity-identity.js';
         else if (state.activePower === 'miracle') { miracleTarget = { x: pt.x, z: pt.z }; updateMiraclePreview(); }
       }
     } else if (e.touches.length >= 2) {
+      army?.cancelAim();
       touchMode = 'pinch';
       miracleTarget = null; reticleGroup.visible = false; updateMiraclePreview();
       const t0 = e.touches[0], t1 = e.touches[1];
@@ -5113,6 +5146,7 @@ import { createEntityIdentity } from '../systems/entity-identity.js';
       if (pt) castMiracleBeam(pt.x, pt.z);
     }
     if (touchMode === 'single' && touchMovedDist < 14 && state.activePower === 'observe') {
+      if(army?.awaiting){army.point(getTerrainIntersection({clientX:lastTouchX,clientY:lastTouchY}));touchMode=null;return;}
       if (economy?.handlePoint({ clientX: lastTouchX, clientY: lastTouchY })) { touchMode = null; return; }
       updatePointerRay({ clientX: lastTouchX, clientY: lastTouchY });
       const hits = raycaster.intersectObjects(worldObjectsGroup.children, true);
@@ -5125,6 +5159,7 @@ import { createEntityIdentity } from '../systems/entity-identity.js';
         }
         if (found) break;
       }
+      if(army?.select(found)){touchMode=null;return;}
       state.selectedEntity = found;
       if (found) {
         updateInspectorUI();
@@ -5143,7 +5178,7 @@ import { createEntityIdentity } from '../systems/entity-identity.js';
   workerSelection.rotation.x = -Math.PI / 2; workerSelection.visible = false; scene.add(workerSelection);
   function updateWorkerSelection() {
     const agent = state.selectedEntity;
-    workerSelection.visible = !allHudHidden && state.activePower === 'observe' && agent?.type === 'agent' && agent.alive && agent.mesh.visible;
+    workerSelection.visible = !allHudHidden && state.activePower === 'observe' && agent?.type === 'agent' && agent.role!=='soldier' && agent.alive && agent.mesh.visible;
     if (workerSelection.visible) workerSelection.position.set(agent.x, getTerrainHeightAt(agent.x,agent.z)+0.18, agent.z);
   }
   economy = createEconomyControls({ window, state, agents, trees, ores, buildings, camCtrl,
@@ -5159,13 +5194,19 @@ import { createEntityIdentity } from '../systems/entity-identity.js';
   combatView=createCombatView({THREE,scene,world:worldObjectsGroup,document,window,
     height:e=>Math.max(getTerrainHeightAt(e.x,e.z),isOnBridgeDeck(e.x,e.z)?4.22:-Infinity),
     project:projectWorldToScreen,sound:(kind,heavy,armor)=>audio.playCombatSound(kind,heavy,armor)});
+  army=createArmyControls({window,state,agents,monsters,buildings,camCtrl,time:()=>simulationClock.time,height:getTerrainHeightAt,
+    canStand:p=>armyGround(p),basePoint:()=>[{x:12,z:8},{x:16,z:4},{x:0,z:12},{x:10,z:16}].find(p=>armyGround(p))||{x:16,z:4},
+    setObserve:()=>setGodPower('observe'),resetEconomy:()=>economy.reset(),layout:syncHudDockHeight,hideReticle:()=>{reticleGroup.visible=false;},
+    showReticle:(p,blocked)=>{reticleGroup.visible=true;reticleGroup.position.set(p.x,getTerrainHeightAt(p.x,p.z)+.35,p.z);reticleGroup.scale.setScalar(3);reticleRing.material.color.setHex(blocked?0xef4444:0x7dd3fc);reticleFill.material.color.setHex(blocked?0xef4444:0x7dd3fc);},
+    issue:reportActionIssue,notify:message=>{addLog(message,'bless');showDilemmaToast(message);}});
+  armyView=createArmyView({THREE,scene,height:(x,z)=>Math.max(getTerrainHeightAt(x,z),isOnBridgeDeck(x,z)?4.22:-Infinity)});
 
   window.AETHERIA_API = {
     get combatFeedback(){return combatView.snapshot();},
     get simulationTime() { return simulationClock.time; },
     // Copied camera pose for read-only diagnostics, including between render frames.
     get cameraView() { return { position: { ...camera.position }, target: { ...camera._lookTarget }, fov: camera.fov }; },
-    economy, setAllHudHidden, advanceEra, previewEra,
+    economy, army, setAllHudHidden, advanceEra, previewEra,
     // Compatibility alias for existing diagnostic fixtures; never used by progression.
     evolveToEra: previewEra, openInteractiveDilemma,
     get worldLayout() { return { bridgeLevels: [...worldLayout.bridgeLevels], well: worldLayout.well, pasture: worldLayout.pasture }; },

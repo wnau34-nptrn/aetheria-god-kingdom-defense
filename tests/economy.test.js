@@ -36,7 +36,7 @@ test('a changed order retains existing cargo and hunger/night retain the new ord
   const ore=a.ores[0];Object.assign(ore,{x:15,z:8,oreAmount:50});
   assert.ok(a.economy.issueOrder(worker,'ore'));assert.equal(worker.carryType,'wood');assert.equal(worker.carryAmount,5);
   a.state.food=10;worker.hunger=70;h.play(.1,1);assert.equal(worker.state,'FORAGE');assert.equal(worker.workOrder.resource,'ore');
-  worker.hunger=0;a.state.timeOfDay=21;h.play(.1,1);assert.equal(worker.state,'SHELTER');assert.equal(worker.carryAmount,5);assert.equal(worker.workOrder.resource,'ore');
+  worker.hunger=0;a.state.timeOfDay=21;worker.safeAfter=a.simulationTime+1;h.play(.1,1);assert.equal(worker.state,'SHELTER');assert.equal(worker.carryAmount,5);assert.equal(worker.workOrder.resource,'ore');
   a.state.timeOfDay=9;h.play(15,5);assert.ok(a.state.wood>=25);assert.equal(worker.workOrder.resource,'ore');
  }finally{h.close();}
 });
