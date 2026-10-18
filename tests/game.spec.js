@@ -19,6 +19,7 @@ test('boots, pauses combat, preserves dilemma speed, changes era and saves progr
   await page.waitForTimeout(1600);
   expect(await page.evaluate(()=>({time:AETHERIA_API.state.timeOfDay,hp:AETHERIA_API.monsters.map(m=>m.hp),projectiles:AETHERIA_API.projectiles.map(p=>[p.x,p.y,p.z])}))).toEqual(frozen);
   await page.evaluate(()=>{AETHERIA_API.state.civProgress=0;});
+  await page.click('button[data-hud-view="city"]');
   await page.locator('#btn-advance-era').click({force:true});
   expect(await page.evaluate(()=>AETHERIA_API.state.civEra)).toBe(1);
   await page.click('#btn-menu');
