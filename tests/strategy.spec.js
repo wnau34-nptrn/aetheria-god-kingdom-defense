@@ -52,4 +52,11 @@ test('small landscape exposes contextual battle and event choices together',asyn
  await page.screenshot({path:'test-results/strategy-small-landscape.png',animations:'disabled',timeout:90000});
  expect(await hits(page,['#dl-choice-0','#dl-choice-1','#dl-choice-2','[data-strategy-action="guard"]','[data-strategy-action="attack"]','[data-strategy-action="retreat"]','[data-speed="0"]','button[data-hud-view="city"]'])).toEqual([]);
  await page.click('[data-strategy-action="retreat"]');expect(await page.evaluate(()=>AETHERIA_API.strategy.snapshot.military)).toBe('retreat');expect(await page.evaluate(()=>AETHERIA_API.state.selectedEntity)).toBe(null);
+ // Controlled loss transition: recovery actions remain reachable with a question open.
+ await page.evaluate(()=>{for(const a of AETHERIA_API.agents)if(a.role==='soldier')a.alive=false;AETHERIA_API.updateHUD();});
+ await expect(page.locator('#strategy-title')).toHaveText('ไม่มีทหาร · ฟื้นแนวป้องกันอย่างไร');
+ const faith=await page.evaluate(()=>AETHERIA_API.state.faith);await page.click('#strategy-choices [data-strategy-action="soldier"]');
+ expect(await page.evaluate(()=>AETHERIA_API.strategy.snapshot.armyCount)).toBe(1);expect(await page.evaluate(()=>AETHERIA_API.state.faith)).toBeCloseTo(faith-25,4);
+ expect(await page.evaluate(()=>AETHERIA_API.agents.find(a=>a.alive&&a.role==='soldier').armyOrder.kind)).toBe('retreat');
+ await expect(page.locator('#strategy-choices [data-strategy-action="attack"]')).toBeVisible();
 });

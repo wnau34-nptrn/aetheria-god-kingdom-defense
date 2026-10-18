@@ -30,7 +30,10 @@ export function strategicThreat(monsters,buildings){
 
 export function strategicContext(state,agents,buildings,monsters,phase,view='auto'){
   const people=agents.filter(a=>a.alive),enemies=livingEnemies(monsters),damaged=buildings.some(b=>b.hp<b.maxHp&&(b.progress===undefined||b.progress>=1));
-  if(view!=='city'&&(enemies.length||view==='battle'&&phase!=='prepare'&&phase!=='waiting'))return {id:'battle',title:enemies.some(m=>m.combat?.target?.type==='temple')?'วิหารถูกโจมตี · จะรับมืออย่างไร':enemies.length?`อสูร ${enemies.length} ตน · จะรับมืออย่างไร`:'กำหนดแผนกองทัพ',actions:['guard','attack','retreat']};
+  if(view!=='city'&&(enemies.length||view==='battle'&&phase!=='prepare'&&phase!=='waiting')){
+    if(!people.some(a=>a.role==='soldier'))return {id:'battle',title:'ไม่มีทหาร · ฟื้นแนวป้องกันอย่างไร',actions:people.some(a=>a.role==='villager')?['soldier','tower','auto']:['soldier','villager','auto']};
+    return {id:'battle',title:enemies.some(m=>m.combat?.target?.type==='temple')?'วิหารถูกโจมตี · จะรับมืออย่างไร':enemies.length?`อสูร ${enemies.length} ตน · จะรับมืออย่างไร`:'กำหนดแผนกองทัพ',actions:['guard','attack','retreat']};
+  }
   if(view!=='city'&&['prepare','waiting'].includes(phase))return {id:'prepare',title:phase==='waiting'?'รอทัพหนุน · เตรียมแผนต่อ':'ใกล้ถึงเวลาบุก · เตรียมเมือง',actions:['guard','tower','food']};
   if(!people.length)return {id:'empty',title:'เมืองต้องการคนกลับมาทำงาน',actions:['villager','soldier','auto']};
   if(state.food<Math.max(12,people.length*2))return {id:'food',title:'เสบียงเริ่มน้อย · จัดงานอย่างไร',actions:['food','wood','balanced']};

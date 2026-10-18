@@ -132,3 +132,11 @@ test('a new construction project is preserved when its builder previously held a
   a.strategy.update(a.simulationTime,true);assert.equal(worker.buildTarget,project);assert.ok(project.progress<1);
  }finally{h.close();}
 });
+
+
+test('battle context offers rebuilding the army instead of empty-unit maneuvers',()=>{
+ const state={food:30},enemy={alive:true,hp:20};
+ assert.deepEqual(strategicContext(state,[{alive:true,role:'villager'}],[],[enemy],'combat').actions,['soldier','tower','auto']);
+ assert.deepEqual(strategicContext(state,[],[],[enemy],'combat').actions,['soldier','villager','auto']);
+ assert.deepEqual(strategicContext(state,[{alive:true,role:'soldier'}],[],[enemy],'combat').actions,['guard','attack','retreat']);
+});
