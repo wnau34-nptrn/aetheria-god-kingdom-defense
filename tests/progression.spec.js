@@ -12,7 +12,6 @@ for(const mobile of [false,true])test(`normal era progression keeps the same kin
     // worker carrying wood. All advancement and preview actions use actual UI.
     await page.evaluate(()=>{
       const a=AETHERIA_API,worker=a.state.selectedEntity,house=a.buildings.find(e=>e.type==='house');
-      house.hp=47;
       window.__eraKingdom={worker,house,people:[...a.agents],buildings:[...a.buildings],workerId:worker.entityId,houseMesh:house.mesh};
       a.state.civProgress=99.99;a.updateHUD();
     });
@@ -20,7 +19,9 @@ for(const mobile of [false,true])test(`normal era progression keeps the same kin
     const start=await page.evaluate(()=>AETHERIA_API.simulationTime);
     await press('[data-speed="5"]');await page.waitForFunction(t=>AETHERIA_API.simulationTime>=t+.25,start,{timeout:60000});await press('[data-speed="0"]');
     expect((await read()).era).toBe(1);expect((await read()).progress).toBe(100);
-    await page.evaluate(()=>{Object.assign(window.__eraKingdom.worker,{carryType:'wood',carryAmount:5});});
+    // Set preservation fixtures after pausing. Autonomous delivery/repair during
+    // the speed check must not be mistaken for an advancement reset on slow GPUs.
+    await page.evaluate(()=>{const k=window.__eraKingdom;Object.assign(k.worker,{carryType:'wood',carryAmount:5});k.house.hp=47;});
     await expect(page.locator('#btn-advance-era')).toHaveAttribute('aria-disabled','false');
     for(const era of [2,3,4]){
       if(era>2)await page.evaluate(()=>{AETHERIA_API.state.civProgress=100;AETHERIA_API.updateHUD();});
