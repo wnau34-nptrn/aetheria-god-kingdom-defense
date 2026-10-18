@@ -12,6 +12,8 @@ Shelter selection excludes completed houses inside the river walking restriction
 
 The extracted game still uses one IIFE, mutable entity arrays and direct DOM access. Splitting files is preparation, not a completed architectural rewrite. Embedded 2D scene images are still in the legacy game and should later move to named assets with provenance.
 
+Normal progression now uses pure rules in `systems/progression.js` and never repopulates the world. Sandbox preview and V1 checkpoint restoration retain their explicit scene-building path. Selectable entities receive immutable, serializable session `entityId`s from `systems/entity-identity.js`, separate from numeric agent IDs; buildings record their construction era. Actual bridge/site layout controls navigation and reserved footprints rather than inferring infrastructure from the current era. Full snapshot restoration and allocator persistence remain Save V2 work. See [ERA_CONTINUITY.th.md](ERA_CONTINUITY.th.md).
+
 The original uploaded HTML is preserved under `original/`, with SHA-256 recorded in `source-provenance.json`. It is useful as a behavioral reference and is not part of the Vite production bundle. The browser audit runner can load it from the development server.
 
 ## Proposed boundaries

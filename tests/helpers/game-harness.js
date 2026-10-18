@@ -9,6 +9,8 @@ import { JSDOM } from 'jsdom';
 import { createFixedStepper } from '../../src/systems/fixed-step.js';
 import { chooseFoodTree } from '../../src/systems/food-target.js';
 import { parseProgress, PROGRESS_KEY } from '../../src/systems/progress-save.js';
+import { progressionIssue, nextCivilization } from '../../src/systems/progression.js';
+import { createEntityIdentity } from '../../src/systems/entity-identity.js';
 
 // Controlled clock + DOM integration harness. The actual game/geometry code runs;
 // pixels/audio are stubbed. Browser tests separately exercise real WebGL and input.
@@ -41,7 +43,7 @@ export function createGameHarness({ seed = 1234, source } = {}) {
     render() {}
   };
   w.THREE.Clock = class { getDelta() { return frameDelta; } };
-  Object.assign(w, { RESOURCE_INFO, availableNode, nearestResourceNode, workerResource, depositCargo, createEconomyControls, recruitmentIssue, constructionRequirement, createDecisionControls, parseProgress, PROGRESS_KEY, createFixedStepper, chooseFoodTree, advanceMelee, chooseCombatTarget, clearMelee, meleeReach, separateCombatants, createCombatView });
+  Object.assign(w, { progressionIssue, nextCivilization, createEntityIdentity, RESOURCE_INFO, availableNode, nearestResourceNode, workerResource, depositCargo, createEconomyControls, recruitmentIssue, constructionRequirement, createDecisionControls, parseProgress, PROGRESS_KEY, createFixedStepper, chooseFoodTree, advanceMelee, chooseCombatTarget, clearMelee, meleeReach, separateCombatants, createCombatView });
   w.eval((source ?? readFileSync(new URL('../../src/legacy/game.js', import.meta.url), 'utf8')).replace(/^import .+;\n/gm, ''));
   const api = w.AETHERIA_API;
   // Avoid unnecessary thought-bubble DOM churn; this does not change simulation.

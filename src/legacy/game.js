@@ -7,11 +7,15 @@ import { createDecisionControls } from '../ui/decision-controls.js';
 import { advanceMelee, chooseCombatTarget, clearMelee, meleeReach, separateCombatants } from '../systems/combat.js';
 import { createCombatView } from '../render/combat-view.js';
 import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
+import { progressionIssue, nextCivilization } from '../systems/progression.js';
+import { createEntityIdentity } from '../systems/entity-identity.js';
 
 (() => {
   'use strict';
   let economy, decisionUI, combatView;
   let pendingDilemmaIdx = null;
+  const entityIdentity = createEntityIdentity();
+  function bindEntity(mesh, entity) { mesh.userData.entity = entityIdentity.assign(entity); }
 
   class SimplexNoise2D {
     constructor(seed = 1337) { this.reseed(seed); }
@@ -249,6 +253,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
 
   const ISLAND_RADIUS = 112, GRID_SEGMENTS = 84, GRID_SIZE = 240;
   let currentCivEra = 1;
+  const worldLayout = { bridgeLevels: [], well: false, pasture: false };
   const islandGroup = new THREE.Group(); scene.add(islandGroup);
   let terrainGeo = null, terrainMesh = null, undersideMesh = null, riverMesh = null;
   const userHeightOffsets = new Float32Array((GRID_SEGMENTS + 1) * (GRID_SEGMENTS + 1));
@@ -342,8 +347,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     return Math.abs(x - getRiverCenterX(z)) < getRiverWidth(z) * 1.25;
   }
   function isOnBridgeDeck(x, z) {
-    const levels = currentCivEra >= 3 ? [14, -16] : [14];
-    return levels.some(bz => Math.abs(z - bz) <= 2.2 && Math.abs(x - getRiverCenterX(bz)) <= getRiverWidth(bz) * 1.45 + 4.4);
+    return worldLayout.bridgeLevels.some(bz => Math.abs(z - bz) <= 2.2 && Math.abs(x - getRiverCenterX(bz)) <= getRiverWidth(bz) * 1.45 + 4.4);
   }
   function getTerrainSlopeAt(x, z) {
     const eps = 1.2;
@@ -497,8 +501,8 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     for (const cf of cropFields) {
       if (Math.hypot(x - cf.x, z - cf.z) < 5.8 + extraMargin) return true;
     }
-    if (currentCivEra >= 2 && Math.hypot(x - 24, z - 31) < 9.5 + extraMargin) return true; // Livestock corral
-    if (currentCivEra >= 2 && Math.hypot(x - 2.5, z - 9.5) < 3.5 + extraMargin) return true; // Town well
+    if (worldLayout.pasture && Math.hypot(x - 24, z - 31) < 9.5 + extraMargin) return true; // Existing livestock corral
+    if (worldLayout.well && Math.hypot(x - 2.5, z - 9.5) < 3.5 + extraMargin) return true; // Existing town well
     if (portalObj && Math.hypot(x - portalObj.x, z - portalObj.z) < 8.5 + extraMargin) return true;
     return false;
   }
@@ -660,6 +664,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   }
 
   function createVillageBridge(bz = 14.0, era = currentCivEra) {
+    if (!worldLayout.bridgeLevels.includes(bz)) worldLayout.bridgeLevels.push(bz);
     const bx = getRiverCenterX(bz), bankY = 4.12, g = new THREE.Group();
     g.position.set(bx, bankY, bz);
     const riverSlope = (getRiverCenterX(bz + 2) - getRiverCenterX(bz - 2)) / 4.0;
@@ -739,6 +744,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   }
 
   function createTownWell(x, z) {
+    worldLayout.well = true;
     const y = getTerrainHeightAt(x, z), g = new THREE.Group();
     g.castShadow = true; g.position.set(x, y, z);
     // Octagonal cobblestone plaza steps + stone well curb + winch roller + bucket + shingled roof
@@ -814,7 +820,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     flattenAndBakeGroup(g);
     worldObjectsGroup.add(g);
     const stall = { type: 'market', name: '🎪 แผงลอยตลาดนัด (Market Stall)', mesh: g, x, z, hp: 140, maxHp: 140, progress: 1.0 };
-    g.userData.entity = stall; buildings.push(stall); return stall;
+    bindEntity(g, stall); buildings.push(stall); return stall;
   }
 
   function createWindmill(x, z) {
@@ -889,7 +895,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     g.add(rotor);
     worldObjectsGroup.add(g);
     const wm = { type: 'windmill', name: '🌾 กังหันลมโรงสีข้าว (Grain Windmill)', mesh: g, rotor, x, z, hp: 300, maxHp: 300, progress: 1.0 };
-    g.userData.entity = wm; buildings.push(wm); windmills.push(wm); return wm;
+    bindEntity(g, wm); buildings.push(wm); windmills.push(wm); return wm;
   }
 
   function createCropField(x, z, isWheat = true, hasScarecrow = false) {
@@ -943,7 +949,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     flattenAndBakeGroup(g);
     worldObjectsGroup.add(g);
     const cf = { type: 'farm', name: isWheat ? '🌾 แปลงนาข้าวสาลีทองคำ (Wheat Field)' : '🥬 แปลงพืชผักสวนครัว (Vegetable Patch)', mesh: g, x, z };
-    g.userData.entity = cf; cropFields.push(cf); return cf;
+    bindEntity(g, cf); cropFields.push(cf); return cf;
   }
 
   function buildHorseMesh(coatHex = 0x7c2d12, maneHex = 0x1e1b4b, hasSaddle = false) {
@@ -1030,10 +1036,11 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
 
     worldObjectsGroup.add(g);
     const wagon = { type: 'wagon', name: '🐎 เกวียนเทียมม้าขนส่งสินค้า (Horse-Drawn Wagon)', mesh: g, horseLegs: horse.legs, wheels, waypoints, wpIndex: 1, x: startPt[0], z: startPt[1], speed: 5.2, walkCycle: Math.random() * 10 };
-    g.userData.entity = wagon; wagons.push(wagon); return wagon;
+    bindEntity(g, wagon); wagons.push(wagon); return wagon;
   }
 
   function createLivestockPasture(cx, cz) {
+    worldLayout.pasture = true;
     clearFootprintResources(cx, cz, 9.0);
     const y = getTerrainHeightAt(cx, cz), g = new THREE.Group();
     g.position.set(cx, y, cz);
@@ -1063,7 +1070,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       horseObj.mesh.position.set(hx, getTerrainHeightAt(hx, hz), hz);
       worldObjectsGroup.add(horseObj.mesh);
       const ent = { type: 'animal', name: '🐎 ม้าสายพันธุ์แท้ (Pasture Horse)', mesh: horseObj.mesh, legs: horseObj.legs, homeX: cx, homeZ: cz, x: hx, z: hz, tx: hx, tz: hz, timer: Math.random() * 4, speed: 2.8, walkCycle: Math.random() * 10 };
-      horseObj.mesh.userData.entity = ent; livestock.push(ent);
+      bindEntity(horseObj.mesh, ent); livestock.push(ent);
     }
 
     const woolMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.92 });
@@ -1082,7 +1089,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       }
       worldObjectsGroup.add(sg);
       const ent = { type: 'animal', name: '🐑 แกะขนปุยในทุ่งหญ้า (Grazing Sheep)', mesh: sg, legs, homeX: cx, homeZ: cz, x: sx, z: sz, tx: sx, tz: sz, timer: Math.random() * 4, speed: 1.6, walkCycle: Math.random() * 10 };
-      sg.userData.entity = ent; livestock.push(ent);
+      bindEntity(sg, ent); livestock.push(ent);
     }
   }
 
@@ -1166,7 +1173,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       baseY: y, x: g.position.x, z: g.position.z,
       hp: 350, maxHp: 350, orbitAngle: phase
     };
-    g.userData.entity = balloon;
+    bindEntity(g, balloon);
     skyAirships.push(balloon);
     return balloon;
   }
@@ -1297,7 +1304,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       x, z, hp: 500, maxHp: 500,
       orbitAngle: Math.atan2(z, x)
     };
-    g.userData.entity = ship;
+    bindEntity(g, ship);
     skyAirships.push(ship);
     return ship;
   }
@@ -1342,7 +1349,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       mesh: g, crystal, ring, gem,
       x, z, hp: 600, maxHp: 600
     };
-    g.userData.entity = ancientRelicObj;
+    bindEntity(g, ancientRelicObj);
     return ancientRelicObj;
   }
 
@@ -1443,8 +1450,8 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
 
     flattenAndBakeGroup(g, flame ? [flame] : []);
     worldObjectsGroup.add(g);
-    templeObj = { type: 'temple', name: title, mesh: g, flameMesh: flame, x: 0, z: 0, hp: 400 + era * 200, maxHp: 400 + era * 200 };
-    g.userData.entity = templeObj; buildings.push(templeObj);
+    templeObj = { type: 'temple', era, name: title, mesh: g, flameMesh: flame, x: 0, z: 0, hp: 400 + era * 200, maxHp: 400 + era * 200 };
+    bindEntity(g, templeObj); buildings.push(templeObj);
   }
 
   function createVoidPortal() {
@@ -1477,7 +1484,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
 
     worldObjectsGroup.add(g);
     portalObj = { type: 'portal', name: 'ประตูมิติอเวจี (Void Rift Portal)', mesh: g, vortex, x: px, z: pz, hp: 9999, maxHp: 9999 };
-    g.userData.entity = portalObj;
+    bindEntity(g, portalObj);
   }
 
   const _treeGeomCache = {};
@@ -1601,7 +1608,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     g.scale.setScalar(initialGrowth);
     worldObjectsGroup.add(g);
     const tree = { type: 'tree', species, name: species === 'fruit' ? '🌳 ต้นผลไม้ทิพย์ (Orchard Fruit Tree)' : (species === 'pine' ? '🌲 ต้นสนอัลไพน์ (Alpine Spruce)' : '🌳 ต้นโอ๊กโบราณ (Ancient Oak)'), mesh: g, fruitMeshes, x, z, growth: initialGrowth, hasFruit: species === 'fruit' && initialGrowth >= 0.75, woodAmount: 25 };
-    g.userData.entity = tree; trees.push(tree); return tree;
+    bindEntity(g, tree); trees.push(tree); return tree;
   }
 
   function createOreNode(x, z, isGold = false) {
@@ -1623,7 +1630,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     flattenAndBakeGroup(g);
     worldObjectsGroup.add(g);
     const ore = { type: 'ore', name: isGold ? '✨ สายแร่ทองคำศักดิ์สิทธิ์ (Sacred Gold Vein)' : '⛏️ สายแร่ศิลาคริสตัล (Crystal Iron Vein)', mesh: g, x, z, oreAmount: 50 };
-    g.userData.entity = ore; ores.push(ore); return ore;
+    bindEntity(g, ore); ores.push(ore); return ore;
   }
 
   function createHouse(x, z, builtProgress = 1.0, era = currentCivEra) {
@@ -1811,8 +1818,8 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     flattenAndBakeGroup(g);
     g.scale.setScalar(0.3 + 0.7 * builtProgress);
     worldObjectsGroup.add(g);
-    const house = { type: 'house', name: houseName, mesh: g, x, z, progress: builtProgress, hp: 140 + era * 40, maxHp: 140 + era * 40 };
-    g.userData.entity = house; buildings.push(house); return house;
+    const house = { type: 'house', era, name: houseName, mesh: g, x, z, progress: builtProgress, hp: 140 + era * 40, maxHp: 140 + era * 40 };
+    bindEntity(g, house); buildings.push(house); return house;
   }
 
   function createWatchtower(x, z, builtProgress = 1.0, era = currentCivEra) {
@@ -1900,8 +1907,8 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     flattenAndBakeGroup(g, crystal ? [crystal] : []);
     g.scale.setScalar(0.3 + 0.7 * builtProgress);
     worldObjectsGroup.add(g);
-    const tower = { type: 'tower', name: towerName, mesh: g, crystal, x, z, progress: builtProgress, hp: 200 + era * 60, maxHp: 200 + era * 60, fireCooldown: 0 };
-    g.userData.entity = tower; buildings.push(tower); return tower;
+    const tower = { type: 'tower', era, name: towerName, mesh: g, crystal, x, z, progress: builtProgress, hp: 200 + era * 60, maxHp: 200 + era * 60, fireCooldown: 0 };
+    bindEntity(g, tower); buildings.push(tower); return tower;
   }
 
     let nextAgentId = 1;
@@ -2032,7 +2039,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       state: isSoldier ? 'PATROL' : 'GATHER', stateLabel: isSoldier ? 'ลาดตระเวน' : 'ตัดไม้/ขุดแร่',
       targetObj: null, workTimer: 0, carryType: null, carryAmount: 0, walkCycle: Math.random() * 10, alive: true
     };
-    g.userData.entity = agent; agents.push(agent); return agent;
+    bindEntity(g, agent); agents.push(agent); return agent;
   }
 
   // Detailed Bipedal Horned Winged Demon / Void Brute Monster
@@ -2110,7 +2117,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       hp: maxHp, maxHp, dmg: Math.round(baseDmg * eraScale),
       speed: isBoss ? 5.4 : (isBrute ? 6.0 : 8.0), attackTimer: 0, alive: true
     };
-    g.userData.entity = m; monsters.push(m);
+    bindEntity(g, m); monsters.push(m);
   }
 
   const ERA_INFO = {
@@ -2122,6 +2129,8 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
 
   function populateWorld(era = 1, resetNature = false) {
     combatView?.reset();
+    worldLayout.bridgeLevels.length = 0;
+    worldLayout.well = worldLayout.pasture = false;
     currentCivEra = era;
     rebuildTerrainVertices();
     const keepNature = !resetNature && trees.length > 0;
@@ -2288,25 +2297,46 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     fxParticles.push({ mesh: ring, isShockwave: true, maxRadius, life: duration, maxLife: duration });
   }
   function triggerScreenFlash() { const fl = document.getElementById('screen-flash'); fl.style.opacity = '0.85'; setTimeout(() => { fl.style.opacity = '0'; }, 90); }
-  function evolveToEra(targetEra) {
-    targetEra = Math.max(1, Math.min(4, targetEra));
+  function previewEra(targetEra, resetNature = false) {
+    if (!Number.isInteger(targetEra) || !ERA_INFO[targetEra]) return false;
     economy?.reset();
     state.selectedEntity = null; camCtrl.followEntity = null;
     const inspCard = document.getElementById('inspector-card'); if (inspCard) inspCard.classList.remove('visible');
     state.civEra = targetEra;
     state.civProgress = targetEra >= 4 ? 100 : 0;
-    populateWorld(targetEra);
+    populateWorld(targetEra, resetNature);
     audio.playBlessChime();
     spawnShockwaveRing(0, getTerrainHeightAt(0, 0), 0, 0xfbbf24, 38, 1.2);
     spawnBurstParticles(0, getTerrainHeightAt(0, 0) + 6.5, 0, 0xfde047, 18, 10, 0.18, 0.75);
-    document.querySelectorAll('[data-era]').forEach(b => b.classList.toggle('active', parseInt(b.dataset.era, 10) === targetEra));
-    const info = ERA_INFO[targetEra];
+    updateEraUI();
+    addLog(`🧪 สร้างฉากตัวอย่าง "${ERA_INFO[targetEra].badge}" · เมืองและยูนิตเดิมถูกแทนที่`, 'warn');
+    updateHUD();
+    return true;
+  }
+
+  function updateEraUI() {
+    document.querySelectorAll('[data-era]').forEach(b => b.classList.toggle('active', Number(b.dataset.era) === state.civEra));
+    const info = ERA_INFO[state.civEra];
     const badge = document.getElementById('era-top-badge');
     if (badge) badge.textContent = info.badge;
     const lbl = document.getElementById('civ-progress-label');
     if (lbl) lbl.textContent = info.nextLabel;
-    addLog(`🏛️ วิวัฒนาการครั้งประวัติศาสตร์! ชนเผ่าพัฒนาเข้าสู่ "${info.badge}" เรียบร้อยแล้ว!`, 'bless');
+  }
+
+  function advanceEra() {
+    const issue = progressionIssue(state);
+    if (issue) { reportActionIssue(issue); return false; }
+    Object.assign(state, nextCivilization(state));
+    currentCivEra = state.civEra;
+    // Recolor roads only: no repopulation, free buildings, healing or resets.
+    rebuildTerrainVertices();
+    updateEraUI();
+    audio.playBlessChime();
+    const message = `พัฒนาสู่ยุค ${state.civEra} แล้ว · เมือง คน งาน และแนวรับเดิมยังอยู่ · สร้างได้บ้าน ${3 + state.civEra * 3} / ป้อม ${1 + state.civEra * 2}`;
+    addLog(`🏛️ ${message}`, 'bless'); showDilemmaToast(message);
     updateHUD();
+    if (state.selectedEntity) updateInspectorUI();
+    return true;
   }
 
   function syncWorldObjectsElevation() {
@@ -2598,7 +2628,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   function moveTowards(entity, tx, tz, speed, dt, stopDistance = 0) {
     const finalDist = Math.hypot(tx - entity.x, tz - entity.z);
     let goalX = tx, goalZ = tz;
-    const bridgeZ = (currentCivEra >= 3 && Math.abs(entity.z + 16.0) < Math.abs(entity.z - 14.0)) ? -16.0 : 14.0;
+    const bridgeZ = worldLayout.bridgeLevels.reduce((closest, bz) => Math.abs(entity.z - bz) < Math.abs(entity.z - closest) ? bz : closest, worldLayout.bridgeLevels[0] ?? 14);
     const bridgeX = getRiverCenterX(bridgeZ);
     const halfSpan = getRiverWidth(bridgeZ) * 1.45 + 3.4;
     const myOffset = entity.x - getRiverCenterX(entity.z), targetOffset = tx - getRiverCenterX(tz);
@@ -3088,10 +3118,10 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       button.setAttribute('aria-description', button.title);
     });
     const advance = document.getElementById('btn-advance-era');
-    const ready = state.civEra < 4 && state.civProgress >= 100;
+    const ready = !progressionIssue(state);
     advance.setAttribute('aria-disabled', String(!ready));
     advance.classList.toggle('ready', ready);
-    advance.title = state.civEra >= 4 ? 'อารยธรรมอยู่ในยุคสูงสุดแล้ว' : ready ? `พัฒนาสู่ยุคที่ ${state.civEra + 1}` : 'ความก้าวหน้าต้องครบ 100% ก่อนพัฒนายุค';
+    advance.title = progressionIssue(state) || `พัฒนาสู่ยุคที่ ${state.civEra + 1} · รักษาเมืองและยูนิตเดิม · ปลดเพดานก่อสร้างและรูปแบบอาคารใหม่`;
     setReadoutText('command-era-progress', state.civEra >= 4 ? 'ยุคสูงสุดแล้ว' : ready ? `พร้อมขึ้นยุค ${state.civEra + 1}` : `ก้าวหน้า ${Math.floor(state.civProgress)}%`);
     updateWorkerCommands();
     syncHudDockHeight();
@@ -3378,7 +3408,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     minimapCtx.stroke();
 
     // Bridges on minimap
-    for (const bz of (state.civEra >= 3 ? [14.0, -16.0] : [14.0])) {
+    for (const bz of worldLayout.bridgeLevels) {
       const bx = cx + getRiverCenterX(bz) * scale, by = cy + bz * scale;
       minimapCtx.fillStyle = '#d97706';
       minimapCtx.fillRect(bx - 4, by - 1.5, 8, 3);
@@ -3471,7 +3501,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
       const data = parseProgress(raw);
       if (!data) { addLog('⚠️ ไม่โหลดเซฟความก้าวหน้า: รูปแบบหรือค่าข้อมูลไม่ถูกต้อง', 'warn'); return false; }
       if (data.civEra >= 1 && data.civEra <= 4 && data.civEra !== state.civEra) {
-        evolveToEra(data.civEra);
+        previewEra(data.civEra); // V1 is explicitly a checkpoint, not a world snapshot.
       }
       state.day = data.day || 1;
       state.timeOfDay = typeof data.timeOfDay === 'number' ? data.timeOfDay : 8.2;
@@ -4687,16 +4717,15 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
   }));
   document.getElementById('btn-jump-day').addEventListener('click', () => { state.timeOfDay = 9.0; document.getElementById('siege-banner').classList.remove('visible'); });
   document.getElementById('btn-jump-night').addEventListener('click', () => { state.timeOfDay = 20.25; state.isNight = false; state.siegeTriggeredTonight = false; });
-  const btnRegen = document.getElementById('btn-regen-island'); if (btnRegen) btnRegen.addEventListener('click', () => { closeInteractiveDilemma(null, true); simplex.reseed(Math.floor(Math.random() * 999999)); userHeightOffsets.fill(0); buildFloatingIslandMeshes(); state.civEra = 1; state.civProgress = 12; populateWorld(1, true); evolveToEra(1); try { window.name = ''; localStorage.removeItem('AETHERIA_CIV_SAVE_V1'); } catch(e) {} addLog('🎲 สุ่มสร้างเกาะลอยฟ้าใบใหม่และเริ่มต้นยุคชนเผ่าเรียบร้อย!', 'bless'); });
+  const btnRegen = document.getElementById('btn-regen-island'); if (btnRegen) btnRegen.addEventListener('click', () => { closeInteractiveDilemma(null, true); simplex.reseed(Math.floor(Math.random() * 999999)); userHeightOffsets.fill(0); buildFloatingIslandMeshes(); previewEra(1, true); try { window.name = ''; localStorage.removeItem('AETHERIA_CIV_SAVE_V1'); } catch(e) {} addLog('🎲 สุ่มสร้างเกาะลอยฟ้าใบใหม่และเริ่มต้นยุคชนเผ่าเรียบร้อย!', 'bless'); });
   document.querySelectorAll('[data-era]').forEach(btn => btn.addEventListener('click', () => {
     audio.init();
-    evolveToEra(parseInt(btn.dataset.era, 10));
+    previewEra(Number(btn.dataset.era));
   }));
   const btnAdvEra = document.getElementById('btn-advance-era');
   if (btnAdvEra) btnAdvEra.addEventListener('click', () => {
     audio.init();
-    if (state.civEra < 4 && state.civProgress >= 100) evolveToEra(state.civEra + 1);
-    else reportActionIssue(state.civEra >= 4 ? 'อารยธรรมอยู่ในยุคสูงสุดแล้ว' : `พัฒนายุคเมื่อความก้าวหน้าครบ 100% · ตอนนี้ ${Math.floor(state.civProgress)}%`);
+    advanceEra();
   });
 
   document.getElementById('btn-spawn-villager').addEventListener('click', () => {
@@ -4735,8 +4764,9 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     state.faith = Math.min(state.maxFaith, state.faith + dt * 0.45);
     if (state.civEra < 4 && dt > 0) {
       const eraSpeedDiv = state.civEra === 1 ? 1.0 : (state.civEra === 2 ? 1.45 : 1.95);
+      const previousProgress = state.civProgress;
       state.civProgress = Math.min(100, state.civProgress + (dt * 0.35) / eraSpeedDiv);
-      if (state.civProgress >= 100 && state.timeScale >= 5.0) evolveToEra(state.civEra + 1);
+      if (previousProgress < 100 && state.civProgress === 100) updateCommandHUD();
     }
     for (const t of trees) {
       if (t.growth < 1.0) {
@@ -4754,7 +4784,7 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
           const step = Math.min(dist, wg.speed * dt);
           wg.x += (dx / dist) * step; wg.z += (dz / dist) * step;
           let wy = getTerrainHeightAt(wg.x, wg.z);
-          for (const bz of [14.0, -16.0]) {
+          for (const bz of worldLayout.bridgeLevels) {
             if (Math.abs(wg.z - bz) <= 2.2 && Math.abs(wg.x - getRiverCenterX(bz)) <= getRiverWidth(bz) * 1.4 + 2.0) {
               wy = Math.max(wy, getWaterLevelAt(bz) + 1.05);
             }
@@ -5135,7 +5165,10 @@ import { PROGRESS_KEY, parseProgress } from '../systems/progress-save.js';
     get simulationTime() { return simulationClock.time; },
     // Copied camera pose for read-only diagnostics, including between render frames.
     get cameraView() { return { position: { ...camera.position }, target: { ...camera._lookTarget }, fov: camera.fov }; },
-    economy, setAllHudHidden, evolveToEra, openInteractiveDilemma,
+    economy, setAllHudHidden, advanceEra, previewEra,
+    // Compatibility alias for existing diagnostic fixtures; never used by progression.
+    evolveToEra: previewEra, openInteractiveDilemma,
+    get worldLayout() { return { bridgeLevels: [...worldLayout.bridgeLevels], well: worldLayout.well, pasture: worldLayout.pasture }; },
     isNearBuildingFoundation, getBuildingPlacementIssue, canPlaceBuildingAt, state, camCtrl, agents, monsters, projectiles, buildings, trees, ores, wagons, livestock, windmills, cropFields,
     setGodPower, castRainPower, applyTerraforming, castMeteorStrike, detonateMeteor, castLightningStrike, castMiracleBeam,
     spawnMonster, updateInspectorUI, drawAnalyticsChart, updateHUD, saveGameState, loadSavedGameState
